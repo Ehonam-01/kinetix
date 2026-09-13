@@ -1,0 +1,1 @@
+ALTER TYPE "public"."commission_type" ADD VALUE 'GENERATION';

@@ -1,0 +1,244 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1786153767271,
+      "tag": "0000_enable_extensions",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786199621143,
+      "tag": "0001_flawless_blazing_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786199679510,
+      "tag": "0002_profiles_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786204804073,
+      "tag": "0003_mixed_silhouette",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786205398932,
+      "tag": "0004_genealogy_rls_and_gist",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786221624453,
+      "tag": "0005_narrow_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786221646015,
+      "tag": "0006_mlm_seed_and_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786236075097,
+      "tag": "0007_illegal_swarm",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786236105917,
+      "tag": "0008_payments_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786257720553,
+      "tag": "0009_flowery_stepford_cuckoos",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786258089623,
+      "tag": "0010_rewards_seed_and_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786261604207,
+      "tag": "0011_tense_ravenous",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1786265000000,
+      "tag": "0012_lms_seed_and_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1786274370785,
+      "tag": "0013_glorious_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1786274400000,
+      "tag": "0014_audit_logs_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786305601828,
+      "tag": "0015_simple_madame_web",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786305700000,
+      "tag": "0016_backfill_username",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786305710534,
+      "tag": "0017_fresh_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786305720000,
+      "tag": "0018_level_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786324341950,
+      "tag": "0019_vengeful_carmella_unuscione",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786324400000,
+      "tag": "0020_wallet_transfers_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786532920120,
+      "tag": "0021_business_model_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786532942994,
+      "tag": "0022_business_model_backfill",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786534649537,
+      "tag": "0023_ambassador_backfill_catchup",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786544241136,
+      "tag": "0024_direct_sale_commission_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786544254306,
+      "tag": "0025_attribution_parameter_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786548347935,
+      "tag": "0026_generation_commission_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786792541048,
+      "tag": "0027_regular_hex",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1786826025372,
+      "tag": "0028_quiet_sphinx",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1786826092370,
+      "tag": "0029_withdrawal_parameter_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786835791612,
+      "tag": "0030_course_thumbnails_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1786870133763,
+      "tag": "0031_remove_dormant_registration_parameters",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1786878222238,
+      "tag": "0032_bv_value_in_cfa_parameter",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1787282965945,
+      "tag": "0033_robust_human_robot",
+      "breakpoints": true
+    }
+  ]
+}

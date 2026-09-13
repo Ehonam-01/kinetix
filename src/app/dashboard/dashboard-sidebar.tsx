@@ -1,0 +1,125 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ShieldCheck, Sparkles, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useMobileSidebar } from "@/components/mobile-sidebar-context";
+import { LogoutButton } from "./logout-button";
+import { DASHBOARD_NAV_ITEMS } from "./nav-items";
+
+export function DashboardSidebar({
+  memberName,
+  isAdmin,
+  isAmbassador,
+  showNav,
+}: {
+  memberName: string;
+  isAdmin: boolean;
+  isAmbassador: boolean;
+  showNav: boolean;
+}) {
+  const pathname = usePathname();
+  const { open, setOpen } = useMobileSidebar();
+  const items = DASHBOARD_NAV_ITEMS.filter(
+    (item) => isAmbassador || !item.ambassadorOnly,
+  );
+
+  return (
+    <>
+      {/* Below lg, the sidebar is an off-canvas drawer (fixed width still
+          fits comfortably on a phone/tablet, unlike the old always-inline
+          w-60 flex child, which left almost no room for content). */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={cn(
+          "bg-sidebar text-sidebar-foreground border-sidebar-border fixed inset-y-0 left-0 z-50 flex w-60 shrink-0 flex-col border-r p-4 transition-transform duration-200 ease-out",
+          "lg:static lg:z-auto lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 px-2 py-2">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg text-sm font-bold">
+              M
+            </div>
+            <span className="font-heading text-sm font-semibold">
+              MLM & Formation
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Fermer le menu"
+            className="hover:bg-sidebar-accent flex size-8 items-center justify-center rounded-lg lg:hidden"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {showNav && (
+          <nav className="mt-6 flex flex-1 flex-col gap-1 overflow-y-auto">
+            {items.map((item) => {
+              const active =
+                item.href === "/dashboard"
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        <div className="border-sidebar-border mt-auto space-y-3 border-t pt-4">
+          {!isAmbassador && (
+            <Link
+              href="/dashboard/become-ambassador"
+              onClick={() => setOpen(false)}
+              className="text-sidebar-primary hover:bg-sidebar-accent flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium"
+            >
+              <Sparkles className="size-4" />
+              Devenir ambassadeur
+            </Link>
+          )}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium"
+            >
+              <ShieldCheck className="size-4" />
+              Administration
+            </Link>
+          )}
+          <div className="flex items-center justify-between gap-2 px-3">
+            <span className="text-sidebar-foreground/60 truncate text-xs">
+              {memberName}
+            </span>
+            <LogoutButton />
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
