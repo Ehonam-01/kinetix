@@ -11,7 +11,7 @@ test("le formulaire d'inscription affiche les erreurs de validation", async ({
   page,
 }) => {
   await page.goto("/register");
-  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await page.getByRole("button", { name: "Nous rejoindre" }).click();
   await expect(page.getByText("Nom trop court")).toBeVisible();
   await expect(page.getByText("3 caractères minimum")).toBeVisible();
   await expect(page.getByText("Email invalide")).toBeVisible();
@@ -21,7 +21,7 @@ test("le formulaire d'inscription affiche les erreurs de validation", async ({
 test("le pseudo refuse les caractères hors [a-z0-9_]", async ({ page }) => {
   await page.goto("/register");
   await page.getByLabel("Pseudo").fill("Ama Koffi!");
-  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await page.getByRole("button", { name: "Nous rejoindre" }).click();
   await expect(
     page.getByText("Lettres minuscules, chiffres et _ uniquement"),
   ).toBeVisible();
@@ -45,8 +45,8 @@ test("la connexion avec de mauvais identifiants affiche une erreur serveur", asy
   page,
 }) => {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("nobody@example.com");
-  await page.getByLabel("Mot de passe").fill("wrongpassword");
+  await page.getByLabel("Email", { exact: true }).fill("nobody@example.com");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("wrongpassword");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page.getByText(/invalid login credentials/i)).toBeVisible({
     timeout: 15000,

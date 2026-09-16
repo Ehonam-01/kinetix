@@ -103,7 +103,7 @@ export function RegisterForm({
       </div>
       {serverError && <p className="text-destructive text-sm">{serverError}</p>}
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Création..." : "Créer mon compte"}
+        {pending ? "Inscription..." : "Nous rejoindre"}
       </Button>
     </form>
   );

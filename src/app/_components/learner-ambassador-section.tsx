@@ -14,9 +14,9 @@ export function LearnerAmbassadorSection() {
               Vous voulez apprendre ? Commencez simplement.
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Vous pouvez utiliser la plateforme uniquement pour vous former.
-              Aucun besoin de devenir ambassadeur pour acheter ou suivre nos
-              formations.
+              Vous pouvez utiliser la plateforme uniquement pour grandir :
+              apprendre, découvrir vos talents et vous faire accompagner. Aucun
+              besoin de devenir ambassadeur pour accéder aux formations.
             </p>
           </div>
         </Reveal>

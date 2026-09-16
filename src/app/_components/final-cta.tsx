@@ -15,11 +15,11 @@ export function FinalCta() {
             className="bg-background/10 absolute -top-24 -right-24 size-72 rounded-full blur-3xl"
           />
           <h2 className="relative text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Votre prochaine compétence commence aujourd&apos;hui.
+            Le futur n&apos;attend pas. Vous non plus.
           </h2>
           <p className="text-primary-foreground/85 relative mx-auto mt-4 max-w-xl text-lg text-pretty">
-            Choisissez une formation, commencez à apprendre et construisez votre
-            prochaine opportunité.
+            Rejoignez le repère de la jeunesse qui apprend, se fait accompagner
+            et avance ensemble — pendant que le monde change.
           </p>
           <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a
@@ -38,7 +38,7 @@ export function FinalCta() {
                 "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 h-12 bg-transparent px-6 text-base",
               )}
             >
-              Créer mon compte
+              Nous rejoindre
             </Link>
           </div>
         </div>

@@ -3,19 +3,25 @@ import { Reveal } from "./reveal";
 
 const FAQS = [
   {
-    question: "Dois-je devenir ambassadeur pour suivre une formation ?",
+    question:
+      "Pourquoi se former maintenant, alors que l'IA change déjà tout ?",
     answer:
-      "Non. Vous pouvez acheter et suivre nos formations simplement en tant que client. Le programme ambassadeur est entièrement optionnel.",
+      "Parce que les métiers et les compétences recherchées évoluent plus vite que les formations classiques. Plus vous attendez, plus l'écart se creuse avec ceux qui se préparent déjà — Kinetix Africa existe pour que vous ne soyez jamais dans le deuxième groupe.",
   },
   {
-    question: "Comment accéder à une formation ?",
+    question: "Dois-je devenir ambassadeur pour suivre une formation ?",
     answer:
-      "Créez un compte, choisissez la formation qui vous intéresse, effectuez le paiement, puis accédez immédiatement au contenu depuis votre tableau de bord.",
+      "Non. Vous pouvez accéder et suivre nos formations simplement en tant qu'apprenant. Le programme ambassadeur est entièrement optionnel.",
+  },
+  {
+    question: "Comment accéder aux formations ?",
+    answer:
+      "Créez un compte et souscrivez à l'abonnement annuel : vous accédez immédiatement à l'ensemble du catalogue depuis votre tableau de bord, sans avoir à payer chaque formation séparément.",
   },
   {
     question: "Puis-je suivre plusieurs formations ?",
     answer:
-      "Oui, vous pouvez acheter et suivre autant de formations que vous le souhaitez, chacune à votre propre rythme.",
+      "Oui — l'abonnement donne accès à tout le catalogue. Suivez autant de formations que vous le souhaitez, chacune à votre propre rythme.",
   },
   {
     question: "Puis-je devenir ambassadeur plus tard ?",
@@ -25,7 +31,7 @@ const FAQS = [
   {
     question: "Comment fonctionne le programme ambassadeur ?",
     answer:
-      "Une fois inscrit au programme, vous recevez un lien personnel à partager. Lorsqu'une vente est réalisée grâce à ce lien, vous pouvez recevoir une commission selon les règles du programme.",
+      "Une fois inscrit au programme, vous recevez un lien personnel à partager. Lorsqu'une personne souscrit à l'abonnement grâce à ce lien, vous pouvez recevoir une commission selon les règles du programme.",
   },
   {
     question: "Comment sont calculées les commissions ?",
@@ -33,13 +39,14 @@ const FAQS = [
       "Les commissions sont calculées selon les règles du programme ambassadeur, notamment les ventes éligibles et le volume généré. Consultez les conditions du programme pour connaître les règles détaillées.",
   },
   {
-    question: "Puis-je acheter une formation sans lien de parrainage ?",
+    question: "Puis-je m'abonner sans lien de parrainage ?",
     answer: "Oui.",
   },
   {
-    question: "Puis-je devenir ambassadeur sans forcer mes proches à acheter ?",
+    question:
+      "Puis-je devenir ambassadeur sans forcer mes proches à s'abonner ?",
     answer:
-      "Le programme repose sur la recommandation des formations. Aucune personne n'est obligée de rejoindre le programme pour acheter une formation.",
+      "Le programme repose sur la recommandation des formations. Aucune personne n'est obligée de rejoindre le programme pour s'abonner.",
   },
 ];
 

@@ -3,4 +3,4 @@
 export const SITE_NAME = "Kinetix Africa";
 
 export const SITE_TAGLINE =
-  "Des formations pratiques pour développer vos compétences et créer de nouvelles opportunités.";
+  "Le repère de la jeunesse qui se prépare à l'avenir : formations, mentorat et communauté à l'ère de l'IA.";

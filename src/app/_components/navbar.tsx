@@ -62,7 +62,7 @@ export function Navbar() {
             Se connecter
           </Link>
           <Link href="/register" className={cn(buttonVariants({ size: "lg" }))}>
-            Créer un compte
+            Nous rejoindre
           </Link>
           <ThemeToggle />
         </div>
@@ -108,7 +108,7 @@ export function Navbar() {
               className={cn(buttonVariants(), "w-full")}
               onClick={() => setMenuOpen(false)}
             >
-              Créer un compte
+              Nous rejoindre
             </Link>
           </div>
         </div>

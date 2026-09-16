@@ -35,8 +35,8 @@ export default function AuthLayout({
               Bienvenue sur {SITE_NAME}
             </h2>
             <p className="text-primary-foreground/85 mt-2 text-sm text-pretty">
-              Apprenez de nouvelles compétences, suivez votre progression et
-              créez de nouvelles opportunités.
+              Le repère de celles et ceux qui se préparent à l&apos;avenir :
+              formations pratiques, mentorat réel et communauté qui avance.
             </p>
             {/* text-foreground resets the color cascade here — the mockup
                 is a white/bg-card surface and expects normal dark-on-light

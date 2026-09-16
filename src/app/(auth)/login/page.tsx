@@ -25,7 +25,7 @@ export default async function LoginPage({
             href="/register"
             className="text-primary underline underline-offset-4"
           >
-            Créer un compte
+            Nous rejoindre
           </Link>
         </CardDescription>
       </CardHeader>

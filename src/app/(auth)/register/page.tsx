@@ -18,7 +18,7 @@ export default async function RegisterPage({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Créer un compte</CardTitle>
+        <CardTitle>Nous rejoindre</CardTitle>
         <CardDescription>
           Déjà inscrit ?{" "}
           <Link

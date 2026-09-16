@@ -1,33 +1,34 @@
-import { Hammer, Lightbulb, LineChart, Clock as ClockIcon } from "lucide-react";
+import { Compass, Handshake, Sprout, Telescope } from "lucide-react";
 import { Reveal } from "./reveal";
 
 const VALUES = [
   {
     number: "01",
-    icon: Hammer,
-    title: "Formations pratiques",
+    icon: Compass,
+    title: "Un repère",
     description:
-      "Apprenez avec des contenus conçus pour être appliqués dans la vie réelle.",
+      "Un cap clair dans un monde qui change vite : on vous aide à savoir où concentrer vos efforts.",
   },
   {
     number: "02",
-    icon: ClockIcon,
-    title: "Apprentissage flexible",
-    description: "Apprenez à votre rythme, où que vous soyez.",
+    icon: Handshake,
+    title: "Du mentorat",
+    description:
+      "Apprenez auprès de personnes qui ont vécu ce que vous voulez vivre, pas seulement des vidéos.",
   },
   {
     number: "03",
-    icon: LineChart,
-    title: "Progression suivie",
+    icon: Telescope,
+    title: "De la découverte",
     description:
-      "Suivez votre avancement et reprenez votre apprentissage là où vous vous êtes arrêté.",
+      "Explorez plusieurs domaines, testez vos talents et trouvez ce qui vous anime vraiment.",
   },
   {
     number: "04",
-    icon: Lightbulb,
-    title: "Compétences utiles",
+    icon: Sprout,
+    title: "L'éclosion de talents",
     description:
-      "Développez des compétences directement applicables à vos projets et votre activité.",
+      "Des formations pratiques pensées pour transformer vos idées en compétences, et vos compétences en opportunités.",
   },
 ];
 
@@ -37,7 +38,7 @@ export function ValueSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <h2 className="mx-auto max-w-2xl text-center text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Plus qu&apos;une formation. Un parcours pour progresser.
+            Plus qu&apos;une plateforme de formation. Un repère pour grandir.
           </h2>
         </Reveal>
 

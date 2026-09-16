@@ -17,11 +17,12 @@ export function FeaturedCourses({
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Développez les compétences qui comptent.
+              Les formations : la base de tout.
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Des formations pratiques, accessibles et conçues pour vous aider à
-              passer de la théorie à l&apos;action.
+              Chaque trajectoire solide commence par des compétences concrètes.
+              Nos formations sont pensées pour être appliquées tout de suite,
+              pas seulement regardées.
             </p>
           </div>
         </Reveal>
@@ -34,11 +35,11 @@ export function FeaturedCourses({
                 De nouvelles formations arrivent très bientôt.
               </p>
               <p className="text-muted-foreground text-sm">
-                Créez votre compte dès maintenant pour être informé dès leur
-                mise en ligne.
+                Rejoignez-nous dès maintenant pour être informé dès leur mise en
+                ligne.
               </p>
               <Link href="/register" className={cn(buttonVariants(), "mt-2")}>
-                Créer mon compte
+                Nous rejoindre
               </Link>
             </div>
           </Reveal>

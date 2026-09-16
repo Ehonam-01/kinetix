@@ -4,6 +4,7 @@ import { listPublishedCoursesForMarketing } from "@/repositories/courses";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
+import { WhyNowSection } from "./_components/why-now-section";
 import { FeaturedCourses } from "./_components/featured-courses";
 import { ValueSection } from "./_components/value-section";
 import { HowItWorks } from "./_components/how-it-works";
@@ -13,9 +14,9 @@ import { FaqSection } from "./_components/faq-section";
 import { FinalCta } from "./_components/final-cta";
 import { Footer } from "./_components/footer";
 
-const TITLE = `${SITE_NAME} — Formations en ligne pour développer vos compétences`;
+const TITLE = `${SITE_NAME} — Formations, mentorat et communauté pour la jeunesse de demain`;
 const DESCRIPTION =
-  "Découvrez des formations pratiques pour développer vos compétences, apprendre à votre rythme et créer de nouvelles opportunités.";
+  "Le repère de celles et ceux qui se préparent à l'avenir : formations pratiques, mentorat réel et communauté pour affronter un monde bouleversé par l'intelligence artificielle.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -52,6 +53,7 @@ export default async function HomePage() {
       <Navbar />
       <main>
         <HeroSection />
+        <WhyNowSection />
         <FeaturedCourses courses={courses} />
         <ValueSection />
         <HowItWorks />

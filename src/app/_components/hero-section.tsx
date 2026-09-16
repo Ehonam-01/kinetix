@@ -30,11 +30,14 @@ export function HeroSection() {
         <Reveal>
           <div className="max-w-xl">
             <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Apprenez des compétences qui peuvent changer votre avenir.
+              Le repère de celles et ceux qui se préparent à l&apos;avenir.
             </h1>
             <p className="text-muted-foreground mt-6 text-lg leading-relaxed text-pretty">
-              Des formations pratiques pour développer vos compétences,
-              progresser professionnellement et créer de nouvelles opportunités.
+              L&apos;intelligence artificielle rebat déjà les cartes du monde du
+              travail. Kinetix Africa est l&apos;endroit où la jeunesse
+              développe des compétences concrètes, trouve des mentors et rejoint
+              une communauté qui avance — pour ne jamais subir le changement,
+              mais s&apos;y préparer.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
@@ -58,7 +61,7 @@ export function HeroSection() {
             </div>
             <p className="text-muted-foreground mt-6 flex items-center gap-2 text-sm">
               <CheckCircle2 className="text-primary size-4 shrink-0" />
-              Apprenez simplement. À votre rythme. Depuis n&apos;importe où.
+              Formations pratiques. Mentorat réel. Une communauté qui avance.
             </p>
           </div>
         </Reveal>
