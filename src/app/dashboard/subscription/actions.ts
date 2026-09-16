@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/services/auth/current-user";
 import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
-import { initiateCoursePurchase } from "@/services/sales/initiate-course-purchase";
-import { requestCoursePurchaseWithWallet } from "@/services/sales/request-course-purchase-wallet";
-import { confirmCoursePurchaseWithWallet } from "@/services/sales/confirm-course-purchase-wallet";
+import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
+import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
+import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-subscription-wallet";
 
-export async function purchaseCourseAction(courseId: string) {
+export async function subscribeAction() {
   const { authUser, profile } = await requireUser();
   if (!authUser.email) {
     throw new Error("Aucun email associé à ce compte.");
@@ -18,12 +18,11 @@ export async function purchaseCourseAction(courseId: string) {
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
 
-  const { checkoutUrl } = await initiateCoursePurchase({
+  const { checkoutUrl } = await initiateSubscriptionPayment({
     buyerUserId: profile.id,
-    courseId,
     email: authUser.email,
     fullName: profile.fullName,
-    returnUrl: `${origin}/dashboard/courses/${courseId}`,
+    returnUrl: `${origin}/dashboard/subscription`,
     visitorToken,
   });
 
@@ -33,16 +32,12 @@ export async function purchaseCourseAction(courseId: string) {
 // {error}-return convention, same as dashboard/transfer/actions.ts: a bad
 // pseudo, an insufficient balance or a wrong OTP code are expected outcomes
 // of this 2-step flow the form needs to show inline, not exceptional bugs.
-export async function requestWalletPurchaseAction(
-  courseId: string,
-  walletUsername: string,
-) {
+export async function requestWalletSubscriptionAction(walletUsername: string) {
   const { profile } = await requireUser();
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
   try {
-    const request = await requestCoursePurchaseWithWallet({
+    const request = await requestSubscriptionWithWallet({
       buyerUserId: profile.id,
-      courseId,
       walletUsername,
       visitorToken,
     });
@@ -55,22 +50,20 @@ export async function requestWalletPurchaseAction(
   }
 }
 
-export async function confirmWalletPurchaseAction(
-  courseId: string,
+export async function confirmWalletSubscriptionAction(
   requestId: string,
   code: string,
 ) {
   const { profile } = await requireUser();
   try {
-    await confirmCoursePurchaseWithWallet(profile.id, requestId, code);
+    await confirmSubscriptionWithWallet(profile.id, requestId, code);
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
     };
   }
-  revalidatePath(`/dashboard/courses/${courseId}`);
+  revalidatePath("/dashboard/subscription");
   revalidatePath("/dashboard/courses");
-  revalidatePath("/dashboard/commissions");
   revalidatePath("/dashboard");
   return { error: null };
 }

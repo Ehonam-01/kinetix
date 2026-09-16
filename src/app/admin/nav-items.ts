@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   BookOpen,
+  CalendarClock,
   CreditCard,
   Gift,
   Landmark,
@@ -25,7 +26,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin", label: "Vue d'ensemble", icon: LayoutGrid },
   { href: "/admin/members", label: "Membres", icon: Users },
   { href: "/admin/payments", label: "Paiements", icon: CreditCard },
-  { href: "/admin/sales", label: "Ventes", icon: ReceiptText },
+  {
+    href: "/admin/subscriptions",
+    label: "Abonnements",
+    icon: CalendarClock,
+  },
+  { href: "/admin/sales", label: "Ventes (historique)", icon: ReceiptText },
   { href: "/admin/transfers", label: "Transferts", icon: ArrowLeftRight },
   { href: "/admin/withdrawals", label: "Retraits", icon: Landmark },
   { href: "/admin/commissions", label: "Commissions", icon: TrendingUp },

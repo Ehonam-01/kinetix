@@ -1,14 +1,13 @@
-import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Lock } from "lucide-react";
+import { Lock, Sparkles } from "lucide-react";
 import { db } from "@/db/client";
-import { courses } from "@/db/schema/courses";
 import { getCourseContent, hasCourseAccess } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkCompleteButton } from "./mark-complete-button";
-import { PurchasePanel } from "./purchase-panel";
 
 export default async function CourseDetailPage(
   props: PageProps<"/dashboard/courses/[courseId]">,
@@ -21,32 +20,40 @@ export default async function CourseDetailPage(
 
   const access = await hasCourseAccess(db, profile.id, courseId);
   if (!access) {
-    // Not accessible via a level, but still purchasable directly (section 9
-    // of the master prompt: a customer can buy without ever joining the
-    // program) — show a purchase prompt instead of a hard 404. A course
-    // with no price stays a plain 404, exactly as before this pivot.
-    const course = await db.query.courses.findFirst({
-      where: eq(courses.id, courseId),
-    });
-    if (!course || course.price == null) notFound();
+    // Every course requires an active annual subscription now (explicit
+    // user decision, "remplacement complet" — see db/schema/subscriptions.ts):
+    // no more per-course purchase prompt here, just a link to subscribe.
+    const content = await getCourseContent(db, courseId);
+    if (!content) notFound();
 
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">{course.title}</h1>
-          {course.description && (
+          <h1 className="text-2xl font-semibold">{content.course.title}</h1>
+          {content.course.description && (
             <p className="text-muted-foreground mt-1 text-sm">
-              {course.description}
+              {content.course.description}
             </p>
           )}
         </div>
         <Card className="max-w-sm">
-          <CardContent className="pt-6">
-            <PurchasePanel
-              courseId={courseId}
-              price={course.price}
-              username={profile.username}
-            />
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="text-primary size-4" />
+              Abonnement requis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Cette formation, comme toutes les autres, est incluse dans
+              l&apos;abonnement annuel.
+            </p>
+            <Link
+              href="/dashboard/subscription"
+              className={cn(buttonVariants(), "w-full")}
+            >
+              Voir l&apos;abonnement
+            </Link>
           </CardContent>
         </Card>
       </div>

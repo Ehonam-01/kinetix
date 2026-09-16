@@ -9,7 +9,7 @@ import { createGenerationRuleAction } from "./actions";
 
 const TYPES = [
   { value: "FIXED", label: "Montant fixe × taille de la génération" },
-  { value: "BV_PERCENTAGE", label: "% du Business Volume de la génération" },
+  { value: "BV_PERCENTAGE", label: "% du volume généré par la génération" },
 ] as const;
 
 const LEVELS = [2, 3, 4, 5];
@@ -156,10 +156,11 @@ export function NewGenerationRuleForm() {
             checked={requirePresence}
             onChange={(e) => setRequirePresence(e.target.checked)}
           />
-          Exiger l&apos;effectif complet de la génération (comme aujourd&apos;hui)
+          Exiger l&apos;effectif complet de la génération (comme
+          aujourd&apos;hui)
         </label>
         <div className="space-y-2">
-          <Label htmlFor="gen-min-bv">BV minimum requis (optionnel)</Label>
+          <Label htmlFor="gen-min-bv">Points minimum requis (optionnel)</Label>
           <Input
             id="gen-min-bv"
             type="number"

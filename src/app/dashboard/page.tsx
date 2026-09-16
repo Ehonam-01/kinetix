@@ -2,10 +2,10 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import {
   BookOpen,
+  CalendarClock,
   Gift,
   HandCoins,
   Layers,
-  ReceiptText,
   Sparkles,
   TrendingUp,
   Wallet,
@@ -21,9 +21,9 @@ import {
 import { listLevelProgress } from "@/repositories/member-levels";
 import { listMemberRewards } from "@/repositories/member-rewards";
 import {
-  listPurchasesForBuyer,
-  listSalesForAmbassador,
-} from "@/repositories/sales";
+  getSubscriptionStatus,
+  listSubscriptionsForAmbassador,
+} from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,11 +36,7 @@ import {
 } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { BalanceEvolutionChart } from "@/components/balance-evolution-chart";
-
-const PURCHASE_STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "Confirmée",
-  REFUNDED: "Remboursée",
-};
+import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner";
 
 // A plain customer never sees the MLM tree, commissions, generations,
 // level, or ambassador balance (section 23 of the master prompt) — only
@@ -68,16 +64,17 @@ export default async function DashboardPage() {
   });
 
   if (!ambassador) {
-    const [courses, purchases] = await Promise.all([
+    const [courses, subscription] = await Promise.all([
       listCoursesForUser(db, profile.id),
-      listPurchasesForBuyer(db, profile.id),
+      getSubscriptionStatus(db, profile.id),
     ]);
     const accessibleCourseCount = courses.filter((c) => c.accessible).length;
-    const recentPurchases = purchases.slice(0, 5);
 
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">Bonjour, {profile.fullName}</h1>
+
+        <SubscriptionAlertBanner status={subscription} />
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
@@ -88,13 +85,39 @@ export default async function DashboardPage() {
             color="emerald"
           />
           <StatCard
-            icon={ReceiptText}
-            label="Mes achats"
-            value={purchases.length}
-            href="/dashboard/purchases"
+            icon={CalendarClock}
+            label="Abonnement"
+            value={subscription.active ? "Actif" : "Inactif"}
+            href="/dashboard/subscription"
             color="blue"
           />
         </div>
+
+        {!subscription.active && (
+          <Card className="from-primary to-primary/70 text-primary-foreground overflow-hidden border-none bg-linear-to-br">
+            <CardHeader>
+              <CardTitle className="text-primary-foreground flex items-center gap-2">
+                <CalendarClock className="size-4" />
+                Débloquez toutes les formations
+              </CardTitle>
+              <CardDescription className="text-primary-foreground/80">
+                L&apos;abonnement annuel donne un accès illimité à toutes les
+                formations de la plateforme.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/dashboard/subscription"
+                className={cn(
+                  buttonVariants(),
+                  "bg-background text-foreground hover:bg-background/90",
+                )}
+              >
+                Voir l&apos;abonnement
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="from-primary to-primary/70 text-primary-foreground overflow-hidden border-none bg-linear-to-br">
           <CardHeader>
@@ -104,7 +127,7 @@ export default async function DashboardPage() {
             </CardTitle>
             <CardDescription className="text-primary-foreground/80">
               Gratuit. Obtenez un lien de parrainage et gagnez des commissions
-              sur les formations que vous recommandez.
+              sur les abonnements que vous recommandez.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -119,56 +142,6 @@ export default async function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium">Achats récents</h2>
-            {purchases.length > 5 && (
-              <Link
-                href="/dashboard/purchases"
-                className="text-primary text-sm hover:underline"
-              >
-                Voir tout
-              </Link>
-            )}
-          </div>
-          {recentPurchases.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Aucun achat pour le moment.
-            </p>
-          ) : (
-            <div className="divide-y rounded-2xl border">
-              {recentPurchases.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-medium">{p.courseTitle}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {p.createdAt.toLocaleDateString("fr-FR", {
-                        dateStyle: "medium",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span>{p.pricePaid.toLocaleString("fr-FR")} F</span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-medium",
-                        p.status === "CONFIRMED" &&
-                          "bg-green-600/10 text-green-600",
-                        p.status === "REFUNDED" && "bg-primary/10 text-primary",
-                      )}
-                    >
-                      {PURCHASE_STATUS_LABEL[p.status] ?? p.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     );
   }
@@ -180,7 +153,8 @@ export default async function DashboardPage() {
     levelProgress,
     courses,
     rewards,
-    sales,
+    subscriptionReferrals,
+    subscription,
   ] = await Promise.all([
     getBalance(db, profile.id),
     getBalanceHistory(db, profile.id, 30),
@@ -188,7 +162,8 @@ export default async function DashboardPage() {
     listLevelProgress(db, profile.id),
     listCoursesForUser(db, profile.id),
     listMemberRewards(db, profile.id),
-    listSalesForAmbassador(db, profile.id),
+    listSubscriptionsForAmbassador(db, profile.id),
+    getSubscriptionStatus(db, profile.id),
   ]);
 
   const currentLevel = levelProgress
@@ -201,11 +176,13 @@ export default async function DashboardPage() {
   const totalTeamBv = levelProgress
     .flatMap((l) => l.generations)
     .reduce((sum, g) => sum + g.bvTotal, 0);
-  const recentSales = sales.slice(0, 5);
+  const recentReferrals = subscriptionReferrals.slice(0, 5);
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Bonjour, {profile.fullName}</h1>
+
+      <SubscriptionAlertBanner status={subscription} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard
@@ -224,7 +201,7 @@ export default async function DashboardPage() {
         />
         <StatCard
           icon={TrendingUp}
-          label="BV total (équipe)"
+          label="Points totaux (équipe)"
           value={totalTeamBv.toLocaleString("fr-FR")}
           href="/dashboard/levels"
           color="rose"
@@ -274,8 +251,8 @@ export default async function DashboardPage() {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Ventes récentes</h2>
-          {sales.length > 5 && (
+          <h2 className="text-lg font-medium">Souscriptions récentes</h2>
+          {subscriptionReferrals.length > 5 && (
             <Link
               href="/dashboard/commissions"
               className="text-primary text-sm hover:underline"
@@ -284,39 +261,26 @@ export default async function DashboardPage() {
             </Link>
           )}
         </div>
-        {recentSales.length === 0 ? (
+        {recentReferrals.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Aucune vente apportée par votre lien pour le moment.
+            Aucune souscription apportée par votre lien pour le moment.
           </p>
         ) : (
           <div className="divide-y rounded-2xl border">
-            {recentSales.map((s) => (
+            {recentReferrals.map((r) => (
               <div
-                key={s.id}
+                key={r.id}
                 className="flex items-center justify-between px-4 py-3 text-sm"
               >
                 <div>
-                  <p className="font-medium">{s.courseTitle}</p>
+                  <p className="font-medium">{r.buyerUsername}</p>
                   <p className="text-muted-foreground text-xs">
-                    Acheté par {s.buyerUsername} ·{" "}
-                    {s.createdAt.toLocaleDateString("fr-FR", {
+                    {r.createdAt.toLocaleDateString("fr-FR", {
                       dateStyle: "medium",
                     })}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span>{s.businessVolume.toLocaleString("fr-FR")} BV</span>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-xs font-medium",
-                      s.status === "CONFIRMED" &&
-                        "bg-green-600/10 text-green-600",
-                      s.status === "REFUNDED" && "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {s.status === "CONFIRMED" ? "Confirmée" : "Remboursée"}
-                  </span>
-                </div>
+                <span>{r.businessVolume.toLocaleString("fr-FR")} pts</span>
               </div>
             ))}
           </div>

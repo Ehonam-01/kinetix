@@ -1,38 +1,37 @@
 import { db } from "@/db/client";
-import { listSalesForAdmin } from "@/repositories/sales";
+import { listSubscriptionsForAdmin } from "@/repositories/subscriptions";
 import { cn } from "@/lib/utils";
-import { RefundButton } from "./refund-button";
 
-const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "Confirmée",
-  REFUNDED: "Remboursée",
-};
-
-export default async function AdminSalesPage() {
-  const sales = await listSalesForAdmin(db);
+export default async function AdminSubscriptionsPage() {
+  const subscriptions = await listSubscriptionsForAdmin(db);
 
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">{sales.length} vente(s)</p>
+      <p className="text-muted-foreground text-sm">
+        {subscriptions.length} abonnement(s)
+      </p>
 
-      {sales.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Aucune vente.</p>
+      {subscriptions.length === 0 ? (
+        <p className="text-muted-foreground text-sm">Aucun abonnement.</p>
       ) : (
         <div className="space-y-3">
-          {sales.map((s) => (
+          {subscriptions.map((s) => (
             <div
               key={s.id}
               className="space-y-2 rounded-2xl border px-4 py-3 text-sm"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{s.courseTitle}</p>
+                  <p className="font-medium">{s.buyerUsername}</p>
                   <p className="text-muted-foreground text-xs">
-                    Acheteur : {s.buyerUsername}
                     {s.ambassadorUsername &&
-                      ` · attribuée à ${s.ambassadorUsername}`}
-                    {" · "}
-                    {s.createdAt.toLocaleDateString("fr-FR", {
+                      `Attribué à ${s.ambassadorUsername} · `}
+                    Du{" "}
+                    {s.startedAt.toLocaleDateString("fr-FR", {
+                      dateStyle: "medium",
+                    })}{" "}
+                    au{" "}
+                    {s.expiresAt.toLocaleDateString("fr-FR", {
                       dateStyle: "medium",
                     })}
                   </p>
@@ -45,16 +44,15 @@ export default async function AdminSalesPage() {
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-xs font-medium",
-                      s.status === "CONFIRMED" &&
-                        "bg-green-600/10 text-green-600",
-                      s.status === "REFUNDED" && "bg-primary/10 text-primary",
+                      s.active
+                        ? "bg-green-600/10 text-green-600"
+                        : "bg-muted text-muted-foreground",
                     )}
                   >
-                    {STATUS_LABEL[s.status] ?? s.status}
+                    {s.active ? "Actif" : "Expiré"}
                   </span>
                 </div>
               </div>
-              {s.status === "CONFIRMED" && <RefundButton saleId={s.id} />}
             </div>
           ))}
         </div>

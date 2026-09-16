@@ -66,6 +66,31 @@ export async function listEffectiveDirectSaleRules(
   });
 }
 
+// The subscription's direct-sale rule: always the global default DIRECT_SALE
+// row (courseId AND category both null) — a subscription has no course/
+// category to resolve a more specific override against, unlike the retired
+// per-course purchase flow. In practice this is the only DIRECT_SALE rule
+// shape left with real meaning after the education-first pivot's
+// "remplacement complet" of per-course pricing (see db/schema/subscriptions.ts).
+export async function getEffectiveSubscriptionRule(
+  executor: Executor,
+): Promise<EffectiveCommissionRule | null> {
+  const rule = await executor.query.commissionRules.findFirst({
+    where: and(
+      eq(commissionRules.scope, "DIRECT_SALE"),
+      isNull(commissionRules.courseId),
+      isNull(commissionRules.category),
+      lte(commissionRules.effectiveFrom, sql`now()`),
+      or(
+        isNull(commissionRules.effectiveTo),
+        sql`${commissionRules.effectiveTo} > now()`,
+      ),
+    ),
+    orderBy: desc(commissionRules.effectiveFrom),
+  });
+  return rule ?? null;
+}
+
 // GENERATION scope is keyed by (levelCode, generation) exactly — no
 // resolution-order ambiguity like DIRECT_SALE's course/category/default
 // chain, since a generation only ever belongs to one level. Returns null

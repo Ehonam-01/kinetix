@@ -12,7 +12,7 @@ export function PaCompensation({ data }: { data: CompensationData }) {
               Comment fonctionne la rémunération
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Simple : une vente réelle, une commission réelle.
+              Simple : une souscription réelle, une commission réelle.
             </p>
           </div>
         </Reveal>
@@ -24,8 +24,8 @@ export function PaCompensation({ data }: { data: CompensationData }) {
                 Commission directe
               </h3>
               <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-                Lorsqu&apos;un ambassadeur apporte directement un acheteur grâce
-                à son lien personnel :
+                Lorsqu&apos;un ambassadeur apporte directement un nouvel abonné
+                grâce à son lien personnel, à sa toute première souscription :
               </p>
               <p className="text-primary mt-4 text-4xl font-bold">
                 {data.directRatePercent}&nbsp;%
@@ -37,7 +37,7 @@ export function PaCompensation({ data }: { data: CompensationData }) {
               {data.example && (
                 <div className="border-border bg-muted/40 mt-6 flex flex-col gap-3 rounded-xl border p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-muted-foreground">
-                    Exemple : {data.example.courseTitle} à{" "}
+                    Exemple : abonnement annuel à{" "}
                     <span className="text-foreground font-medium">
                       {data.example.price.toLocaleString("fr-FR")} F CFA
                     </span>
@@ -64,10 +64,11 @@ export function PaCompensation({ data }: { data: CompensationData }) {
                 Le système de génération
               </h3>
               <p className="text-muted-foreground mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed">
-                Quand ton activité de recommandation se développe, les ventes
-                réalisées dans ton organisation génèrent du Business Volume.
-                Selon les conditions d&apos;éligibilité et le niveau atteint,
-                certaines ventes ouvrent droit à une commission de génération.
+                Quand ton activité de recommandation se développe, les
+                souscriptions réalisées dans ton organisation génèrent du
+                volume. Selon les conditions d&apos;éligibilité et le niveau
+                atteint, certaines souscriptions ouvrent droit à une commission
+                de génération.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {data.levels.map((level) => (
@@ -94,7 +95,7 @@ export function PaCompensation({ data }: { data: CompensationData }) {
             aucune commission.{" "}
             <span className="text-foreground font-medium">
               Les commissions sont déclenchées par l&apos;activité commerciale
-              réelle et les ventes de formations.
+              réelle et les souscriptions à l&apos;abonnement annuel.
             </span>
           </p>
         </Reveal>

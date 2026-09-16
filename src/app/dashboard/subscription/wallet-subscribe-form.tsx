@@ -5,16 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  confirmWalletPurchaseAction,
-  requestWalletPurchaseAction,
-} from "./purchase-actions";
+  confirmWalletSubscriptionAction,
+  requestWalletSubscriptionAction,
+} from "./actions";
 
-export function WalletPurchaseForm({
-  courseId,
+export function WalletSubscribeForm({
   price,
   defaultUsername,
 }: {
-  courseId: string;
   price: number;
   defaultUsername: string;
 }) {
@@ -34,8 +32,7 @@ export function WalletPurchaseForm({
       return;
     }
     startTransition(async () => {
-      const result = await requestWalletPurchaseAction(
-        courseId,
+      const result = await requestWalletSubscriptionAction(
         walletUsername.trim(),
       );
       if (result.error || !result.requestId) {
@@ -51,11 +48,7 @@ export function WalletPurchaseForm({
     setError(null);
     if (!requestId) return;
     startTransition(async () => {
-      const result = await confirmWalletPurchaseAction(
-        courseId,
-        requestId,
-        code,
-      );
+      const result = await confirmWalletSubscriptionAction(requestId, code);
       if (result.error) {
         setError(result.error);
         return;
@@ -74,7 +67,7 @@ export function WalletPurchaseForm({
   if (step === "done") {
     return (
       <p className="text-sm text-green-600">
-        Achat confirmé — la formation est maintenant accessible.
+        Abonnement confirmé — toutes les formations sont maintenant accessibles.
       </p>
     );
   }
@@ -88,9 +81,9 @@ export function WalletPurchaseForm({
           expire dans 10 minutes.
         </p>
         <div className="space-y-2">
-          <Label htmlFor="wallet-otp">Code de confirmation</Label>
+          <Label htmlFor="subscription-otp">Code de confirmation</Label>
           <Input
-            id="wallet-otp"
+            id="subscription-otp"
             inputMode="numeric"
             maxLength={6}
             value={code}
@@ -103,7 +96,7 @@ export function WalletPurchaseForm({
             disabled={pending || code.length !== 6}
             onClick={handleConfirm}
           >
-            {pending ? "Vérification..." : "Confirmer l'achat"}
+            {pending ? "Vérification..." : "Confirmer l'abonnement"}
           </Button>
           <Button variant="outline" disabled={pending} onClick={reset}>
             Recommencer
@@ -116,9 +109,11 @@ export function WalletPurchaseForm({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="wallet-username">Wallet à débiter (pseudo)</Label>
+        <Label htmlFor="subscription-wallet-username">
+          Wallet à débiter (pseudo)
+        </Label>
         <Input
-          id="wallet-username"
+          id="subscription-wallet-username"
           value={walletUsername}
           onChange={(e) => setWalletUsername(e.target.value)}
         />

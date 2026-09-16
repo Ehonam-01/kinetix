@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { PurchaseCourseButton } from "./purchase-course-button";
-import { WalletPurchaseForm } from "./wallet-purchase-form";
+import { SubscribeButton } from "./subscribe-button";
+import { WalletSubscribeForm } from "./wallet-subscribe-form";
 
-export function PurchasePanel({
-  courseId,
+export function SubscriptionPanel({
   price,
   username,
 }: {
-  courseId: string;
   price: number;
   username: string;
 }) {
@@ -48,13 +46,9 @@ export function PurchasePanel({
       </div>
 
       {method === "MOBILE_MONEY" ? (
-        <PurchaseCourseButton courseId={courseId} price={price} />
+        <SubscribeButton price={price} />
       ) : (
-        <WalletPurchaseForm
-          courseId={courseId}
-          price={price}
-          defaultUsername={username}
-        />
+        <WalletSubscribeForm price={price} defaultUsername={username} />
       )}
     </div>
   );

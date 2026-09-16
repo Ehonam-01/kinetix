@@ -11,7 +11,9 @@ import { EditParameterForm } from "./edit-parameter-form";
 
 const PARAMETER_LABEL: Record<string, string> = {
   "commission.level_1_bonus": "Bonus fin de niveau 1",
-  "bv.value_in_cfa": "Valeur d'1 BV (F CFA)",
+  "bv.value_in_cfa": "Valeur d'1 point (F CFA)",
+  "subscription.price_in_cfa": "Prix de l'abonnement annuel (F CFA)",
+  "subscription.business_volume": "Points générés par l'abonnement",
 };
 
 export default async function AdminParametersPage() {

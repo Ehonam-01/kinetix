@@ -56,8 +56,8 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
         </div>
 
         <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
-          <span className="text-lg font-semibold">
-            {course.price.toLocaleString("fr-FR")} F
+          <span className="text-muted-foreground text-xs font-medium">
+            Inclus dans l&apos;abonnement
           </span>
           <span className="text-primary text-sm font-medium">
             Voir la formation →

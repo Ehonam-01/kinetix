@@ -8,9 +8,6 @@ import { createCourse } from "@/services/lms/create-course";
 export async function createCourseAction(input: {
   title: string;
   description?: string;
-  price?: number;
-  businessVolume?: number;
-  category?: string;
 }) {
   const { profile } = await requireAdmin();
   const course = await createCourse(profile.id, input);

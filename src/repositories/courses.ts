@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { courses, lessons, modules } from "@/db/schema/courses";
 import { lessonProgress } from "@/db/schema/lesson-progress";
@@ -7,16 +7,18 @@ import { profiles } from "@/db/schema/profiles";
 import { quizAttempts, quizzes } from "@/db/schema/quizzes";
 import { refunds } from "@/db/schema/refunds";
 import { sales } from "@/db/schema/sales";
+import { hasActiveSubscription } from "./subscriptions";
 
-// Every course is public to browse and buy — access to its content requires
-// a confirmed purchase, full stop (explicit business rule, confirmed by the
-// user: "il n'y a plus de cours débloqué par niveau, tous les cours sont
-// publics en vente"). The level-based OR path this used to have
-// (course_levels, "unlock via member_levels") is retired — course_levels
-// itself is left in the schema unused rather than dropped, same
-// conserve-then-remove-later discipline as the rest of this project's
-// migrations, but no code reads it anymore. Admins bypass gating entirely,
-// for content review.
+// A single annual subscription unlocks every course (explicit user decision,
+// "remplacement complet": no course keeps an individual price anymore — see
+// db/schema/subscriptions.ts). The old per-course sales path is kept only as
+// a grandfather clause for whatever was bought before this pivot (courses
+// bought individually never lose access retroactively); no code creates new
+// sales rows anymore. The level-based path this used to have (course_levels,
+// "unlock via member_levels") is retired too — course_levels itself is left
+// in the schema unused rather than dropped, same conserve-then-remove-later
+// discipline as the rest of this project's migrations. Admins bypass gating
+// entirely, for content review.
 export async function hasCourseAccess(
   executor: Executor,
   userId: string,
@@ -27,6 +29,9 @@ export async function hasCourseAccess(
   });
   if (profile?.role === "ADMIN") return true;
 
+  if (await hasActiveSubscription(executor, userId)) return true;
+
+  // Legacy: a course bought individually before the subscription pivot.
   const purchased = await executor.query.sales.findFirst({
     where: and(
       eq(sales.buyerUserId, userId),
@@ -210,8 +215,9 @@ export type CourseSummary = {
 };
 
 // The "mes cours" list — deferred in Phase 7 (no page existed yet to call
-// it), built now for the Phase 8 dashboard. Access = purchased (or admin),
-// same rule as hasCourseAccess above — no more level-based free path.
+// it), built now for the Phase 8 dashboard. Access = active subscription (or
+// admin, or a legacy per-course purchase from before the subscription
+// pivot), same rule as hasCourseAccess above.
 export async function listCoursesForUser(
   executor: Executor,
   userId: string,
@@ -220,11 +226,25 @@ export async function listCoursesForUser(
     where: eq(profiles.id, userId),
   });
   const isAdmin = profile?.role === "ADMIN";
+  const subscribed = await hasActiveSubscription(executor, userId);
 
   const activeCourses = await executor.query.courses.findMany({
     where: eq(courses.isActive, true),
   });
   if (activeCourses.length === 0) return [];
+
+  if (isAdmin || subscribed) {
+    const progressList = await Promise.all(
+      activeCourses.map((c) => getCourseProgress(executor, userId, c.id)),
+    );
+    return activeCourses.map((course, i) => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      accessible: true,
+      ...progressList[i],
+    }));
+  }
 
   const courseIds = activeCourses.map((c) => c.id);
   const [purchases, refundedButKept] = await Promise.all([
@@ -269,7 +289,7 @@ export async function listCoursesForUser(
     id: course.id,
     title: course.title,
     description: course.description,
-    accessible: isAdmin || purchasedCourseIds.has(course.id),
+    accessible: purchasedCourseIds.has(course.id),
     ...progressList[i],
   }));
 }
@@ -343,7 +363,6 @@ export type MarketingCourseSummary = {
   slug: string | null;
   title: string;
   description: string | null;
-  price: number;
   category: string | null;
   thumbnailUrl: string | null;
   durationMinutes: number | null;
@@ -352,21 +371,16 @@ export type MarketingCourseSummary = {
 };
 
 // Public homepage listing — no auth, no per-viewer fields (accessible/
-// completedLessons come from listCoursesForUser instead). Only courses an
-// anonymous visitor could actually buy right now: PUBLISHED, active, and
-// priced — a course an admin hasn't finished pricing yet
-// (initiate-course-purchase.ts already refuses to sell it) has no business
-// showing up with no price on a conversion-focused page. Most recent first.
+// completedLessons come from listCoursesForUser instead). Every PUBLISHED,
+// active course is shown — no price field to require anymore: access comes
+// from the subscription, not a per-course price (see
+// db/schema/subscriptions.ts). Most recent first.
 export async function listPublishedCoursesForMarketing(
   executor: Executor,
   limit = 6,
 ): Promise<MarketingCourseSummary[]> {
   const rows = await executor.query.courses.findMany({
-    where: and(
-      eq(courses.status, "PUBLISHED"),
-      eq(courses.isActive, true),
-      isNotNull(courses.price),
-    ),
+    where: and(eq(courses.status, "PUBLISHED"), eq(courses.isActive, true)),
     orderBy: desc(courses.createdAt),
     limit,
   });
@@ -415,7 +429,6 @@ export async function listPublishedCoursesForMarketing(
     slug: course.slug,
     title: course.title,
     description: course.description,
-    price: course.price!,
     category: course.category,
     thumbnailUrl: course.thumbnailUrl,
     durationMinutes: course.durationMinutes,

@@ -7,7 +7,6 @@ import {
   listEffectiveDirectSaleRules,
   listEffectiveGenerationRules,
 } from "@/repositories/commission-rules";
-import { listPublishedCoursesForMarketing } from "@/repositories/courses";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 
 export type CompensationLevel = {
@@ -19,25 +18,28 @@ export type CompensationLevel = {
 export type CompensationData = {
   directRatePercent: number | null;
   levels: CompensationLevel[];
-  example: { courseTitle: string; price: number; commission: number } | null;
+  example: { price: number; commission: number } | null;
 };
 
 // Every rate on this page is read live from the same rules the platform
 // actually pays with (commission_rules) — never hand-typed — so the sales
-// page can never drift from what an ambassador is really paid. Mirrors
-// repositories/courses.ts's listPublishedCoursesForMarketing precedent
-// (real catalog, not a hardcoded list) applied to commission rates.
+// page can never drift from what an ambassador is really paid.
 export async function getCompensationData(
   executor: Executor,
 ): Promise<CompensationData> {
-  const [directRules, generationRules, levelRows, courses, bvValueInCfa] =
-    await Promise.all([
-      listEffectiveDirectSaleRules(executor),
-      listEffectiveGenerationRules(executor),
-      executor.query.levels.findMany({ orderBy: asc(levels.code) }),
-      listPublishedCoursesForMarketing(executor, 6),
-      getCurrentParameterValue(executor, "bv.value_in_cfa"),
-    ]);
+  const [
+    directRules,
+    generationRules,
+    levelRows,
+    subscriptionPrice,
+    bvValueInCfa,
+  ] = await Promise.all([
+    listEffectiveDirectSaleRules(executor),
+    listEffectiveGenerationRules(executor),
+    executor.query.levels.findMany({ orderBy: asc(levels.code) }),
+    getCurrentParameterValue(executor, "subscription.price_in_cfa"),
+    getCurrentParameterValue(executor, "bv.value_in_cfa"),
+  ]);
 
   const defaultDirectRule =
     directRules.find((r) => r.courseId === null && r.category === null) ?? null;
@@ -63,23 +65,18 @@ export async function getCompensationData(
       ratePercent: rateByLevel.get(code)!,
     }));
 
-  // The worked example uses the highest-priced course actually in the
-  // catalog, run through the real computeDirectSaleCommission — never a
-  // number typed by hand, so it can never contradict what the platform
-  // would really pay.
+  // The worked example uses the real subscription price, run through the
+  // real computeDirectSaleCommission — never a number typed by hand, so it
+  // can never contradict what the platform would really pay. businessVolume
+  // is irrelevant here: a PERCENTAGE-type direct-sale rule (the only kind
+  // configured today) only ever reads pricePaid.
   let example: CompensationData["example"] = null;
-  if (defaultDirectRule && courses.length > 0) {
-    const highest = courses.reduce((max, c) => (c.price > max.price ? c : max));
+  if (defaultDirectRule) {
     example = {
-      courseTitle: highest.title,
-      price: highest.price,
-      // businessVolume is irrelevant here: a PERCENTAGE-type direct-sale
-      // rule (the only kind configured today) only ever reads pricePaid —
-      // see computeDirectSaleCommission. MarketingCourseSummary doesn't
-      // carry the real BV figure, so this stand-in never affects the result.
+      price: subscriptionPrice,
       commission: computeDirectSaleCommission(defaultDirectRule, {
-        pricePaid: highest.price,
-        businessVolume: highest.price,
+        pricePaid: subscriptionPrice,
+        businessVolume: subscriptionPrice,
         bvValueInCfa,
       }),
     };

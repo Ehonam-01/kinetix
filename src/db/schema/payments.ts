@@ -16,14 +16,16 @@ export const paymentMethodEnum = pgEnum("payment_method", [
   "WALLET",
 ]);
 
-// COURSE_PURCHASE added for the education-first pivot (BUSINESS_MODEL.md) —
-// not yet written by any service in this phase (services/sales/purchase-course.ts
-// is a later phase); a payments row of this purpose will produce a sales
-// row on confirmation, the way REGISTRATION produces a binary placement
-// today (services/payments/activate-registration.ts).
+// COURSE_PURCHASE is retired (education-first pivot replaced per-course
+// pricing with a single annual subscription, see db/schema/subscriptions.ts)
+// but kept in the enum: historical payments/sales rows still reference it,
+// and Postgres enum values can't be dropped without rewriting every row that
+// uses them. No code creates a COURSE_PURCHASE payment anymore — SUBSCRIPTION
+// is the only paid course-access product going forward.
 export const paymentPurposeEnum = pgEnum("payment_purpose", [
   "REGISTRATION",
   "COURSE_PURCHASE",
+  "SUBSCRIPTION",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [

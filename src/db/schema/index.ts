@@ -21,4 +21,5 @@ export * from "./commission-rules";
 export * from "./refunds";
 export * from "./quizzes";
 export * from "./withdrawals";
-export * from "./course-purchase-wallet-requests";
+export * from "./subscriptions";
+export * from "./subscription-wallet-requests";

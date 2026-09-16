@@ -13,7 +13,6 @@ import { AddLessonForm } from "./add-lesson-form";
 import { AddModuleForm } from "./add-module-form";
 import { CourseStatusForm } from "./course-status-form";
 import { EditModuleForm } from "./edit-module-form";
-import { EditPricingForm } from "./edit-pricing-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
 
 export default async function AdminCourseDetailPage(
@@ -48,25 +47,6 @@ export default async function AdminCourseDetailPage(
           <EditThumbnailForm
             courseId={courseId}
             currentThumbnailUrl={content.course.thumbnailUrl}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Vente</CardTitle>
-          <CardDescription>
-            {content.course.price == null
-              ? "Pas encore en vente — vide un prix pour la rendre achetable."
-              : `${content.course.price.toLocaleString("fr-FR")} F · ${content.course.businessVolume?.toLocaleString("fr-FR") ?? 0} BV`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <EditPricingForm
-            courseId={courseId}
-            currentPrice={content.course.price}
-            currentBusinessVolume={content.course.businessVolume}
-            currentCategory={content.course.category}
           />
         </CardContent>
       </Card>

@@ -77,7 +77,7 @@ export default async function LevelsPage() {
                     >
                       {gen.currentCount} / {gen.requiredCount}
                       {gen.bvTotal > 0 &&
-                        ` · ${gen.bvTotal.toLocaleString("fr-FR")} BV`}
+                        ` · ${gen.bvTotal.toLocaleString("fr-FR")} pts`}
                     </span>
                   </div>
                 ))}

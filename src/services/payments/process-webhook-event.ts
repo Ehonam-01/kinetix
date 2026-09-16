@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { paymentEvents, payments } from "@/db/schema/payments";
 import { findPaymentByProviderReference } from "@/repositories/payments";
-import { confirmCoursePurchase } from "@/services/sales/confirm-course-purchase";
+import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
 import { activateRegistration } from "./activate-registration";
 import type { WebhookEvent } from "./provider";
 
@@ -13,11 +13,12 @@ import type { WebhookEvent } from "./provider";
 // matching payment. A second delivery of the same event, or an event for
 // an unknown reference, is a safe no-op.
 //
-// Dispatches on payment.purpose since Phase 11 (education-first pivot):
-// REGISTRATION still goes to activateRegistration, unchanged; COURSE_PURCHASE
-// goes to confirmCoursePurchase instead. One webhook route, one payments
-// table, two independent outcomes — never assume every confirmed payment is
-// a registration.
+// Dispatches on payment.purpose: REGISTRATION still goes to
+// activateRegistration, unchanged; SUBSCRIPTION goes to
+// confirmSubscriptionPurchase instead (replaces the retired COURSE_PURCHASE
+// per-course flow — see db/schema/subscriptions.ts). One webhook route, one
+// payments table, two independent outcomes — never assume every confirmed
+// payment is a registration.
 export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
   const payment = await findPaymentByProviderReference(
     tx,
@@ -45,9 +46,9 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
     .where(eq(paymentEvents.id, inserted.id));
 
   if (event.status === "CONFIRMED") {
-    if (payment.purpose === "COURSE_PURCHASE") {
-      await confirmCoursePurchase(tx, payment.id);
-    } else {
+    if (payment.purpose === "SUBSCRIPTION") {
+      await confirmSubscriptionPurchase(tx, payment.id);
+    } else if (payment.purpose === "REGISTRATION") {
       await activateRegistration(tx, payment.id);
     }
   } else if (event.status === "FAILED") {

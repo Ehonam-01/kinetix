@@ -21,6 +21,7 @@ export const resendEmailProvider: EmailProvider = {
         to: input.to,
         subject: input.subject,
         html: input.html,
+        ...(input.text ? { text: input.text } : {}),
       }),
     });
 

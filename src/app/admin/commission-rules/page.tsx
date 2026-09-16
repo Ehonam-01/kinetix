@@ -24,7 +24,7 @@ function describeDirectSaleRule(
     case "PERCENTAGE":
       return `${(rule.rate / 100).toLocaleString("fr-FR")} % du prix payé`;
     case "BV_PERCENTAGE":
-      return `${(rule.rate / 100).toLocaleString("fr-FR")} % du Business Volume`;
+      return `${(rule.rate / 100).toLocaleString("fr-FR")} % du volume généré`;
   }
 }
 
@@ -34,11 +34,11 @@ function describeGenerationRule(
   const amount =
     rule.commissionType === "FIXED"
       ? `${rule.rate.toLocaleString("fr-FR")} F / personne`
-      : `${(rule.rate / 100).toLocaleString("fr-FR")} % du BV de la génération`;
+      : `${(rule.rate / 100).toLocaleString("fr-FR")} % du volume généré par la génération`;
   const req = rule.qualificationRequirement;
   const conditions = [
     req?.presence !== false && "effectif complet",
-    req?.minBv != null && `BV ≥ ${req.minBv.toLocaleString("fr-FR")} F`,
+    req?.minBv != null && `volume ≥ ${req.minBv.toLocaleString("fr-FR")} pts`,
   ].filter(Boolean);
   return { amount, conditions: conditions.join(" et ") };
 }
@@ -55,10 +55,10 @@ export default async function AdminCommissionRulesPage() {
     <div className="space-y-8">
       <div className="space-y-6">
         <p className="text-muted-foreground text-sm">
-          Commission versée à l&apos;ambassadeur dont le lien a mené à un
-          achat direct (section 11). Créer une règle ferme la précédente pour
-          la même portée à partir de maintenant — aucune commission déjà
-          versée n&apos;est recalculée.
+          Commission versée à l&apos;ambassadeur dont le lien a mené à un achat
+          direct (section 11). Créer une règle ferme la précédente pour la même
+          portée à partir de maintenant — aucune commission déjà versée
+          n&apos;est recalculée.
         </p>
 
         <Card>
@@ -114,11 +114,10 @@ export default async function AdminCommissionRulesPage() {
 
       <div className="space-y-6">
         <p className="text-muted-foreground text-sm">
-          Commission versée quand une génération (niveaux 2 à 5) est
-          qualifiée — par défaut, l&apos;effectif complet suffit (comportement
-          historique). Une règle ici peut resserrer la condition : BV
-          minimum, ou effectif complet ET BV minimum ensemble (section
-          14/16/17).
+          Commission versée quand une génération (niveaux 2 à 5) est qualifiée —
+          par défaut, l&apos;effectif complet suffit (comportement historique).
+          Une règle ici peut resserrer la condition : volume minimum, ou
+          effectif complet ET volume minimum ensemble (section 14/16/17).
         </p>
 
         <Card>
@@ -137,8 +136,8 @@ export default async function AdminCommissionRulesPage() {
         <div className="space-y-3">
           <p className="text-muted-foreground text-sm">
             {generationRules.length} règle(s) génération actuellement
-            effective(s) — les autres (niveau, génération) restent au
-            barème historique (voir Paramètres).
+            effective(s) — les autres (niveau, génération) restent au barème
+            historique (voir Paramètres).
           </p>
           {generationRules.map((rule) => {
             const { amount, conditions } = describeGenerationRule(rule);

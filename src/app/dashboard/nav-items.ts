@@ -1,12 +1,12 @@
 import {
   ArrowLeftRight,
   BookOpen,
+  CalendarClock,
   CreditCard,
   Gift,
   Landmark,
   LayoutGrid,
   Layers,
-  ReceiptText,
   Settings,
   Share2,
   type LucideIcon,
@@ -58,7 +58,11 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     ambassadorOnly: true,
   },
   { href: "/dashboard/courses", label: "Cours", icon: BookOpen },
-  { href: "/dashboard/purchases", label: "Mes achats", icon: ReceiptText },
+  {
+    href: "/dashboard/subscription",
+    label: "Mon abonnement",
+    icon: CalendarClock,
+  },
   {
     href: "/dashboard/rewards",
     label: "Récompenses",

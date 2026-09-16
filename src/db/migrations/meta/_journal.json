@@ -239,6 +239,34 @@
       "when": 1787282965945,
       "tag": "0033_robust_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1789505138072,
+      "tag": "0034_subscriptions_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1789505151977,
+      "tag": "0035_drop_course_purchase_wallet_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1789505169175,
+      "tag": "0036_subscription_parameters_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1789546290891,
+      "tag": "0037_subscription_expiry_reminders",
+      "breakpoints": true
     }
   ]
 }

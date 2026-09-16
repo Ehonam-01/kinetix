@@ -36,9 +36,9 @@ describe("findDashboardSectionLabel", () => {
     );
   });
 
-  it("resolves the purchases page to the Mes achats section", () => {
-    expect(findDashboardSectionLabel("/dashboard/purchases")).toBe(
-      "Mes achats",
+  it("resolves the subscription page to the Mon abonnement section", () => {
+    expect(findDashboardSectionLabel("/dashboard/subscription")).toBe(
+      "Mon abonnement",
     );
   });
 

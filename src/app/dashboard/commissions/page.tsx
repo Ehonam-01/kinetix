@@ -21,7 +21,7 @@ const TYPE_LABEL: Record<string, string> = {
   LEVEL_1_BONUS: "Bonus fin de niveau 1",
   LEVEL_COMMISSION: "Commission de génération",
   DIRECT_SALE_COMMISSION: "Commission sur vente directe",
-  GENERATION_COMMISSION: "Commission de génération (BV)",
+  GENERATION_COMMISSION: "Commission de génération (volume)",
   COMMISSION_REVERSAL: "Commission annulée",
   REWARD: "Récompense en espèces",
   PAYMENT: "Paiement",
@@ -69,7 +69,7 @@ export default async function CommissionsPage() {
         <Card size="sm">
           <CardContent className="space-y-1">
             <CardDescription>Mon lien de parrainage</CardDescription>
-            <CardTitle className="text-sm font-mono font-normal break-all">
+            <CardTitle className="font-mono text-sm font-normal break-all">
               /r/{ambassador.referralCode}
             </CardTitle>
           </CardContent>
@@ -159,14 +159,13 @@ export default async function CommissionsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span>{s.businessVolume.toLocaleString("fr-FR")} BV</span>
+                    <span>{s.businessVolume.toLocaleString("fr-FR")} pts</span>
                     <span
                       className={cn(
                         "rounded-full px-2 py-0.5 text-xs font-medium",
                         s.status === "CONFIRMED" &&
                           "bg-green-600/10 text-green-600",
-                        s.status === "REFUNDED" &&
-                          "bg-primary/10 text-primary",
+                        s.status === "REFUNDED" && "bg-primary/10 text-primary",
                       )}
                     >
                       {SALE_STATUS_LABEL[s.status] ?? s.status}

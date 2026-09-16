@@ -32,11 +32,11 @@ export async function createGenerationCommissionRule(
     input.minimumBv != null &&
     (!Number.isInteger(input.minimumBv) || input.minimumBv < 0)
   ) {
-    throw new Error("Le BV minimum doit être un entier positif ou nul.");
+    throw new Error("Le volume minimum doit être un entier positif ou nul.");
   }
   if (!input.requirePresence && input.minimumBv == null) {
     throw new Error(
-      "La règle doit exiger au moins une condition : présence ou BV minimum.",
+      "La règle doit exiger au moins une condition : présence ou volume minimum.",
     );
   }
 

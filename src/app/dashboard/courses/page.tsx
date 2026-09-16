@@ -74,7 +74,7 @@ export default async function CoursesPage(
                   </span>
                   {!course.accessible && (
                     <span className="text-primary text-xs font-medium">
-                      Non acheté
+                      Abonnement requis
                     </span>
                   )}
                 </CardContent>

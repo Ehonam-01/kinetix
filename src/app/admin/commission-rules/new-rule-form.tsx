@@ -10,7 +10,7 @@ import { createDirectSaleRuleAction } from "./actions";
 const TYPES = [
   { value: "FIXED", label: "Montant fixe (F CFA)" },
   { value: "PERCENTAGE", label: "% du prix payé" },
-  { value: "BV_PERCENTAGE", label: "% du Business Volume" },
+  { value: "BV_PERCENTAGE", label: "% du volume généré" },
 ] as const;
 
 export function NewRuleForm({

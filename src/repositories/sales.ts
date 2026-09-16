@@ -68,36 +68,6 @@ export async function listSalesForAdmin(
   }));
 }
 
-export type MemberPurchaseSummary = {
-  id: string;
-  courseTitle: string;
-  pricePaid: number;
-  status: "CONFIRMED" | "REFUNDED";
-  createdAt: Date;
-};
-
-// "Mes achats" (section 23 of the master prompt) — a customer's own
-// purchase history, available regardless of ambassador status.
-export async function listPurchasesForBuyer(
-  executor: Executor,
-  buyerUserId: string,
-): Promise<MemberPurchaseSummary[]> {
-  const rows = await executor
-    .select({
-      id: sales.id,
-      courseTitle: courses.title,
-      pricePaid: sales.pricePaid,
-      status: sales.status,
-      createdAt: sales.createdAt,
-    })
-    .from(sales)
-    .innerJoin(courses, eq(courses.id, sales.courseId))
-    .where(eq(sales.buyerUserId, buyerUserId))
-    .orderBy(desc(sales.createdAt));
-
-  return rows;
-}
-
 export type AttributedSaleSummary = {
   id: string;
   courseTitle: string;
@@ -107,10 +77,11 @@ export type AttributedSaleSummary = {
   createdAt: Date;
 };
 
-// "Mes ventes" (section 24) — sales an ambassador's own referral link
-// produced, distinct from listPurchasesForBuyer (their own purchases) and
-// from the commission ledger (dashboard/commissions/page.tsx, which shows
-// what was earned, not which sales earned it).
+// "Mes ventes" (section 24) — legacy per-course sales an ambassador's own
+// referral link produced, from before the subscription pivot (see
+// repositories/subscriptions.ts's listSubscriptionsForAmbassador, its
+// replacement going forward). Kept for historical data only — nothing
+// writes a new sales row anymore.
 export async function listSalesForAmbassador(
   executor: Executor,
   ambassadorUserId: string,
