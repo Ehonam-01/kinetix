@@ -15,9 +15,34 @@ export type SubscriptionStatus = {
   // calling Date.now() during a component's render, so "now" has to be read
   // once, at data-fetch time, same as `active` itself already was.
   daysLeft: number | null;
+  // Had a real subscription at some point (expiresAt !== null) and it's not
+  // currently active — a brand new member who never subscribed at all is
+  // NOT frozen (expiresAt is null for them): only a lapsed *renewal* blocks
+  // the account (explicit user decision — "si un compte n'est pas
+  // renouvelé"), never a first-timer who hasn't started yet.
+  frozen: boolean;
+  // Past PERMANENT_FREEZE_MONTHS since expiry with no renewal — self-service
+  // payment no longer lifts this (services/subscriptions/confirm-subscription-payment.ts
+  // still accepts the payment, but dashboard/layout.tsx's gate keeps blocking
+  // a permanently-frozen account regardless): only an admin-granted credit
+  // (services/subscriptions/grant-subscription-credit.ts) does. Deliberately
+  // never surfaced to the member (explicit user decision: "pas une
+  // information publique") — the UI shows the same generic blocked screen
+  // either way, see dashboard/layout.tsx.
+  permanentlyFrozen: boolean;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const PERMANENT_FREEZE_MONTHS = 3;
+
+// Calendar-month arithmetic, not a fixed-duration offset — same reasoning as
+// confirm-subscription-payment.ts's addOneYear (a fixed 30-day/month offset
+// drifts against real calendar months).
+function addMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + months);
+  return result;
+}
 
 // The most recently-expiring subscription row for a user tells the whole
 // story: expiresAt strictly grows with every renewal (see
@@ -35,14 +60,26 @@ export async function getSubscriptionStatus(
     orderBy: desc(subscriptions.expiresAt),
   });
   if (!latest) {
-    return { active: false, expiresAt: null, pricePaid: null, daysLeft: null };
+    return {
+      active: false,
+      expiresAt: null,
+      pricePaid: null,
+      daysLeft: null,
+      frozen: false,
+      permanentlyFrozen: false,
+    };
   }
   const now = Date.now();
+  const active = latest.expiresAt.getTime() > now;
   return {
-    active: latest.expiresAt.getTime() > now,
+    active,
     expiresAt: latest.expiresAt,
     pricePaid: latest.pricePaid,
     daysLeft: Math.ceil((latest.expiresAt.getTime() - now) / DAY_MS),
+    frozen: !active,
+    permanentlyFrozen:
+      !active &&
+      now > addMonths(latest.expiresAt, PERMANENT_FREEZE_MONTHS).getTime(),
   };
 }
 

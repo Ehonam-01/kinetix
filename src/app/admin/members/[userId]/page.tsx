@@ -9,6 +9,7 @@ import { listLevelProgress } from "@/repositories/member-levels";
 import { listMemberRewards } from "@/repositories/member-rewards";
 import { getNetworkView } from "@/repositories/network";
 import { findProfileById } from "@/repositories/profiles";
+import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import {
   Card,
   CardContent,
@@ -16,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GrantSubscriptionButton } from "./grant-subscription-button";
 import { StatusActionButton } from "./status-action-button";
 
 // See admin/members/page.tsx's comment — same relabel, same reason.
@@ -39,15 +41,23 @@ export default async function AdminMemberDetailPage(
   const member = await findProfileById(userId);
   if (!member) notFound();
 
-  const [email, balance, levelProgress, rewards, transactions, network] =
-    await Promise.all([
-      findAuthEmailByUserId(db, userId),
-      getBalance(db, userId),
-      listLevelProgress(db, userId),
-      listMemberRewards(db, userId),
-      listTransactions(db, userId, 10),
-      getNetworkView(db, userId, 2),
-    ]);
+  const [
+    email,
+    balance,
+    levelProgress,
+    rewards,
+    transactions,
+    network,
+    subscription,
+  ] = await Promise.all([
+    findAuthEmailByUserId(db, userId),
+    getBalance(db, userId),
+    listLevelProgress(db, userId),
+    listMemberRewards(db, userId),
+    listTransactions(db, userId, 10),
+    getNetworkView(db, userId, 2),
+    getSubscriptionStatus(db, userId),
+  ]);
 
   const currentLevel = levelProgress
     .filter((l) => l.status !== "LOCKED")
@@ -105,6 +115,26 @@ export default async function AdminMemberDetailPage(
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Abonnement</CardTitle>
+            <CardDescription>
+              {subscription.active
+                ? `Actif jusqu'au ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                : subscription.permanentlyFrozen
+                  ? `Compte gelé (paiement libre-service désactivé depuis plus de 3 mois). Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                  : subscription.frozen
+                    ? `Compte gelé, en attente de renouvellement. Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                    : "Jamais souscrit."}
+            </CardDescription>
+          </div>
+          {!subscription.active && (
+            <GrantSubscriptionButton userId={member.id} />
+          )}
+        </CardHeader>
+      </Card>
 
       {network && (
         <Card>

@@ -65,5 +65,11 @@ export async function confirmWalletSubscriptionAction(
   revalidatePath("/dashboard/subscription");
   revalidatePath("/dashboard/courses");
   revalidatePath("/dashboard");
+  // dashboard/layout.tsx reads subscription status to decide whether to
+  // render the frozen screen instead of {children} — without invalidating
+  // the layout itself, a member who just paid from that very screen (the
+  // wallet path is embedded there) would keep seeing it, same staleness bug
+  // fixed once already for the ambassador sidebar (become-ambassador/actions.ts).
+  revalidatePath("/dashboard", "layout");
   return { error: null };
 }
