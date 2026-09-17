@@ -36,7 +36,7 @@ const FAQS = [
   {
     question: "Comment sont calculées les commissions ?",
     answer:
-      "Les commissions sont calculées selon les règles du programme ambassadeur, notamment les ventes éligibles et le volume généré. Consultez les conditions du programme pour connaître les règles détaillées.",
+      "Les commissions sont calculées selon les règles du programme ambassadeur, notamment les souscriptions éligibles et le volume généré. Consultez les conditions du programme pour connaître les règles détaillées.",
   },
   {
     question: "Puis-je m'abonner sans lien de parrainage ?",

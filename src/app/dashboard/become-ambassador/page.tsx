@@ -24,17 +24,17 @@ export default async function BecomeAmbassadorPage(
   if (existing) redirect("/dashboard");
 
   const { sponsor } = await props.searchParams;
-  const defaultSponsorUsername = typeof sponsor === "string" ? sponsor : undefined;
+  const defaultSponsorUsername =
+    typeof sponsor === "string" ? sponsor : undefined;
 
   return (
     <Card className="mx-auto max-w-md">
       <CardHeader>
         <CardTitle>Devenir ambassadeur</CardTitle>
         <CardDescription>
-          Gratuit. Vous gardez l&apos;accès à vos formations achetées quoi
-          qu&apos;il arrive — rejoindre le programme ajoute un lien de
-          parrainage, une équipe et des commissions sur les ventes que vous
-          apportez.
+          Gratuit. Vous gardez l&apos;accès à votre abonnement quoi qu&apos;il
+          arrive — rejoindre le programme ajoute un lien de parrainage, une
+          équipe et des commissions sur les souscriptions que vous apportez.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -30,36 +30,36 @@ function FooterLink({ href, children }: { href?: string; children: string }) {
 const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
   [
     {
-      title: "Plateforme",
+      title: "Kinetix",
       links: [
         { label: "Accueil", href: "/" },
-        { label: "Formations", href: "#formations" },
-        { label: "À propos" },
+        { label: "Notre vision" },
         { label: "Contact" },
       ],
     },
     {
       title: "Apprendre",
       links: [
-        { label: "Toutes les formations", href: "#formations" },
-        { label: "Catégories" },
-        { label: "Certificats" },
+        { label: "Toutes les formations", href: "/#formations" },
+        { label: "Intelligence artificielle", href: "/#ia" },
+        { label: "Comment ça marche", href: "/#comment-ca-marche" },
       ],
     },
     {
-      title: "Ambassadeurs",
+      title: "Communauté",
       links: [
-        { label: "Programme ambassadeur", href: "#ambassadeurs" },
-        { label: "Conditions" },
-        { label: "Règles de rémunération" },
+        { label: "Communauté", href: "/#communaute" },
+        { label: "Mentorat", href: "/#communaute" },
+        { label: "Projets", href: "/#projets" },
+        { label: "Événements" },
       ],
     },
     {
-      title: "Support",
+      title: "Opportunités",
       links: [
-        { label: "FAQ", href: "#faq" },
-        { label: "Contact" },
-        { label: "Politique de remboursement" },
+        { label: "Opportunités", href: "/#projets" },
+        { label: "Programme ambassadeur", href: "/programme-ambassadeur" },
+        { label: "Collaborations" },
       ],
     },
     {

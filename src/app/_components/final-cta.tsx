@@ -15,11 +15,12 @@ export function FinalCta() {
             className="bg-background/10 absolute -top-24 -right-24 size-72 rounded-full blur-3xl"
           />
           <h2 className="relative text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Le futur n&apos;attend pas. Vous non plus.
+            Tu n&apos;as pas besoin d&apos;avoir toutes les réponses pour
+            commencer.
           </h2>
           <p className="text-primary-foreground/85 relative mx-auto mt-4 max-w-xl text-lg text-pretty">
-            Rejoignez le repère de la jeunesse qui apprend, se fait accompagner
-            et avance ensemble — pendant que le monde change.
+            Rejoins une communauté qui t&apos;aide à apprendre, rencontrer,
+            construire et avancer — pendant que le monde change.
           </p>
           <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <a

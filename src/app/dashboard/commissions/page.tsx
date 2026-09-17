@@ -6,9 +6,8 @@ import {
   getBalance,
   listTransactions,
 } from "@/repositories/financial-transactions";
-import { listSalesForAmbassador } from "@/repositories/sales";
+import { listSubscriptionsForAmbassador } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
-import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -20,7 +19,7 @@ const TYPE_LABEL: Record<string, string> = {
   DIRECT_COMMISSION: "Commission directe",
   LEVEL_1_BONUS: "Bonus fin de niveau 1",
   LEVEL_COMMISSION: "Commission de génération",
-  DIRECT_SALE_COMMISSION: "Commission sur vente directe",
+  DIRECT_SALE_COMMISSION: "Commission sur souscription directe",
   GENERATION_COMMISSION: "Commission de génération (volume)",
   COMMISSION_REVERSAL: "Commission annulée",
   REWARD: "Récompense en espèces",
@@ -30,11 +29,6 @@ const TYPE_LABEL: Record<string, string> = {
   ADJUSTMENT: "Ajustement",
   TRANSFER_SENT: "Transfert envoyé",
   TRANSFER_RECEIVED: "Transfert reçu",
-};
-
-const SALE_STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "Confirmée",
-  REFUNDED: "Remboursée",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -59,8 +53,8 @@ export default async function CommissionsPage() {
       where: eq(ambassadorProfiles.userId, profile.id),
     }),
   ]);
-  const attributedSales = ambassador
-    ? await listSalesForAmbassador(db, profile.id)
+  const attributedSubscriptions = ambassador
+    ? await listSubscriptionsForAmbassador(db, profile.id)
     : [];
 
   return (
@@ -137,40 +131,27 @@ export default async function CommissionsPage() {
 
       {ambassador && (
         <div className="space-y-3">
-          <h2 className="text-lg font-medium">Mes ventes</h2>
-          {attributedSales.length === 0 ? (
+          <h2 className="text-lg font-medium">Mes souscriptions</h2>
+          {attributedSubscriptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Aucune vente apportée par votre lien pour le moment.
+              Aucune souscription apportée par votre lien pour le moment.
             </p>
           ) : (
             <div className="divide-y rounded-xl border">
-              {attributedSales.map((s) => (
+              {attributedSubscriptions.map((s) => (
                 <div
                   key={s.id}
                   className="flex items-center justify-between px-4 py-3 text-sm"
                 >
                   <div>
-                    <p className="font-medium">{s.courseTitle}</p>
+                    <p className="font-medium">{s.buyerUsername}</p>
                     <p className="text-muted-foreground text-xs">
-                      Acheté par {s.buyerUsername} ·{" "}
                       {s.createdAt.toLocaleDateString("fr-FR", {
                         dateStyle: "medium",
                       })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span>{s.businessVolume.toLocaleString("fr-FR")} pts</span>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-xs font-medium",
-                        s.status === "CONFIRMED" &&
-                          "bg-green-600/10 text-green-600",
-                        s.status === "REFUNDED" && "bg-primary/10 text-primary",
-                      )}
-                    >
-                      {SALE_STATUS_LABEL[s.status] ?? s.status}
-                    </span>
-                  </div>
+                  <span>{s.businessVolume.toLocaleString("fr-FR")} pts</span>
                 </div>
               ))}
             </div>

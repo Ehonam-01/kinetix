@@ -3,9 +3,9 @@ import { Reveal } from "@/app/_components/reveal";
 
 const BENEFITS = [
   "Un lien de parrainage personnel à partager",
-  "Une commission sur chaque vente directe que tu apportes",
+  "Une commission sur chaque souscription directe que tu apportes",
   "Des commissions de génération sur le volume de ton équipe",
-  "Un tableau de bord pour suivre tes ventes et commissions",
+  "Un tableau de bord pour suivre tes souscriptions et commissions",
   "Des retraits vers mobile money",
   "Un parcours de progression, du niveau Bronze à Diamant",
 ];

@@ -30,7 +30,7 @@ export function PaHero() {
           <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty">
             Le programme ambassadeur Kinetix te permet de partager les
             formations que tu apprécies et de recevoir une commission à chaque
-            vente réelle que tu apportes.
+            souscription réelle que tu apportes.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
@@ -53,8 +53,8 @@ export function PaHero() {
             </a>
           </div>
           <p className="text-muted-foreground mt-6 text-sm">
-            Aucune commission sur les inscriptions. Uniquement sur les ventes
-            réelles.
+            Aucune commission sur les inscriptions. Uniquement sur les
+            souscriptions réelles.
           </p>
         </Reveal>
       </div>

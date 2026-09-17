@@ -67,39 +67,3 @@ export async function listSalesForAdmin(
     createdAt: r.createdAt,
   }));
 }
-
-export type AttributedSaleSummary = {
-  id: string;
-  courseTitle: string;
-  buyerUsername: string;
-  businessVolume: number;
-  status: "CONFIRMED" | "REFUNDED";
-  createdAt: Date;
-};
-
-// "Mes ventes" (section 24) — legacy per-course sales an ambassador's own
-// referral link produced, from before the subscription pivot (see
-// repositories/subscriptions.ts's listSubscriptionsForAmbassador, its
-// replacement going forward). Kept for historical data only — nothing
-// writes a new sales row anymore.
-export async function listSalesForAmbassador(
-  executor: Executor,
-  ambassadorUserId: string,
-): Promise<AttributedSaleSummary[]> {
-  const rows = await executor
-    .select({
-      id: sales.id,
-      courseTitle: courses.title,
-      buyerUsername: profiles.username,
-      businessVolume: sales.businessVolume,
-      status: sales.status,
-      createdAt: sales.createdAt,
-    })
-    .from(sales)
-    .innerJoin(courses, eq(courses.id, sales.courseId))
-    .innerJoin(profiles, eq(profiles.id, sales.buyerUserId))
-    .where(eq(sales.ambassadorUserId, ambassadorUserId))
-    .orderBy(desc(sales.createdAt));
-
-  return rows;
-}

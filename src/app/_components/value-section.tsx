@@ -34,7 +34,7 @@ const VALUES = [
 
 export function ValueSection() {
   return (
-    <section className="bg-muted/40 py-16 sm:py-24">
+    <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <h2 className="mx-auto max-w-2xl text-center text-3xl font-semibold tracking-tight text-balance sm:text-4xl">

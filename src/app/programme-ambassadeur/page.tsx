@@ -15,7 +15,7 @@ import { PaTrustNote } from "./_components/pa-trust-note";
 
 const TITLE = `Programme ambassadeur — ${SITE_NAME}`;
 const DESCRIPTION =
-  "Découvre le programme ambassadeur Kinetix Africa : recommande les formations, sois rémunéré sur les ventes réelles.";
+  "Découvre le programme ambassadeur Kinetix Africa : recommande les formations, sois rémunéré sur les souscriptions réelles.";
 
 export const metadata: Metadata = {
   title: TITLE,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, Rocket, Sprout } from "lucide-react";
+import { Compass, Rocket, Sprout, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "./reveal";
@@ -8,23 +8,30 @@ const STEPS = [
   {
     number: "01",
     icon: Compass,
-    title: "Choisissez",
+    title: "Oriente-toi",
     description:
-      "Explorez notre catalogue et choisissez la formation qui correspond à vos objectifs.",
+      "Dis-nous ce que tu veux accomplir, on t'aide à trouver ta direction.",
   },
   {
     number: "02",
     icon: Rocket,
-    title: "Apprenez",
+    title: "Apprends",
     description:
-      "Accédez immédiatement à votre formation et progressez à votre rythme.",
+      "Accède immédiatement aux formations qui correspondent à ton objectif.",
   },
   {
     number: "03",
-    icon: Sprout,
-    title: "Évoluez",
+    icon: Users,
+    title: "Rencontre",
     description:
-      "Transformez vos nouvelles connaissances en compétences et en opportunités.",
+      "Échange avec la communauté et trouve les bonnes personnes pour avancer.",
+  },
+  {
+    number: "04",
+    icon: Sprout,
+    title: "Avance",
+    description:
+      "Transforme tes nouvelles compétences en projets et en opportunités.",
   },
 ];
 
@@ -34,11 +41,11 @@ export function HowItWorks() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <h2 className="mx-auto max-w-2xl text-center text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Comment ça marche
+            Commencer est simple.
           </h2>
         </Reveal>
 
-        <div className="relative mt-14 grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-6">
+        <div className="relative mt-14 grid grid-cols-2 gap-10 sm:grid-cols-4 sm:gap-6">
           <div
             aria-hidden="true"
             className="border-border absolute top-8 right-0 left-0 hidden border-t border-dashed sm:block"
@@ -71,7 +78,7 @@ export function HowItWorks() {
               "h-12 px-6 text-base",
             )}
           >
-            Commencer à apprendre
+            Commencer maintenant
           </Link>
         </div>
       </div>

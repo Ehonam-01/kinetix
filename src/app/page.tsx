@@ -4,9 +4,13 @@ import { listPublishedCoursesForMarketing } from "@/repositories/courses";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
-import { WhyNowSection } from "./_components/why-now-section";
-import { FeaturedCourses } from "./_components/featured-courses";
+import { ProblemSection } from "./_components/problem-section";
 import { ValueSection } from "./_components/value-section";
+import { GoalSection } from "./_components/goal-section";
+import { FeaturedCourses } from "./_components/featured-courses";
+import { AiSection } from "./_components/ai-section";
+import { CommunityMentorshipSection } from "./_components/community-mentorship-section";
+import { ProjectsOpportunitiesSection } from "./_components/projects-opportunities-section";
 import { HowItWorks } from "./_components/how-it-works";
 import { LearnerAmbassadorSection } from "./_components/learner-ambassador-section";
 import { AmbassadorSection } from "./_components/ambassador-section";
@@ -53,9 +57,13 @@ export default async function HomePage() {
       <Navbar />
       <main>
         <HeroSection />
-        <WhyNowSection />
-        <FeaturedCourses courses={courses} />
+        <ProblemSection />
         <ValueSection />
+        <GoalSection />
+        <FeaturedCourses courses={courses} />
+        <AiSection />
+        <CommunityMentorshipSection />
+        <ProjectsOpportunitiesSection />
         <HowItWorks />
         <LearnerAmbassadorSection />
         <AmbassadorSection />

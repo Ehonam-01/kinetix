@@ -34,7 +34,8 @@ export function PaFinalCta() {
             </Link>
           </div>
           <p className="text-primary-foreground/80 relative mt-5 text-sm">
-            Commissions sur ventes réelles. Aucune obligation de recrutement.
+            Commissions sur souscriptions réelles. Aucune obligation de
+            recrutement.
           </p>
         </div>
       </Reveal>

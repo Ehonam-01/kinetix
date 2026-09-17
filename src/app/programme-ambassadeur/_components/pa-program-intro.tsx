@@ -11,7 +11,7 @@ const CAPACITIES = [
   { icon: Users, text: "Développer progressivement une communauté." },
   {
     icon: Share2,
-    text: "Être rémunéré lorsqu'une recommandation aboutit à une vente.",
+    text: "Être rémunéré lorsqu'une recommandation aboutit à une souscription.",
   },
 ];
 
@@ -55,7 +55,7 @@ export function PaProgramIntro() {
             </p>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
               Tu es rémunéré lorsqu&apos;une recommandation aboutit à une
-              véritable vente.
+              véritable souscription.
             </p>
           </div>
         </Reveal>

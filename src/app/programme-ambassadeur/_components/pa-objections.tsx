@@ -5,17 +5,17 @@ const OBJECTIONS = [
   {
     question: "Est-ce un MLM ?",
     answer:
-      "Kinetix possède une structure de recommandation et de commissions. Mais la rémunération est liée aux ventes réelles de formations, jamais au simple fait qu'une personne rejoigne le programme.",
+      "Kinetix possède une structure de recommandation et de commissions. Mais la rémunération est liée aux souscriptions réelles à l'abonnement, jamais au simple fait qu'une personne rejoigne le programme.",
   },
   {
     question: "Dois-je recruter pour gagner ?",
     answer:
-      "Non. Un ambassadeur peut générer une commission directe simplement en apportant une vente, sans jamais avoir à recruter qui que ce soit.",
+      "Non. Un ambassadeur peut générer une commission directe simplement en apportant une souscription, sans jamais avoir à recruter qui que ce soit.",
   },
   {
     question: "Combien puis-je gagner ?",
     answer:
-      "Il n'existe aucun montant garanti. Tes gains dépendent des ventes réellement générées, de ton activité et des règles en vigueur du programme.",
+      "Il n'existe aucun montant garanti. Tes gains dépendent des souscriptions réellement apportées, de ton activité et des règles en vigueur du programme.",
   },
   {
     question: "Est-ce garanti ?",

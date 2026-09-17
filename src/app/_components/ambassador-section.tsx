@@ -9,7 +9,7 @@ const STEPS = [
   { icon: UserPlus, label: "Devenez ambassadeur" },
   { icon: Link2, label: "Partagez vos liens" },
   { icon: Megaphone, label: "Recommandez les formations" },
-  { icon: ShoppingBag, label: "Générez des ventes" },
+  { icon: ShoppingBag, label: "Générez des souscriptions" },
   { icon: Wallet, label: "Recevez vos commissions" },
 ];
 
@@ -27,12 +27,12 @@ export function AmbassadorSection() {
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Transformez vos recommandations en opportunités.
+              Envie d&apos;aller plus loin avec Kinetix ?
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
               Vous aimez une formation et souhaitez la recommander ? Notre
               programme ambassadeur vous permet de partager les formations de la
-              plateforme et de recevoir des commissions sur les ventes
+              plateforme et de recevoir des commissions sur les souscriptions
               éligibles.
             </p>
           </div>

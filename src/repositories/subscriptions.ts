@@ -257,8 +257,9 @@ export type AmbassadorSubscriptionSummary = {
   createdAt: Date;
 };
 
-// "Souscriptions apportées" — the subscription pendant of
-// listSalesForAmbassador, used by the dashboard overview's ambassador view.
+// "Souscriptions apportées" — used by the dashboard overview and the
+// commissions page's ambassador view (the retired listSalesForAmbassador's
+// replacement, now that subscriptions are the only paid product).
 export async function listSubscriptionsForAmbassador(
   executor: Executor,
   ambassadorUserId: string,
