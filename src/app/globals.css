@@ -43,6 +43,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand-accent-foreground: var(--brand-accent-foreground);
+  --color-brand-accent: var(--brand-accent);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -89,6 +91,14 @@
   --sidebar-accent-foreground: oklch(0.379 0.146 265.5);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.623 0.188 262.4);
+  /* Marketing-only warm accent ("Les bonnes opportunités", CTAs, active
+     states on the public site) — kept separate from --primary rather than
+     replacing it, since --primary still drives the authenticated
+     dashboard/admin UI untouched by this brand pass. Same value in both
+     themes (an amber this saturated reads fine on both a white and a
+     near-black ground, no per-theme tuning needed). */
+  --brand-accent: oklch(0.77 0.19 70);
+  --brand-accent-foreground: oklch(0.2 0.04 70);
 }
 
 .dark {

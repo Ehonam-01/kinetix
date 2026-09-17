@@ -3,8 +3,10 @@ import {
   Briefcase,
   Compass,
   Globe,
+  Handshake,
   HelpCircle,
   Lightbulb,
+  Network,
   Rocket,
   Sparkles,
   type LucideIcon,
@@ -48,6 +50,16 @@ const GOAL_DETAILS: Record<
     description: "Trouve les compétences et les ressources pour avancer.",
     href: "#formations",
   },
+  mentor: {
+    icon: Handshake,
+    description: "Apprends auprès de quelqu'un qui a déjà fait le chemin.",
+    href: "#communaute",
+  },
+  reseau: {
+    icon: Network,
+    description: "Rencontre d'autres jeunes ambitieux et élargis ton cercle.",
+    href: "#communaute",
+  },
   incertain: {
     icon: HelpCircle,
     description: "Aide-moi à trouver ma direction.",
@@ -66,13 +78,18 @@ const GOALS = GOAL_OPTIONS.map((goal) => ({
 // around the visitor's goal before showing a catalog, same principle a
 // real quiz would serve later without this section needing to change
 // shape when that backend exists.
+//
+// "incertain" gets its own accent-tinted treatment (not just another grid
+// cell) — it's the one path aimed at someone who can't yet name a goal,
+// which is central to how Kinetix wants to be found, not an edge case to
+// bury at the end of a row.
 export function GoalSection() {
   return (
-    <section className="bg-muted/40 py-16 sm:py-24">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-muted/40 py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
               Que veux-tu accomplir ?
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
@@ -82,23 +99,43 @@ export function GoalSection() {
         </Reveal>
 
         <Reveal delayMs={100}>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {GOALS.map((goal) => (
-              <Link
-                key={goal.title}
-                href={goal.href}
-                className="border-border bg-card hover:border-primary/40 hover:bg-primary/5 group flex flex-col items-start gap-2 rounded-2xl border p-4 transition-colors sm:p-5"
-              >
-                <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex size-9 items-center justify-center rounded-lg transition-colors">
-                  <goal.icon className="size-4.5" />
-                </div>
-                <p className="mt-1 text-sm font-semibold">{goal.title}</p>
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  {goal.description}
-                </p>
-              </Link>
-            ))}
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {GOALS.filter((goal) => goal.title !== "Je ne sais pas encore").map(
+              (goal) => (
+                <Link
+                  key={goal.title}
+                  href={goal.href}
+                  className="border-border bg-card hover:border-brand-accent/50 hover:bg-brand-accent/5 group flex flex-col items-start gap-3 rounded-2xl border p-5 transition-colors sm:p-6"
+                >
+                  <div className="bg-brand-accent/10 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-accent-foreground flex size-10 items-center justify-center rounded-xl transition-colors">
+                    <goal.icon className="size-5" />
+                  </div>
+                  <p className="mt-1 text-base font-semibold">{goal.title}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {goal.description}
+                  </p>
+                </Link>
+              ),
+            )}
           </div>
+        </Reveal>
+
+        <Reveal delayMs={180}>
+          <Link
+            href="/register"
+            className="border-brand-accent/30 bg-brand-accent/10 hover:bg-brand-accent/15 mt-6 flex flex-col items-center gap-3 rounded-2xl border p-8 text-center transition-colors sm:flex-row sm:text-left"
+          >
+            <div className="bg-brand-accent text-brand-accent-foreground flex size-12 shrink-0 items-center justify-center rounded-xl">
+              <HelpCircle className="size-6" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold">Je ne sais pas encore</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                C&apos;est normal, et c&apos;est même pour ça que Kinetix
+                existe — aide-moi à trouver ma direction.
+              </p>
+            </div>
+          </Link>
         </Reveal>
       </div>
     </section>

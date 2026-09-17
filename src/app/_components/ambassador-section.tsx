@@ -30,10 +30,8 @@ export function AmbassadorSection() {
               Envie d&apos;aller plus loin avec Kinetix ?
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Vous aimez une formation et souhaitez la recommander ? Notre
-              programme ambassadeur vous permet de partager les formations de la
-              plateforme et de recevoir des commissions sur les souscriptions
-              éligibles.
+              Recommande Kinetix à ton réseau et sois récompensé lorsque les
+              personnes que tu parraines rejoignent la communauté.
             </p>
           </div>
         </Reveal>
@@ -48,7 +46,7 @@ export function AmbassadorSection() {
                 <span className="text-muted-foreground/50 text-xs font-semibold">
                   {i + 1}
                 </span>
-                <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
+                <div className="bg-brand-accent/10 text-brand-accent flex size-9 items-center justify-center rounded-lg">
                   <step.icon className="size-4.5" />
                 </div>
                 <p className="text-xs leading-snug font-medium">{step.label}</p>
@@ -59,8 +57,8 @@ export function AmbassadorSection() {
 
         <Reveal delayMs={150}>
           <p className="text-muted-foreground mx-auto mt-8 max-w-xl text-center text-sm leading-relaxed">
-            Les ambassadeurs disposent également d&apos;un système de
-            progression basé notamment sur le volume commercial généré.
+            Le programme prévoit aussi des bonus liés à la performance de ton
+            équipe, en plus des commissions sur tes propres recommandations.
           </p>
         </Reveal>
 

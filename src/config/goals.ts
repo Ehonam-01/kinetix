@@ -9,6 +9,8 @@ export const GOAL_OPTIONS = [
   { value: "competence", label: "Développer une compétence" },
   { value: "freelance", label: "Devenir freelance" },
   { value: "projet", label: "Développer mon projet" },
+  { value: "mentor", label: "Trouver un mentor" },
+  { value: "reseau", label: "Développer mon réseau" },
   { value: "incertain", label: "Je ne sais pas encore" },
 ] as const;
 

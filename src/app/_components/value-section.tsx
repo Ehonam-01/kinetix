@@ -1,65 +1,63 @@
-import { Compass, Handshake, Sprout, Telescope } from "lucide-react";
+import { BookOpen, Handshake, Rocket, Users } from "lucide-react";
 import { Reveal } from "./reveal";
 
-const VALUES = [
+const PILLARS = [
   {
-    number: "01",
-    icon: Compass,
-    title: "Un repère",
+    icon: BookOpen,
+    title: "Apprendre",
     description:
-      "Un cap clair dans un monde qui change vite : on vous aide à savoir où concentrer vos efforts.",
+      "Des formations pratiques, pensées pour être appliquées tout de suite — pas seulement regardées.",
   },
   {
-    number: "02",
     icon: Handshake,
-    title: "Du mentorat",
+    title: "Être accompagné",
     description:
-      "Apprenez auprès de personnes qui ont vécu ce que vous voulez vivre, pas seulement des vidéos.",
+      "Des mentors qui ont vécu ce que tu veux vivre, pour ne jamais avancer à l'aveugle.",
   },
   {
-    number: "03",
-    icon: Telescope,
-    title: "De la découverte",
+    icon: Users,
+    title: "Rencontrer",
     description:
-      "Explorez plusieurs domaines, testez vos talents et trouvez ce qui vous anime vraiment.",
+      "Une communauté de jeunes ambitieux à qui parler, avec qui construire, sur qui compter.",
   },
   {
-    number: "04",
-    icon: Sprout,
-    title: "L'éclosion de talents",
+    icon: Rocket,
+    title: "Construire",
     description:
-      "Des formations pratiques pensées pour transformer vos idées en compétences, et vos compétences en opportunités.",
+      "Transforme tes compétences en projets concrets, et tes projets en opportunités.",
   },
 ];
 
+// Four pillars, deliberately presented as a big editorial 2x2 rather than a
+// tight 4-up card row — the previous version (small icon + "01"/"02" corner
+// numbers, tight padding) was the single clearest instance of the
+// "dashboard feature grid" look this pass moves away from.
 export function ValueSection() {
   return (
-    <section className="py-16 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <h2 className="mx-auto max-w-2xl text-center text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-            Plus qu&apos;une plateforme de formation. Un repère pour grandir.
+          <h2 className="mx-auto max-w-3xl text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+            Plus qu&apos;une plateforme de formation.{" "}
+            <span className="text-brand-accent">Un espace pour grandir.</span>
           </h2>
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {VALUES.map((value, i) => (
-            <Reveal key={value.title} delayMs={i * 80}>
-              <div className="border-border bg-card h-full rounded-2xl border p-6">
-                <div className="flex items-center justify-between">
-                  <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl">
-                    <value.icon className="size-5" />
-                  </div>
-                  <span className="text-muted-foreground/50 text-sm font-semibold">
-                    {value.number}
-                  </span>
+        <div className="mt-16 grid grid-cols-1 gap-x-12 gap-y-14 sm:grid-cols-2">
+          {PILLARS.map((pillar, i) => (
+            <Reveal key={pillar.title} delayMs={i * 80}>
+              <div className="flex items-start gap-5">
+                <div className="bg-brand-accent/10 text-brand-accent flex size-14 shrink-0 items-center justify-center rounded-2xl">
+                  <pillar.icon className="size-7" />
                 </div>
-                <h3 className="font-heading mt-4 font-semibold">
-                  {value.title}
-                </h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {value.description}
-                </p>
+                <div>
+                  <h3 className="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-muted-foreground mt-2 text-base leading-relaxed sm:text-lg">
+                    {pillar.description}
+                  </p>
+                </div>
               </div>
             </Reveal>
           ))}

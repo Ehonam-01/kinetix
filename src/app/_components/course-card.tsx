@@ -12,9 +12,9 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
   return (
     <Link
       href={`/dashboard/courses/${course.id}`}
-      className="group border-border bg-card hover:border-primary/40 flex flex-col overflow-hidden rounded-2xl border transition-colors"
+      className="group border-border bg-card hover:border-brand-accent/40 flex flex-col overflow-hidden rounded-3xl border shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="from-primary/15 to-accent relative flex aspect-video items-center justify-center overflow-hidden bg-linear-to-br">
+      <div className="from-brand-accent/15 to-accent relative flex aspect-video items-center justify-center overflow-hidden bg-linear-to-br">
         {course.thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- external, unoptimized course thumbnails; no next.config.ts remotePatterns configured yet since no real thumbnail exists in the catalog
           <img
@@ -23,7 +23,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
             className="size-full object-cover"
           />
         ) : (
-          <GraduationCap className="text-primary/50 size-12" />
+          <GraduationCap className="text-brand-accent/50 size-12" />
         )}
         {course.category && (
           <span className="bg-background/90 text-foreground absolute top-3 left-3 rounded-full px-2.5 py-1 text-xs font-medium">
@@ -33,7 +33,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="group-hover:text-primary font-heading text-base font-semibold transition-colors">
+        <h3 className="group-hover:text-brand-accent font-heading text-base font-semibold transition-colors">
           {course.title}
         </h3>
         {course.description && (
@@ -59,7 +59,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
           <span className="text-muted-foreground text-xs font-medium">
             Inclus dans l&apos;abonnement
           </span>
-          <span className="text-primary text-sm font-medium">
+          <span className="text-brand-accent text-sm font-medium">
             Voir la formation →
           </span>
         </div>

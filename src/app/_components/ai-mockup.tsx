@@ -7,9 +7,9 @@ import { Sparkles, Wand2 } from "lucide-react";
 // chips.
 export function AiMockup() {
   return (
-    <div className="border-border bg-card mx-auto max-w-md rounded-2xl border p-5 shadow-2xl lg:max-w-none">
+    <div className="border-border bg-card mx-auto max-w-lg rounded-2xl border p-6 shadow-2xl lg:max-w-none">
       <div className="flex items-center gap-2 pb-4">
-        <span className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-lg">
+        <span className="bg-brand-accent/10 text-brand-accent flex size-7 items-center justify-center rounded-lg">
           <Sparkles className="size-3.5" />
         </span>
         <span className="text-sm font-medium">Assistant IA</span>
@@ -21,7 +21,7 @@ export function AiMockup() {
 
       <div className="border-border bg-background mt-3 w-fit max-w-[92%] rounded-2xl rounded-tl-sm border px-4 py-3 text-sm leading-relaxed">
         <p className="flex items-center gap-1.5 font-medium">
-          <Wand2 className="text-primary size-3.5" />
+          <Wand2 className="text-brand-accent size-3.5" />
           Voici un point de départ
         </p>
         <ol className="text-muted-foreground mt-1.5 list-decimal space-y-1 pl-4">

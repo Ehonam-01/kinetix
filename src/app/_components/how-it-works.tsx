@@ -40,12 +40,12 @@ export function HowItWorks() {
     <section id="comment-ca-marche" className="scroll-mt-16 py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <h2 className="mx-auto max-w-2xl text-center text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          <h2 className="mx-auto max-w-2xl text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             Commencer est simple.
           </h2>
         </Reveal>
 
-        <div className="relative mt-14 grid grid-cols-2 gap-10 sm:grid-cols-4 sm:gap-6">
+        <div className="relative mt-16 grid grid-cols-2 gap-10 sm:grid-cols-4 sm:gap-6">
           <div
             aria-hidden="true"
             className="border-border absolute top-8 right-0 left-0 hidden border-t border-dashed sm:block"
@@ -53,7 +53,7 @@ export function HowItWorks() {
           {STEPS.map((step, i) => (
             <Reveal key={step.title} delayMs={i * 100}>
               <div className="relative flex flex-col items-center text-center">
-                <div className="bg-primary text-primary-foreground border-background relative z-10 flex size-16 items-center justify-center rounded-2xl border-4 shadow-sm">
+                <div className="bg-brand-accent text-brand-accent-foreground border-background relative z-10 flex size-16 items-center justify-center rounded-2xl border-4 shadow-sm">
                   <step.icon className="size-7" />
                 </div>
                 <span className="text-muted-foreground/60 mt-4 text-xs font-semibold tracking-wide">
@@ -75,7 +75,7 @@ export function HowItWorks() {
             href="/register"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "h-12 px-6 text-base",
+              "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 h-12 px-6 text-base",
             )}
           >
             Commencer maintenant

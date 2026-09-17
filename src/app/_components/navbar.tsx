@@ -62,7 +62,13 @@ export function Navbar() {
           >
             Se connecter
           </Link>
-          <Link href="/register" className={cn(buttonVariants({ size: "lg" }))}>
+          <Link
+            href="/register"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90",
+            )}
+          >
             Nous rejoindre
           </Link>
           <ThemeToggle />
@@ -106,7 +112,10 @@ export function Navbar() {
             </Link>
             <Link
               href="/register"
-              className={cn(buttonVariants(), "w-full")}
+              className={cn(
+                buttonVariants(),
+                "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 w-full",
+              )}
               onClick={() => setMenuOpen(false)}
             >
               Nous rejoindre

@@ -16,13 +16,14 @@ export function FeaturedCourses({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Les formations : la base de tout.
+            <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+              Les formations : un moyen de progresser, pas toute
+              l&apos;histoire.
             </h2>
-            <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Chaque trajectoire solide commence par des compétences concrètes.
-              Nos formations sont pensées pour être appliquées tout de suite,
-              pas seulement regardées.
+            <p className="text-muted-foreground mt-5 text-xl leading-relaxed text-pretty">
+              Chaque trajectoire solide commence par des compétences
+              concrètes, pensées pour être appliquées tout de suite — pas
+              seulement regardées.
             </p>
           </div>
         </Reveal>
@@ -55,7 +56,7 @@ export function FeaturedCourses({
             <div className="mt-10 text-center">
               <a
                 href="#formations"
-                className="text-primary inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+                className="text-brand-accent inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
               >
                 Voir toutes les formations
                 <ArrowRight className="size-4" />

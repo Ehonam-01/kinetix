@@ -1,74 +1,68 @@
 import { CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { GridBackdrop } from "./grid-backdrop";
-import { ProductMockup } from "./product-mockup";
 import { Reveal } from "./reveal";
 
+// Text colors here are hard-coded to white/amber rather than the theme's
+// text-foreground/text-muted-foreground tokens — the section always sits on
+// the same dark photo overlay regardless of light/dark site theme, same
+// reasoning as final-cta.tsx's primary-gradient band. Only the third line
+// carries the brand-accent color (never multiple words/lines at once) —
+// see globals.css for why this is a separate token from --primary.
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden">
-      <GridBackdrop />
-      <span
-        aria-hidden="true"
-        className="bg-primary/60 absolute top-24 left-[15%] size-1.5 rounded-full"
-      />
-      <span
-        aria-hidden="true"
-        className="bg-primary/40 absolute top-40 right-[12%] size-1 rounded-full"
+      <Image
+        src="/hero2.png"
+        alt=""
+        fill
+        priority
+        className="object-cover"
       />
       <div
         aria-hidden="true"
-        className="bg-primary/15 absolute top-0 -right-40 size-128 rounded-full blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="bg-accent absolute -bottom-24 -left-40 size-112 rounded-full blur-3xl"
+        className="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/85"
       />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:py-24">
+      <div className="relative mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:px-8">
         <Reveal>
-          <div className="max-w-xl">
-            <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Les bonnes compétences. Les bonnes personnes. Les bonnes
-              opportunités.
-            </h1>
-            <p className="text-muted-foreground mt-6 text-lg leading-relaxed text-pretty">
-              L&apos;intelligence artificielle redistribue déjà les cartes de
-              l&apos;emploi. Kinetix Africa donne à la jeunesse les
-              compétences pour s&apos;adapter, les mentors pour ne pas
-              avancer seule, et les opportunités pour transformer cette
-              préparation en résultats concrets.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#formations"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "h-12 px-6 text-base",
-                )}
-              >
-                Découvrir les formations
-              </a>
-              <a
-                href="#comment-ca-marche"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-12 px-6 text-base",
-                )}
-              >
-                Comment ça marche ?
-              </a>
-            </div>
-            <p className="text-muted-foreground mt-6 flex items-center gap-2 text-sm">
-              <CheckCircle2 className="text-primary size-4 shrink-0" />
-              Formations pratiques. Mentorat réel. Une communauté qui avance.
-            </p>
+          <h1 className="text-shadow-lg text-shadow-black/60 text-4xl leading-[1.1] font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <span className="block">Les bonnes compétences.</span>
+            <span className="block">Les bonnes personnes.</span>
+            <span className="text-brand-accent block">
+              Les bonnes opportunités.
+            </span>
+          </h1>
+          <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-pretty text-white/80">
+            Kinetix t&apos;aide à développer les compétences qui comptent,
+            rencontrer les bonnes personnes et transformer ton potentiel en
+            projets et opportunités.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a
+              href="/register"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 h-12 px-6 text-base",
+              )}
+            >
+              Rejoindre Kinetix
+            </a>
+            <a
+              href="#communaute"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-12 border-white/30 bg-white/5 px-6 text-base text-white hover:bg-white/10",
+              )}
+            >
+              Découvrir la communauté
+            </a>
           </div>
-        </Reveal>
-
-        <Reveal delayMs={150}>
-          <ProductMockup />
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-white/70">
+            <CheckCircle2 className="text-brand-accent size-4 shrink-0" />
+            Formations pratiques. Mentorat réel. Une communauté qui avance.
+          </p>
         </Reveal>
       </div>
     </section>
