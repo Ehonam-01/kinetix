@@ -105,7 +105,7 @@ export function GoalSection() {
                 <Link
                   key={goal.title}
                   href={goal.href}
-                  className="border-border bg-card hover:border-brand-accent/50 hover:bg-brand-accent/5 group flex flex-col items-start gap-3 rounded-2xl border p-5 transition-colors sm:p-6"
+                  className="border-border bg-card hover:border-brand-accent/50 hover:bg-brand-accent/5 group flex flex-col items-center gap-3 rounded-2xl border p-5 text-center transition-colors sm:items-start sm:p-6 sm:text-left"
                 >
                   <div className="bg-brand-accent/10 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-accent-foreground flex size-10 items-center justify-center rounded-xl transition-colors">
                     <goal.icon className="size-5" />
