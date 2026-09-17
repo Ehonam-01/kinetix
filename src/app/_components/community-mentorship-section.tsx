@@ -16,7 +16,7 @@ export function CommunityMentorshipSection() {
             "L'annuaire des membres est disponible : découvre qui apprend, quels objectifs ils poursuivent et quelles compétences ils développent.",
           href: "/dashboard/community",
           image: {
-            src: "/community-photo.jpg",
+            src: "/community-photo.png",
             alt: "Membres de la communauté Kinetix qui échangent",
             brief:
               "Photo ou capture : des membres réels qui discutent, collaborent ou se rencontrent.",
