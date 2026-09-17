@@ -45,7 +45,7 @@ export function HowItWorks() {
           </h2>
         </Reveal>
 
-        <div className="relative mt-16 grid grid-cols-2 gap-10 sm:grid-cols-4 sm:gap-6">
+        <div className="relative mt-16 grid grid-cols-1 gap-10 sm:grid-cols-4 sm:gap-6">
           <div
             aria-hidden="true"
             className="border-border absolute top-8 right-0 left-0 hidden border-t border-dashed sm:block"
