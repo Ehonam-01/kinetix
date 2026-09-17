@@ -30,14 +30,15 @@ export function HeroSection() {
         <Reveal>
           <div className="max-w-xl">
             <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Le repère de celles et ceux qui se préparent à l&apos;avenir.
+              Les bonnes compétences. Les bonnes personnes. Les bonnes
+              opportunités.
             </h1>
             <p className="text-muted-foreground mt-6 text-lg leading-relaxed text-pretty">
-              L&apos;intelligence artificielle rebat déjà les cartes du monde du
-              travail. Kinetix Africa est l&apos;endroit où la jeunesse
-              développe des compétences concrètes, trouve des mentors et rejoint
-              une communauté qui avance — pour ne jamais subir le changement,
-              mais s&apos;y préparer.
+              L&apos;intelligence artificielle redistribue déjà les cartes de
+              l&apos;emploi. Kinetix Africa donne à la jeunesse les
+              compétences pour s&apos;adapter, les mentors pour ne pas
+              avancer seule, et les opportunités pour transformer cette
+              préparation en résultats concrets.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
