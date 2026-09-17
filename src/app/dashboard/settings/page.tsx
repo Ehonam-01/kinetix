@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/services/auth/current-user";
 import {
   Card,
@@ -6,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CommunityProfileForm } from "./community-profile-form";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 
@@ -38,6 +40,26 @@ export default async function SettingsPage() {
             username={profile.username}
             phone={profile.phone ?? ""}
             country={profile.country ?? ""}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Profil communautaire</CardTitle>
+          <CardDescription>
+            Visible par les autres membres dans{" "}
+            <Link href="/dashboard/community" className="underline">
+              l&apos;annuaire
+            </Link>
+            .
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CommunityProfileForm
+            bio={profile.bio ?? ""}
+            goal={profile.goal ?? ""}
+            skills={profile.skills ?? []}
           />
         </CardContent>
       </Card>

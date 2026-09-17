@@ -7,55 +7,58 @@ import {
   Lightbulb,
   Rocket,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
+import { GOAL_OPTIONS, type GoalValue } from "@/config/goals";
 import { Reveal } from "./reveal";
 
-const GOALS = [
-  {
+const GOAL_DETAILS: Record<
+  GoalValue,
+  { icon: LucideIcon; description: string; href: string }
+> = {
+  emploi: {
     icon: Briefcase,
-    title: "Trouver un emploi",
     description:
       "Développe les compétences et le profil qui font la différence.",
     href: "#formations",
   },
-  {
+  entreprendre: {
     icon: Rocket,
-    title: "Entreprendre",
     description: "Passe de l'idée à un projet concret.",
     href: "#formations",
   },
-  {
+  ia: {
     icon: Sparkles,
-    title: "Maîtriser l'IA",
     description:
       "Apprends à utiliser l'intelligence artificielle dans ton travail.",
     href: "#formations",
   },
-  {
+  competence: {
     icon: Lightbulb,
-    title: "Développer une compétence",
     description: "Apprends une compétence pratique et valorisable.",
     href: "#formations",
   },
-  {
+  freelance: {
     icon: Globe,
-    title: "Devenir freelance",
     description: "Construis un profil capable de travailler avec des clients.",
     href: "#formations",
   },
-  {
+  projet: {
     icon: Compass,
-    title: "Développer mon projet",
     description: "Trouve les compétences et les ressources pour avancer.",
     href: "#formations",
   },
-  {
+  incertain: {
     icon: HelpCircle,
-    title: "Je ne sais pas encore",
     description: "Aide-moi à trouver ma direction.",
     href: "/register",
   },
-];
+};
+
+const GOALS = GOAL_OPTIONS.map((goal) => ({
+  title: goal.label,
+  ...GOAL_DETAILS[goal.value],
+}));
 
 // No segmentation engine exists yet behind this — every card is a real,
 // working link (mostly #formations, see the "why" below), never a dead

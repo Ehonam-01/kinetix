@@ -7,13 +7,14 @@ export function CommunityMentorshipSection() {
       id="communaute"
       eyebrow="Communauté & mentorat"
       title="Les bonnes opportunités commencent souvent par les bonnes rencontres."
-      description="Rencontrer d'autres jeunes ambitieux, partager son expérience, trouver un mentor pour ne pas avancer seul — c'est la prochaine brique de Kinetix."
+      description="Rencontrer d'autres jeunes ambitieux, partager son expérience, trouver un mentor pour ne pas avancer seul."
       cards={[
         {
           icon: Users2,
           title: "Communauté",
           description:
-            "Échanger avec d'autres membres, demander conseil, trouver des collaborateurs et partager ses projets.",
+            "L'annuaire des membres est disponible : découvre qui apprend, quels objectifs ils poursuivent et quelles compétences ils développent.",
+          href: "/dashboard/community",
         },
         {
           icon: Handshake,

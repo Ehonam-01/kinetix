@@ -1,4 +1,5 @@
 import {
+  jsonb,
   pgEnum,
   pgSchema,
   pgTable,
@@ -39,6 +40,16 @@ export const profiles = pgTable("profiles", {
   country: text("country"),
   role: profileRoleEnum("role").notNull().default("USER"),
   status: profileStatusEnum("status").notNull().default("PENDING_PAYMENT"),
+  // Community directory fields (Phase B, first building block) — all
+  // optional and self-service (dashboard/settings), never required at
+  // registration. goal stores one of config/goals.ts's GOAL_OPTIONS
+  // values, same taxonomy the homepage's "Que veux-tu accomplir ?" picker
+  // uses, so a member's stated goal and the marketing copy never drift
+  // apart. No avatar/photo field yet — no upload infra exists for it,
+  // initials-based avatars cover v1.
+  bio: text("bio"),
+  goal: text("goal"),
+  skills: jsonb("skills").$type<string[]>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -8,6 +8,11 @@ export type ComingSoonCard = {
   icon: LucideIcon;
   title: string;
   description: string;
+  // When set, the card links to a real, live feature instead of showing
+  // the "Bientôt" badge — lets this shared shell host a mix of shipped and
+  // not-yet-shipped cards (e.g. Communauté is live, Mentorat isn't) without
+  // ever showing "coming soon" on something that already exists.
+  href?: string;
 };
 
 // Shared shell for the two "vision" sections that don't have a real
@@ -54,25 +59,43 @@ export function ComingSoonSection({
 
         <Reveal delayMs={100}>
           <div className="mx-auto mt-10 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-            {cards.map((card) => (
-              <div
-                key={card.title}
-                className="border-border bg-card relative rounded-2xl border p-6"
-              >
-                <span className="bg-primary/10 text-primary absolute top-5 right-5 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase">
-                  Bientôt
-                </span>
-                <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl">
-                  <card.icon className="size-5" />
+            {cards.map((card) => {
+              const content = (
+                <>
+                  <span
+                    className={cn(
+                      "absolute top-5 right-5 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase",
+                      card.href
+                        ? "bg-green-600/10 text-green-600"
+                        : "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {card.href ? "Disponible" : "Bientôt"}
+                  </span>
+                  <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl">
+                    <card.icon className="size-5" />
+                  </div>
+                  <h3 className="font-heading mt-4 font-semibold">
+                    {card.title}
+                  </h3>
+                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                    {card.description}
+                  </p>
+                </>
+              );
+              const className =
+                "border-border bg-card relative rounded-2xl border p-6 transition-colors" +
+                (card.href ? " hover:border-primary/40" : "");
+              return card.href ? (
+                <Link key={card.title} href={card.href} className={className}>
+                  {content}
+                </Link>
+              ) : (
+                <div key={card.title} className={className}>
+                  {content}
                 </div>
-                <h3 className="font-heading mt-4 font-semibold">
-                  {card.title}
-                </h3>
-                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {card.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Reveal>
 

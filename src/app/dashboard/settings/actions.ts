@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { resetPasswordSchema } from "@/schemas/auth";
+import { updateCommunityProfileSchema } from "@/schemas/community-profile";
 import { updateProfileSchema } from "@/schemas/profile";
 import { requireUser } from "@/services/auth/current-user";
 import { updatePassword } from "@/services/auth/update-password";
+import { updateCommunityProfile } from "@/services/profile/update-community-profile";
 import { updateProfile } from "@/services/profile/update-profile";
 
 export async function updateProfileAction(input: unknown) {
@@ -20,6 +22,21 @@ export async function updateProfileAction(input: unknown) {
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function updateCommunityProfileAction(input: unknown) {
+  const { profile } = await requireUser();
+
+  const parsed = updateCommunityProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
+  }
+
+  await updateCommunityProfile(profile.id, parsed.data);
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/community");
   return { error: null };
 }
 

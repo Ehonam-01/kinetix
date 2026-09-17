@@ -58,3 +58,20 @@ export async function updateProfileFields(
 
   return updated;
 }
+
+// Self-service edit of the community-directory fields (dashboard/settings) —
+// a separate function from updateProfileFields on purpose: these are a
+// distinct concern (how you present yourself to other members) from
+// identity fields, edited from their own settings card.
+export async function updateCommunityProfileFields(
+  userId: string,
+  values: { bio: string | null; goal: string | null; skills: string[] },
+) {
+  const [updated] = await db
+    .update(profiles)
+    .set(values)
+    .where(eq(profiles.id, userId))
+    .returning();
+
+  return updated;
+}

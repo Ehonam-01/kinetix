@@ -267,6 +267,13 @@
       "when": 1789546290891,
       "tag": "0037_subscription_expiry_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1789644282383,
+      "tag": "0038_community_profile_fields",
+      "breakpoints": true
     }
   ]
 }
