@@ -33,7 +33,10 @@ export function AiSection() {
             </p>
             <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {USES.map((use) => (
-                <li key={use.label} className="flex items-center gap-3">
+                <li
+                  key={use.label}
+                  className="flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left"
+                >
                   <span className="bg-brand-accent/10 text-brand-accent flex size-9 shrink-0 items-center justify-center rounded-lg">
                     <use.icon className="size-4.5" />
                   </span>

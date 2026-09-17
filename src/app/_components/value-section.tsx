@@ -46,7 +46,7 @@ export function ValueSection() {
         <div className="mt-16 grid grid-cols-1 gap-x-12 gap-y-14 sm:grid-cols-2">
           {PILLARS.map((pillar, i) => (
             <Reveal key={pillar.title} delayMs={i * 80}>
-              <div className="flex items-start gap-5">
+              <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-start sm:text-left">
                 <div className="bg-brand-accent/10 text-brand-accent flex size-14 shrink-0 items-center justify-center rounded-2xl">
                   <pillar.icon className="size-7" />
                 </div>
