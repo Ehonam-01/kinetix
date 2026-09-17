@@ -14,33 +14,40 @@ export default async function DashboardLayout({
 }: LayoutProps<"/dashboard">) {
   const { profile } = await requireUser();
 
+  // Subscription status and ambassador lookup don't depend on each other —
+  // run them together instead of back-to-back so the shell only waits on
+  // whichever round trip is slower, not the sum of both. The ambassador
+  // query still fires even when it'll turn out to be unneeded (frozen
+  // admin-exempt path below) — cheap enough to trade for the common case.
+  const [status, ambassador] = await Promise.all([
+    profile.role !== "ADMIN"
+      ? getSubscriptionStatus(db, profile.id)
+      : Promise.resolve(null),
+    db.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, profile.id),
+    }),
+  ]);
+
   // A lapsed renewal blocks the whole account, replacing every nested route
   // with the same blocked screen (explicit user decision) — admins are
   // exempt, same bypass convention as hasCourseAccess/every other gate. A
   // member who never subscribed at all (expiresAt null) is NOT frozen: this
   // only fires for an actual lapsed *renewal*, never a first-timer who
   // hasn't started yet (see repositories/subscriptions.ts's frozen field).
-  if (profile.role !== "ADMIN") {
-    const status = await getSubscriptionStatus(db, profile.id);
-    if (status.frozen) {
-      const price = await getCurrentParameterValue(
-        db,
-        "subscription.price_in_cfa",
-      );
-      return (
-        <FrozenAccountScreen
-          memberName={profile.fullName}
-          permanentlyFrozen={status.permanentlyFrozen}
-          price={price}
-          username={profile.username}
-        />
-      );
-    }
+  if (status?.frozen) {
+    const price = await getCurrentParameterValue(
+      db,
+      "subscription.price_in_cfa",
+    );
+    return (
+      <FrozenAccountScreen
+        memberName={profile.fullName}
+        permanentlyFrozen={status.permanentlyFrozen}
+        price={price}
+        username={profile.username}
+      />
+    );
   }
-
-  const ambassador = await db.query.ambassadorProfiles.findFirst({
-    where: eq(ambassadorProfiles.userId, profile.id),
-  });
 
   return (
     <MobileSidebarProvider>
