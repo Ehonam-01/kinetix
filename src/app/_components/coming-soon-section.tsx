@@ -76,7 +76,7 @@ export function ComingSoonSection({
                       src={card.image.src}
                       alt={card.image.alt}
                       brief={card.image.brief}
-                      className="-m-8 mb-6 aspect-video rounded-t-3xl rounded-b-none"
+                      className="-m-8 mb-6 aspect-video w-[calc(100%+4rem)] rounded-t-3xl rounded-b-none"
                     />
                   )}
                   <span
@@ -106,7 +106,7 @@ export function ComingSoonSection({
                 </>
               );
               const className =
-                "border-border bg-card relative overflow-hidden rounded-3xl border p-8 transition-colors" +
+                "border-border bg-card relative flex flex-col items-center overflow-hidden rounded-3xl border p-8 text-center transition-colors sm:items-start sm:text-left" +
                 (card.href ? " hover:border-brand-accent/40" : "");
               return card.href ? (
                 <Link key={card.title} href={card.href} className={className}>
