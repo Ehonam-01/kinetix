@@ -12,7 +12,10 @@ const USES = [
 
 export function AiSection() {
   return (
-    <section id="ia" className="bg-muted/40 scroll-mt-16 py-20 sm:py-28">
+    <section
+      id="ia"
+      className="bg-muted/40 scroll-mt-16 overflow-x-hidden py-20 sm:py-28"
+    >
       <div className="mx-auto grid max-w-6xl items-center gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:px-8">
         <Reveal>
           <div>

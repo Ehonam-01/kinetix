@@ -23,7 +23,7 @@ export function LearnerAmbassadorSection() {
 
         <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
           <Reveal>
-            <div className="border-border bg-card flex h-full flex-col rounded-2xl border p-8">
+            <div className="border-border bg-card flex h-full flex-col items-center rounded-2xl border p-8 text-center sm:items-start sm:text-left">
               <div className="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-xl">
                 <GraduationCap className="size-5" />
               </div>
@@ -38,7 +38,7 @@ export function LearnerAmbassadorSection() {
                 href="#formations"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "mt-6 w-full",
+                  "mt-6 h-auto min-h-9 w-full py-2 whitespace-normal",
                 )}
               >
                 Découvrir les formations
@@ -47,7 +47,7 @@ export function LearnerAmbassadorSection() {
           </Reveal>
 
           <Reveal delayMs={100}>
-            <div className="border-border bg-card flex h-full flex-col rounded-2xl border p-8">
+            <div className="border-border bg-card flex h-full flex-col items-center rounded-2xl border p-8 text-center sm:items-start sm:text-left">
               <div className="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-xl">
                 <Share2 className="size-5" />
               </div>
@@ -63,7 +63,7 @@ export function LearnerAmbassadorSection() {
                 href="/programme-ambassadeur"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "mt-6 w-full",
+                  "mt-6 h-auto min-h-9 w-full py-2 whitespace-normal",
                 )}
               >
                 Découvrir le programme ambassadeur
