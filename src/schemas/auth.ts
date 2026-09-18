@@ -16,10 +16,10 @@ export const registerSchema = z.object({
   // Optional: only the platform root has no sponsor. Empty string (from an
   // untouched form field) is a valid "no sponsor" value, not a validation
   // error — callers should treat "" the same as undefined (both falsy).
-  sponsorEmail: z
-    .literal("")
-    .or(z.string().trim().toLowerCase().email("Email de parrain invalide"))
-    .optional(),
+  // Identified by pseudo, not email (section: registration form) — the
+  // same handle a referral link already uses, and the one a new member is
+  // actually likely to know off the top of their head.
+  sponsorUsername: z.literal("").or(usernameSchema).optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

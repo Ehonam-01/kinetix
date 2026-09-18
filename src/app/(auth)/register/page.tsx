@@ -30,7 +30,7 @@ export default async function RegisterPage({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <RegisterForm defaultSponsorEmail={sponsor} />
+        <RegisterForm defaultSponsorUsername={sponsor} />
       </CardContent>
     </Card>
   );

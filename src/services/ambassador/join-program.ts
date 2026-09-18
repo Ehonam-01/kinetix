@@ -44,7 +44,7 @@ export async function joinAmbassadorProgram(
   if (existing) return existing;
 
   // Reuse whatever sponsor was already recorded at signup
-  // (services/auth/register.ts's optional sponsorEmail) — sponsorships is
+  // (services/auth/register.ts's optional sponsorUsername) — sponsorships is
   // append-only and fixed once (see assign-sponsor.ts), so it takes
   // priority over sponsorUsername given now. Only when no sponsorship
   // exists yet does sponsorUsername apply — this lets someone who signed

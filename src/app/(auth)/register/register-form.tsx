@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
-import { registerAction } from "./actions";
+import { lookupSponsorAction, registerAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function RegisterForm({
-  defaultSponsorEmail,
+  defaultSponsorUsername,
 }: {
-  defaultSponsorEmail?: string;
+  defaultSponsorUsername?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -20,11 +20,38 @@ export function RegisterForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { sponsorEmail: defaultSponsorEmail },
+    defaultValues: { sponsorUsername: defaultSponsorUsername },
   });
+
+  const sponsorUsername = watch("sponsorUsername");
+  const [sponsorName, setSponsorName] = useState<string | null>(null);
+  const [sponsorLookupDone, setSponsorLookupDone] = useState(false);
+
+  // Debounced live lookup — fires ~400ms after the visitor stops typing,
+  // not on every keystroke, so a 10-letter pseudo isn't 10 round trips.
+  // sponsorLookupDone (rather than sponsorName !== null) is what drives
+  // the "aucun parrain trouvé" message, so a still-empty result after a
+  // completed lookup reads as "not found," not as "haven't looked yet."
+  useEffect(() => {
+    const trimmed = (sponsorUsername ?? "").trim();
+    if (!trimmed) {
+      setSponsorName(null);
+      setSponsorLookupDone(false);
+      return;
+    }
+    setSponsorLookupDone(false);
+    const timeout = setTimeout(() => {
+      lookupSponsorAction(trimmed).then((result) => {
+        setSponsorName(result.fullName);
+        setSponsorLookupDone(true);
+      });
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [sponsorUsername]);
 
   function onSubmit(values: RegisterInput) {
     setServerError(null);
@@ -88,18 +115,27 @@ export function RegisterForm({
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="sponsorEmail">Email du parrain (facultatif)</Label>
+        <Label htmlFor="sponsorUsername">Pseudo du parrain (facultatif)</Label>
         <Input
-          id="sponsorEmail"
-          type="email"
+          id="sponsorUsername"
           autoComplete="off"
-          {...register("sponsorEmail")}
+          {...register("sponsorUsername")}
         />
-        {errors.sponsorEmail && (
+        {errors.sponsorUsername && (
           <p className="text-destructive text-sm">
-            {errors.sponsorEmail.message}
+            {errors.sponsorUsername.message}
           </p>
         )}
+        {!errors.sponsorUsername &&
+          sponsorUsername?.trim() &&
+          sponsorLookupDone &&
+          (sponsorName ? (
+            <p className="text-sm text-green-600">Parrain : {sponsorName}</p>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Aucun membre ne correspond à ce pseudo.
+            </p>
+          ))}
       </div>
       {serverError && <p className="text-destructive text-sm">{serverError}</p>}
       <Button type="submit" disabled={pending} className="w-full">
