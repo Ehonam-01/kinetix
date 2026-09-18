@@ -29,25 +29,24 @@ export function RegisterForm({
 
   const sponsorUsername = watch("sponsorUsername");
   const [sponsorName, setSponsorName] = useState<string | null>(null);
-  const [sponsorLookupDone, setSponsorLookupDone] = useState(false);
+  // Which trimmed pseudo sponsorName actually answers — lets the render
+  // below tell "no match for the current input" apart from "haven't
+  // looked up the current input yet" without a second boolean, and means
+  // every setState here happens inside the timeout's callback, never
+  // synchronously in the effect body (react-hooks/set-state-in-effect).
+  const [sponsorAnsweredFor, setSponsorAnsweredFor] = useState<string | null>(
+    null,
+  );
 
   // Debounced live lookup — fires ~400ms after the visitor stops typing,
   // not on every keystroke, so a 10-letter pseudo isn't 10 round trips.
-  // sponsorLookupDone (rather than sponsorName !== null) is what drives
-  // the "aucun parrain trouvé" message, so a still-empty result after a
-  // completed lookup reads as "not found," not as "haven't looked yet."
   useEffect(() => {
     const trimmed = (sponsorUsername ?? "").trim();
-    if (!trimmed) {
-      setSponsorName(null);
-      setSponsorLookupDone(false);
-      return;
-    }
-    setSponsorLookupDone(false);
+    if (!trimmed) return;
     const timeout = setTimeout(() => {
       lookupSponsorAction(trimmed).then((result) => {
         setSponsorName(result.fullName);
-        setSponsorLookupDone(true);
+        setSponsorAnsweredFor(trimmed);
       });
     }, 400);
     return () => clearTimeout(timeout);
@@ -128,7 +127,7 @@ export function RegisterForm({
         )}
         {!errors.sponsorUsername &&
           sponsorUsername?.trim() &&
-          sponsorLookupDone &&
+          sponsorAnsweredFor === sponsorUsername.trim() &&
           (sponsorName ? (
             <p className="text-sm text-green-600">Parrain : {sponsorName}</p>
           ) : (

@@ -1,7 +1,10 @@
 import "server-only";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { findProfileByUsername } from "@/repositories/profiles";
+import {
+  findActiveProfileByUsername,
+  findProfileByUsername,
+} from "@/repositories/profiles";
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
 
 export async function registerUser(input: RegisterInput) {
@@ -54,8 +57,8 @@ export async function lookupSponsorByUsername(username: string) {
   const parsed = registerSchema.shape.sponsorUsername.safeParse(username);
   if (!parsed.success || !parsed.data) return null;
 
-  const profile = await findProfileByUsername(parsed.data);
-  if (!profile || profile.status === "SUSPENDED") return null;
+  const profile = await findActiveProfileByUsername(parsed.data);
+  if (!profile) return null;
 
   return { fullName: profile.fullName };
 }

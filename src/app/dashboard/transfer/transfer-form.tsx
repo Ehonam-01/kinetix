@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { confirmTransferAction, initiateTransferAction } from "./actions";
+import {
+  confirmTransferAction,
+  initiateTransferAction,
+  lookupRecipientAction,
+} from "./actions";
 
 export function TransferForm() {
   const [pending, startTransition] = useTransition();
@@ -14,6 +18,30 @@ export function TransferForm() {
   const [transferId, setTransferId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const [recipientName, setRecipientName] = useState<string | null>(null);
+  // Which trimmed pseudo recipientName actually answers — lets the render
+  // below tell "no match for the current input" apart from "haven't
+  // looked up the current input yet" without a second boolean, and means
+  // every setState here happens inside the timeout's callback, never
+  // synchronously in the effect body (react-hooks/set-state-in-effect).
+  const [recipientAnsweredFor, setRecipientAnsweredFor] = useState<
+    string | null
+  >(null);
+
+  // Debounced live lookup — fires ~400ms after typing stops, not on every
+  // keystroke.
+  useEffect(() => {
+    const trimmed = recipientUsername.trim();
+    if (!trimmed) return;
+    const timeout = setTimeout(() => {
+      lookupRecipientAction(trimmed).then((result) => {
+        setRecipientName(result.fullName);
+        setRecipientAnsweredFor(trimmed);
+      });
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [recipientUsername]);
 
   function handleInitiate() {
     setError(null);
@@ -115,6 +143,17 @@ export function TransferForm() {
           value={recipientUsername}
           onChange={(e) => setRecipientUsername(e.target.value)}
         />
+        {recipientUsername.trim() &&
+          recipientAnsweredFor === recipientUsername.trim() &&
+          (recipientName ? (
+            <p className="text-sm text-green-600">
+              Destinataire : {recipientName}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Aucun membre ne correspond à ce pseudo.
+            </p>
+          ))}
       </div>
       <div className="space-y-2">
         <Label htmlFor="amount">Montant (F CFA)</Label>

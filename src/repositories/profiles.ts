@@ -13,6 +13,16 @@ export function findProfileByUsername(username: string) {
   });
 }
 
+// Used wherever a pseudo needs to resolve to a display name for a live
+// preview (registration's sponsor field, wallet transfer's recipient
+// field) — never a suspended account, matching what the real action
+// (joining under them, transferring to them) would reject anyway.
+export async function findActiveProfileByUsername(username: string) {
+  const profile = await findProfileByUsername(username);
+  if (!profile || profile.status === "SUSPENDED") return null;
+  return profile;
+}
+
 export async function insertProfileIfMissing(values: {
   id: string;
   fullName: string;
