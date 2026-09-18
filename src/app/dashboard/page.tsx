@@ -72,7 +72,7 @@ export default async function DashboardPage() {
 
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Bonjour, {profile.fullName}</h1>
+        <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
 
         <SubscriptionAlertBanner status={subscription} />
 
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Bonjour, {profile.fullName}</h1>
+      <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
 
       <SubscriptionAlertBanner status={subscription} />
 
