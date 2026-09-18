@@ -31,12 +31,18 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
 async function main() {
   const file = path.join(__dirname, `seed-real-level2.${runId}.json`);
   const { created } = JSON.parse(fs.readFileSync(file, "utf8")) as {
-    created: { id: string; username: string }[];
+    created: { id: string; username: string; depth: number }[];
   };
 
-  console.log(`Deleting ${created.length} accounts from run ${runId}...`);
+  // binary_nodes.binary_parent_id has no ON DELETE CASCADE (positions are
+  // meant to be immutable — see db/schema/binary-nodes.ts) — deleting a
+  // parent while its children's rows still point to it violates that FK.
+  // Deepest first avoids ever hitting that.
+  const deletionOrder = [...created].sort((a, b) => b.depth - a.depth);
+
+  console.log(`Deleting ${deletionOrder.length} accounts from run ${runId} (leaves first)...`);
   let failures = 0;
-  for (const member of created) {
+  for (const member of deletionOrder) {
     const { error } = await admin.auth.admin.deleteUser(member.id);
     if (error) {
       failures++;
