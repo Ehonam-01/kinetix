@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import { InlineScript } from "@/components/inline-script";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SITE_NAME } from "@/config/site";
 import "./globals.css";
 
 // Sets the .dark class on <html> before the browser paints, matching the
@@ -24,8 +25,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Plateforme MLM & Formation",
-  description: "Plateforme de formation en ligne avec progression MLM binaire.",
+  title: SITE_NAME,
+  description: "Formations, mentorat et communauté pour la jeunesse de demain.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

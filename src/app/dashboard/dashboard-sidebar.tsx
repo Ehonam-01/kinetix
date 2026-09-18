@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShieldCheck, Sparkles, X } from "lucide-react";
+import { Logo } from "@/app/_components/logo";
 import { cn } from "@/lib/utils";
 import { useMobileSidebar } from "@/components/mobile-sidebar-context";
 import { LogoutButton } from "./logout-button";
@@ -45,14 +46,7 @@ export function DashboardSidebar({
         )}
       >
         <div className="flex items-center justify-between gap-2 px-2 py-2">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg text-sm font-bold">
-              M
-            </div>
-            <span className="font-heading text-sm font-semibold">
-              MLM & Formation
-            </span>
-          </div>
+          <Logo priority />
           <button
             type="button"
             onClick={() => setOpen(false)}
