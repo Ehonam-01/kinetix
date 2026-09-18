@@ -15,7 +15,10 @@ import {
   getEffectiveGenerationRule,
   isGenerationQualified,
 } from "@/repositories/commission-rules";
-import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import {
+  getCurrentParameterValue,
+  getCurrentParameterValueOrNull,
+} from "@/repositories/parameter-versions";
 import { createCommissionEvent } from "./commission";
 import { levelBonusDedupeKey, levelCommissionDedupeKey } from "./dedupe-keys";
 import { unlockReward } from "./reward";
@@ -111,22 +114,35 @@ async function maybeCompleteGeneration(
         });
       }
     } else {
-      const rate = await getCurrentParameterValue(
+      // No commission_rules row for this (level, generation) — fall back
+      // to the pre-Phase-11 flat parameter, but only if an admin actually
+      // still has one configured. Migration 0031 deleted the seeded
+      // defaults on the assumption every (level, generation) pair would
+      // already have a commission_rules row in production; where that
+      // assumption doesn't hold (a fresh environment, or a pair nobody's
+      // configured yet), this must degrade the same way the DIRECT_SALE
+      // path already does when unconfigured (confirm-subscription-payment.ts:
+      // "if (rule) { ...pay... }", silently no commission otherwise) —
+      // never throw and abort the member's own join/subscription
+      // transaction over an admin configuration gap that isn't their fault.
+      const rate = await getCurrentParameterValueOrNull(
         tx,
         `commission.level.${row.levelCode}`,
       );
-      await createCommissionEvent(tx, {
-        beneficiaryUserId: row.userId,
-        type: "LEVEL_COMMISSION",
-        levelCode: row.levelCode,
-        generation: row.generation,
-        amount: rate * row.requiredCount,
-        dedupeKey: levelCommissionDedupeKey(
-          row.userId,
-          row.levelCode,
-          row.generation,
-        ),
-      });
+      if (rate !== null) {
+        await createCommissionEvent(tx, {
+          beneficiaryUserId: row.userId,
+          type: "LEVEL_COMMISSION",
+          levelCode: row.levelCode,
+          generation: row.generation,
+          amount: rate * row.requiredCount,
+          dedupeKey: levelCommissionDedupeKey(
+            row.userId,
+            row.levelCode,
+            row.generation,
+          ),
+        });
+      }
     }
   }
 
