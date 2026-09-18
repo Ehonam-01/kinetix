@@ -21,15 +21,18 @@ import { describe, it, vi, expect } from "vitest";
 import * as schema from "@/db/schema";
 
 // --- Scenario knobs -------------------------------------------------
-// No default commission_rules exist in the real deployment (confirmed
-// earlier) — these are exploratory numbers, not committed real rates.
 // F CFA throughout, matching the rest of the codebase (no floats, no
-// subunit — see FINANCIAL_MODEL.md).
+// subunit — see FINANCIAL_MODEL.md). Current real decision: 15,000 F
+// subscription, 20% direct-sale commission. Generation (level 2-5) rates
+// aren't decided yet — GENERATE_GENERATION_COMMISSIONS below controls
+// whether this run seeds any commission_rules for them at all; with it
+// false, the run reflects exactly what's actually decided today (direct
+// sale only, no generation program active), matching "no rule = no
+// commission" (confirmed against the real deployment earlier).
 const SUBSCRIPTION_PRICE_CFA = 15_000;
-const RATES = {
-  directSaleFixed: 2500, // paid once, on a buyer's first-ever subscription
-  generationFixedPerPerson: 1000, // FIXED commissionType: rate x requiredCount
-};
+const DIRECT_SALE_RATE_BASIS_POINTS = 2000; // 20.00% of price paid
+const GENERATE_GENERATION_COMMISSIONS = false;
+const GENERATION_FIXED_RATE_PER_PERSON = 1000; // only used if the flag above is true
 // How many binary-tree depths to build under the root. 5 = 62 accounts
 // (2+4+8+16+32), the same size simulate-level2.test.ts uses. Each extra
 // depth roughly triples the account count and reshapes the ratio — worth
@@ -137,18 +140,20 @@ describe("commission plan sustainability (pglite, no shared DB touched)", () => 
       await localDb.insert(schema.commissionRules).values([
         {
           scope: "DIRECT_SALE",
-          commissionType: "FIXED",
-          rate: RATES.directSaleFixed,
+          commissionType: "PERCENTAGE",
+          rate: DIRECT_SALE_RATE_BASIS_POINTS,
         },
-        ...[2, 3, 4, 5].flatMap((levelCode) =>
-          [1, 2, 3].map((generation) => ({
-            scope: "GENERATION" as const,
-            levelCode,
-            generation,
-            commissionType: "FIXED" as const,
-            rate: RATES.generationFixedPerPerson,
-          })),
-        ),
+        ...(GENERATE_GENERATION_COMMISSIONS
+          ? [2, 3, 4, 5].flatMap((levelCode) =>
+              [1, 2, 3].map((generation) => ({
+                scope: "GENERATION" as const,
+                levelCode,
+                generation,
+                commissionType: "FIXED" as const,
+                rate: GENERATION_FIXED_RATE_PER_PERSON,
+              })),
+            )
+          : []),
       ]);
 
       const { joinAmbassadorProgram } = await import(
@@ -240,10 +245,12 @@ describe("commission plan sustainability (pglite, no shared DB touched)", () => 
         `Subscription price: ${SUBSCRIPTION_PRICE_CFA.toLocaleString("fr-FR")} F CFA`,
       );
       console.log(
-        `Direct-sale rate: ${RATES.directSaleFixed.toLocaleString("fr-FR")} F CFA (fixed, once per new subscriber)`,
+        `Direct-sale rate: ${(DIRECT_SALE_RATE_BASIS_POINTS / 100).toFixed(2)}% of price paid, once per new subscriber (= ${Math.floor((SUBSCRIPTION_PRICE_CFA * DIRECT_SALE_RATE_BASIS_POINTS) / 10_000).toLocaleString("fr-FR")} F CFA at this price)`,
       );
       console.log(
-        `Generation rate: ${RATES.generationFixedPerPerson.toLocaleString("fr-FR")} F CFA/person (fixed, per completed generation)`,
+        GENERATE_GENERATION_COMMISSIONS
+          ? `Generation rate: ${GENERATION_FIXED_RATE_PER_PERSON.toLocaleString("fr-FR")} F CFA/person (fixed, per completed generation)`
+          : `Generation commissions: not active (no commission_rules configured, matching the real deployment today)`,
       );
       console.log(`Tree depth: ${DEPTHS} (${subscriberCount} paying accounts)`);
 
