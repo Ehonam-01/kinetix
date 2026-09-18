@@ -35,12 +35,24 @@ export default async function RewardsPage() {
           {rewards.map((r) => (
             <Card key={r.id}>
               <CardHeader>
-                <CardTitle>{r.reward?.name ?? "Récompense"}</CardTitle>
-                <CardDescription>
-                  {r.reward?.description}
-                  {r.reward?.rewardType === "CASH" &&
-                    ` · ${r.reward.value.toLocaleString("fr-FR")} F CFA`}
-                </CardDescription>
+                <div className="flex items-center gap-3">
+                  {r.reward?.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL, no remotePatterns configured (same as course-card.tsx)
+                    <img
+                      src={r.reward.imageUrl}
+                      alt=""
+                      className="size-12 shrink-0 rounded-lg object-cover"
+                    />
+                  )}
+                  <div>
+                    <CardTitle>{r.reward?.name ?? "Récompense"}</CardTitle>
+                    <CardDescription>
+                      {r.reward?.description}
+                      {r.reward?.rewardType === "CASH" &&
+                        ` · ${r.reward.value.toLocaleString("fr-FR")} F CFA`}
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground text-sm">

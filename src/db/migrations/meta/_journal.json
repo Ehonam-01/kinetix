@@ -274,6 +274,27 @@
       "when": 1789644282383,
       "tag": "0038_community_profile_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789730609900,
+      "tag": "0039_reward_image_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789730622297,
+      "tag": "0040_reward_catalog_reset",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789730646195,
+      "tag": "0041_reward_images_storage",
+      "breakpoints": true
     }
   ]
 }

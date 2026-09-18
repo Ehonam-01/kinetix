@@ -33,6 +33,11 @@ export const rewards = pgTable("rewards", {
   description: text("description"),
   value: integer("value").notNull(),
   rewardType: rewardTypeEnum("reward_type").notNull().default("PHYSICAL"),
+  // Supabase Storage public URL (reward-images bucket) — set once an admin
+  // uploads one, same optional-until-configured pattern as
+  // courses.thumbnailUrl. Never required: unlockReward grants the reward
+  // regardless of whether a picture exists yet.
+  imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
