@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { resolveAttribution } from "@/services/attribution/resolve-referral";
-import { monerooProvider } from "@/services/payments/moneroo";
+import { getActivePaymentProvider } from "@/services/payments/provider-selector";
 
 function splitFullName(fullName: string): {
   firstName: string;
@@ -43,8 +43,9 @@ export async function initiateSubscriptionPayment(input: {
   const attribution = await resolveAttribution(input.visitorToken);
   const idempotencyKey = `SUBSCRIPTION:${input.buyerUserId}:${randomUUID()}`;
   const { firstName, lastName } = splitFullName(input.fullName);
+  const provider = await getActivePaymentProvider(db);
 
-  const intent = await monerooProvider.createPayment({
+  const intent = await provider.createPayment({
     amount,
     description: "Abonnement annuel Kinetix Africa",
     customer: { email: input.email, firstName, lastName },
@@ -60,7 +61,7 @@ export async function initiateSubscriptionPayment(input: {
       purpose: "SUBSCRIPTION",
       method: "MOBILE_MONEY",
       amount,
-      provider: "MONEROO",
+      provider: provider.name,
       providerReference: intent.providerReference,
       idempotencyKey,
       status: "PENDING",

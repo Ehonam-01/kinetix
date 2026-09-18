@@ -19,4 +19,8 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SALE_REFUNDED: "Vente remboursée",
   WITHDRAWAL_APPROVED: "Retrait validé",
   WITHDRAWAL_REJECTED: "Retrait refusé",
+  WITHDRAWAL_PAYOUT_INITIATED: "Virement de retrait déclenché",
+  WITHDRAWAL_PAYOUT_CONFIRMED: "Virement de retrait confirmé",
+  WITHDRAWAL_PAYOUT_FAILED: "Virement de retrait échoué",
+  PAYMENT_PROVIDER_CHANGED: "Fournisseur de paiement modifié",
 };

@@ -6,11 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
 
+const OPERATOR_OPTIONS = [
+  { value: "MTN_MONEY", label: "MTN Money" },
+  { value: "ORANGE_MONEY", label: "Orange Money" },
+  { value: "WAVE_MONEY", label: "Wave" },
+  { value: "MOOV_MONEY", label: "Moov Money" },
+  { value: "MOBICASH", label: "Mobicash" },
+  { value: "TOGOCELL", label: "T-Money (Togocel)" },
+  { value: "FREE_MONEY", label: "Free Money" },
+];
+
 export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<"form" | "otp" | "done">("form");
   const [amount, setAmount] = useState("");
   const [payoutPhone, setPayoutPhone] = useState("");
+  const [operator, setOperator] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,16 +31,20 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
     const parsedAmount = Number(amount);
     if (
       !payoutPhone.trim() ||
+      !operator ||
       !Number.isInteger(parsedAmount) ||
       parsedAmount <= 0
     ) {
-      setError("Renseignez un numéro mobile money et un montant valides.");
+      setError(
+        "Renseignez un numéro mobile money, un opérateur et un montant valides.",
+      );
       return;
     }
     startTransition(async () => {
       const result = await requestWithdrawalAction(
         parsedAmount,
         payoutPhone.trim(),
+        operator,
       );
       if (result.error || !result.requestId) {
         setError(result.error ?? "Une erreur est survenue.");
@@ -58,6 +73,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
     setRequestId(null);
     setCode("");
     setError(null);
+    setOperator("");
   }
 
   if (step === "done") {
@@ -117,6 +133,22 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
           value={payoutPhone}
           onChange={(e) => setPayoutPhone(e.target.value)}
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="operator">Opérateur</Label>
+        <select
+          id="operator"
+          value={operator}
+          onChange={(e) => setOperator(e.target.value)}
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
+        >
+          <option value="">Choisir un opérateur</option>
+          {OPERATOR_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="amount">Montant (F CFA)</Label>

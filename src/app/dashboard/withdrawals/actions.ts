@@ -12,10 +12,16 @@ import { requestWithdrawal } from "@/services/wallet/request-withdrawal";
 export async function requestWithdrawalAction(
   amount: number,
   payoutPhone: string,
+  operator: string,
 ) {
   const { profile } = await requireUser();
   try {
-    const request = await requestWithdrawal(profile.id, amount, payoutPhone);
+    const request = await requestWithdrawal(
+      profile.id,
+      amount,
+      payoutPhone,
+      operator,
+    );
     return { requestId: request.id as string, error: null };
   } catch (err) {
     return {

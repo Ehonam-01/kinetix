@@ -71,6 +71,7 @@ async function monerooRequest<T>(path: string, init: RequestInit): Promise<T> {
 }
 
 export const monerooProvider: PaymentProvider = {
+  name: "MONEROO",
   async createPayment(input: CreatePaymentInput): Promise<PaymentIntent> {
     const result = await monerooRequest<MonerooInitializeResponse>(
       "/v1/payments/initialize",

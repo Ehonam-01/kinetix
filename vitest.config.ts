@@ -29,6 +29,9 @@ export default defineConfig({
       // real secrets, this file is committed.
       MONEROO_SECRET_KEY: "test_unit_test_fake_key",
       MONEROO_WEBHOOK_SECRET: "test_unit_test_fake_webhook_secret",
+      BICTORYS_SECRET_KEY: "test_unit_test_fake_key",
+      BICTORYS_WEBHOOK_SECRET: "test_unit_test_fake_webhook_secret",
+      BICTORYS_MERCHANT_SECRET_CODE: "1234",
     },
   },
 });

@@ -1,7 +1,10 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { withdrawalRequests } from "@/db/schema/withdrawals";
+import {
+  mobileMoneyOperatorEnum,
+  withdrawalRequests,
+} from "@/db/schema/withdrawals";
 import { findAuthEmailByUserId } from "@/repositories/auth-users";
 import { getBalance } from "@/repositories/financial-transactions";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
@@ -23,6 +26,7 @@ export async function requestWithdrawal(
   userId: string,
   amount: number,
   payoutPhone: string,
+  operator: string,
 ) {
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error("Le montant doit être un nombre entier positif.");
@@ -31,6 +35,14 @@ export async function requestWithdrawal(
   if (!PAYOUT_PHONE_PATTERN.test(trimmedPhone)) {
     throw new Error("Le numéro mobile money n'est pas valide.");
   }
+  if (
+    !(
+      mobileMoneyOperatorEnum.enumValues as readonly string[]
+    ).includes(operator)
+  ) {
+    throw new Error("Opérateur mobile money invalide.");
+  }
+  const validOperator = operator as (typeof mobileMoneyOperatorEnum.enumValues)[number];
 
   const user = await findProfileById(userId);
   if (!user || user.status !== "ACTIVE") {
@@ -76,6 +88,7 @@ export async function requestWithdrawal(
       userId,
       amount,
       payoutPhone: trimmedPhone,
+      operator: validOperator,
       otpCodeHash: hashOtpCode(code),
       otpExpiresAt,
     })

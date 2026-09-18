@@ -45,7 +45,15 @@ export type RefundResult = {
   refundReference: string;
 };
 
+export type PaymentProviderName = "MONEROO" | "BICTORYS";
+
 export interface PaymentProvider {
+  // Written verbatim to payments.provider (a plain text column) — lets
+  // call sites (initiate-registration-payment.ts, initiate-subscription-
+  // payment.ts) record which provider actually handled a charge without
+  // hardcoding a literal per call site, now that provider-selector.ts picks
+  // between more than one.
+  name: PaymentProviderName;
   createPayment(input: CreatePaymentInput): Promise<PaymentIntent>;
   verifyPayment(providerReference: string): Promise<VerifiedPayment>;
   parseWebhook(rawBody: string, signature: string | null): WebhookEvent;

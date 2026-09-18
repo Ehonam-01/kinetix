@@ -23,3 +23,4 @@ export * from "./quizzes";
 export * from "./withdrawals";
 export * from "./subscriptions";
 export * from "./subscription-wallet-requests";
+export * from "./payment-settings";

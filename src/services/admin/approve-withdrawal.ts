@@ -1,43 +1,72 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { financialTransactions } from "@/db/schema/financial-transactions";
 import { profiles } from "@/db/schema/profiles";
-import { userBalances } from "@/db/schema/user-balances";
 import { withdrawalRequests } from "@/db/schema/withdrawals";
+import { createBictorysPayout } from "@/services/payments/bictorys-payout";
 import { logAdminAction } from "./audit-log";
 
-// Admin-only. Called once the mobile money payout has actually been sent
-// manually (no live Moneroo payout integration — see
-// services/wallet/confirm-withdrawal.ts). Moves the amount from
-// pending_balance to withdrawn_balance and flips the linked ledger row
-// PENDING -> COMPLETED; never touches available_balance, which was already
-// debited at confirmWithdrawal time.
+// Admin-only. Triggers a real Bictorys payout and moves the request to
+// PROCESSING — it does NOT mark it PAID: that only happens once the
+// Bictorys webhook confirms the transfer actually succeeded
+// (services/payments/handle-payout-webhook.ts moves pending_balance to
+// withdrawn_balance and flips the ledger row PENDING -> COMPLETED at that
+// point, not here). A payout that fails outright (API error) leaves the
+// request untouched at PENDING_REVIEW so the admin can retry; a payout
+// that's accepted but later reported as failed by the webhook reverts
+// PROCESSING -> PENDING_REVIEW with payoutFailureReason set.
 export async function approveWithdrawal(
   adminUserId: string,
   requestId: string,
 ) {
+  const admin = await db.query.profiles.findFirst({
+    where: eq(profiles.id, adminUserId),
+  });
+  if (admin?.role !== "ADMIN") {
+    throw new Error("Seul un administrateur peut valider un retrait.");
+  }
+
+  const request = await db.query.withdrawalRequests.findFirst({
+    where: eq(withdrawalRequests.id, requestId),
+  });
+  if (!request) {
+    throw new Error("Demande de retrait introuvable.");
+  }
+  if (request.status !== "PENDING_REVIEW") {
+    throw new Error("Cette demande n'est plus en attente de validation.");
+  }
+  if (!request.operator) {
+    throw new Error(
+      "Cette demande a été créée avant la sélection de l'opérateur mobile money et ne peut pas être payée automatiquement.",
+    );
+  }
+
+  const recipient = await db.query.profiles.findFirst({
+    where: eq(profiles.id, request.userId),
+  });
+  if (!recipient) {
+    throw new Error("Membre introuvable.");
+  }
+
+  // Real money movement — deliberately outside any DB transaction, so a
+  // slow/failed call never holds a transaction open. The WHERE-guarded
+  // UPDATE below is what actually commits the state change.
+  const payout = await createBictorysPayout({
+    amount: request.amount,
+    phone: request.payoutPhone,
+    operator: request.operator,
+    recipientName: recipient.fullName,
+    merchantReference: `WITHDRAWAL:${request.id}`,
+  });
+
   return db.transaction(async (tx) => {
-    const admin = await tx.query.profiles.findFirst({
-      where: eq(profiles.id, adminUserId),
-    });
-    if (admin?.role !== "ADMIN") {
-      throw new Error("Seul un administrateur peut valider un retrait.");
-    }
-
-    const request = await tx.query.withdrawalRequests.findFirst({
-      where: eq(withdrawalRequests.id, requestId),
-    });
-    if (!request) {
-      throw new Error("Demande de retrait introuvable.");
-    }
-
     const [updated] = await tx
       .update(withdrawalRequests)
       .set({
-        status: "PAID",
+        status: "PROCESSING",
         reviewedBy: adminUserId,
         reviewedAt: sql`now()`,
+        payoutProviderReference: payout.payoutProviderReference,
       })
       .where(
         and(
@@ -47,31 +76,21 @@ export async function approveWithdrawal(
       )
       .returning();
     if (!updated) {
-      throw new Error("Cette demande n'est plus en attente de validation.");
-    }
-
-    await tx
-      .update(userBalances)
-      .set({
-        pendingBalance: sql`${userBalances.pendingBalance} - ${request.amount}`,
-        withdrawnBalance: sql`${userBalances.withdrawnBalance} + ${request.amount}`,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(userBalances.userId, request.userId));
-
-    if (request.financialTransactionId) {
-      await tx
-        .update(financialTransactions)
-        .set({ status: "COMPLETED" })
-        .where(eq(financialTransactions.id, request.financialTransactionId));
+      throw new Error(
+        "Cette demande n'est plus en attente de validation (un virement Bictorys a néanmoins été déclenché — vérifiez le tableau de bord Bictorys).",
+      );
     }
 
     await logAdminAction(tx, {
       actorUserId: adminUserId,
-      action: "WITHDRAWAL_APPROVED",
+      action: "WITHDRAWAL_PAYOUT_INITIATED",
       targetType: "withdrawal_request",
       targetId: requestId,
-      metadata: { userId: request.userId, amount: request.amount },
+      metadata: {
+        userId: request.userId,
+        amount: request.amount,
+        payoutProviderReference: payout.payoutProviderReference,
+      },
     });
 
     return updated;

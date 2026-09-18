@@ -33,7 +33,7 @@ export function ReviewActions({ requestId }: { requestId: string }) {
       <div className="space-y-2">
         <div className="flex gap-2">
           <Button size="sm" disabled={pending} onClick={handleApprove}>
-            {pending ? "Validation..." : "Marquer comme payé"}
+            {pending ? "Envoi du virement..." : "Déclencher le virement"}
           </Button>
           <Button
             size="sm"

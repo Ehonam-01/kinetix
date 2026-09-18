@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import { monerooProvider } from "./moneroo";
+import { getActivePaymentProvider } from "./provider-selector";
 
 function splitFullName(fullName: string): {
   firstName: string;
@@ -31,8 +31,9 @@ export async function initiateRegistrationPayment(input: {
   const amount = await getCurrentParameterValue(db, "registration_price");
   const idempotencyKey = `REGISTRATION:${input.beneficiaryUserId}:${randomUUID()}`;
   const { firstName, lastName } = splitFullName(input.fullName);
+  const provider = await getActivePaymentProvider(db);
 
-  const intent = await monerooProvider.createPayment({
+  const intent = await provider.createPayment({
     amount,
     description: "Inscription à la plateforme",
     customer: { email: input.email, firstName, lastName },
@@ -48,7 +49,7 @@ export async function initiateRegistrationPayment(input: {
       purpose: "REGISTRATION",
       method: "MOBILE_MONEY",
       amount,
-      provider: "MONEROO",
+      provider: provider.name,
       providerReference: intent.providerReference,
       idempotencyKey,
       status: "PENDING",
