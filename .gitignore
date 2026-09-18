@@ -45,3 +45,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# per-run output from scripts/seed-real-level2.ts (account ids from a
+# specific run against the real DB — never meant to be shared/tracked)
+scripts/seed-real-level2.*.json
