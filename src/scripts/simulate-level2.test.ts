@@ -64,7 +64,11 @@ async function runMigrations(client: PGlite) {
     .sort();
 
   for (const file of files) {
-    if (file === "0030_course_thumbnails_storage.sql") continue; // Supabase Storage, not app schema
+    if (
+      file === "0030_course_thumbnails_storage.sql" ||
+      file === "0041_reward_images_storage.sql"
+    )
+      continue; // Supabase Storage, not app schema
     const sql = fs.readFileSync(path.join(dir, file), "utf8");
     const statements = sql
       .split(/;\s*\n/)
@@ -112,7 +116,6 @@ describe("local level-2 simulation (pglite, no shared DB touched)", () => {
       // seeded migrations (0006, 0032, 0036), so the commission math this
       // simulation shows matches what production would compute today.
       await localDb.insert(schema.parameterVersions).values([
-        { parameterKey: "commission.level_1_bonus", value: 1000 },
         { parameterKey: "bv.value_in_cfa", value: 1000 },
         { parameterKey: "subscription.price_in_cfa", value: 15000 },
         { parameterKey: "subscription.business_volume", value: 15 },

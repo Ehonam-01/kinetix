@@ -83,7 +83,11 @@ async function runMigrations(client: PGlite) {
     .sort();
 
   for (const file of files) {
-    if (file === "0030_course_thumbnails_storage.sql") continue;
+    if (
+      file === "0030_course_thumbnails_storage.sql" ||
+      file === "0041_reward_images_storage.sql"
+    )
+      continue;
     const sqlText = fs.readFileSync(path.join(dir, file), "utf8");
     const statements = sqlText
       .split(/;\s*\n/)
@@ -128,7 +132,6 @@ describe("commission plan sustainability (pglite, no shared DB touched)", () => 
       await runMigrations(client);
 
       await localDb.insert(schema.parameterVersions).values([
-        { parameterKey: "commission.level_1_bonus", value: 1000 },
         { parameterKey: "bv.value_in_cfa", value: 1000 },
         {
           parameterKey: "subscription.price_in_cfa",

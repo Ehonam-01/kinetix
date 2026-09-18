@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { levelBonusDedupeKey, levelCommissionDedupeKey } from "./dedupe-keys";
+import { levelCommissionDedupeKey } from "./dedupe-keys";
 
 describe("levelCommissionDedupeKey", () => {
   it("is unique per (user, level, generation)", () => {
@@ -14,11 +14,5 @@ describe("levelCommissionDedupeKey", () => {
     expect(levelCommissionDedupeKey("u1", 2, 1)).toBe(
       levelCommissionDedupeKey("u1", 2, 1),
     );
-  });
-});
-
-describe("levelBonusDedupeKey", () => {
-  it("is unique per user", () => {
-    expect(levelBonusDedupeKey("u1")).not.toBe(levelBonusDedupeKey("u2"));
   });
 });

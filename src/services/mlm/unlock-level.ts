@@ -20,7 +20,7 @@ import {
   getCurrentParameterValueOrNull,
 } from "@/repositories/parameter-versions";
 import { createCommissionEvent } from "./commission";
-import { levelBonusDedupeKey, levelCommissionDedupeKey } from "./dedupe-keys";
+import { levelCommissionDedupeKey } from "./dedupe-keys";
 import { unlockReward } from "./reward";
 
 // Batch-checks which of the given candidate users already have a
@@ -226,20 +226,6 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
         eq(memberLevels.levelCode, levelCode),
       ),
     );
-
-  if (levelCode === 1) {
-    const amount = await getCurrentParameterValue(
-      tx,
-      "commission.level_1_bonus",
-    );
-    await createCommissionEvent(tx, {
-      beneficiaryUserId: userId,
-      type: "LEVEL_1_BONUS",
-      levelCode: 1,
-      amount,
-      dedupeKey: levelBonusDedupeKey(userId),
-    });
-  }
 
   if (levelCode >= 3) {
     await unlockReward(tx, userId, levelCode);

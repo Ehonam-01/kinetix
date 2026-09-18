@@ -8,7 +8,3 @@ export function levelCommissionDedupeKey(
 ): string {
   return `LEVEL_COMMISSION:${userId}:${levelCode}:${generation}`;
 }
-
-export function levelBonusDedupeKey(userId: string): string {
-  return `LEVEL_1_BONUS:${userId}`;
-}
