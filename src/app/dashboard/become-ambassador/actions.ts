@@ -5,13 +5,13 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/services/auth/current-user";
 import {
   AMBASSADOR_TERMS_VERSION,
-  joinAmbassadorProgram,
+  joinAmbassadorProgramInNewTransaction,
 } from "@/services/ambassador/join-program";
 
 export async function joinAmbassadorProgramAction(sponsorUsername: string) {
   const { profile } = await requireUser();
   try {
-    await joinAmbassadorProgram(profile.id, {
+    await joinAmbassadorProgramInNewTransaction(profile.id, {
       sponsorUsername: sponsorUsername || undefined,
       termsVersion: AMBASSADOR_TERMS_VERSION,
     });

@@ -1,5 +1,8 @@
 import "server-only";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { db } from "@/db/client";
+import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
 import { createClient } from "@/lib/supabase/server";
 import {
   findActiveProfileByUsername,
@@ -8,7 +11,7 @@ import {
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
 
 export async function registerUser(input: RegisterInput) {
-  const { fullName, username, email, password, sponsorUsername } =
+  const { fullName, username, email, password, sponsorUsername, wantsAmbassador } =
     registerSchema.parse(input);
 
   // Resolved and validated up front so a typo'd sponsor pseudo fails loudly
@@ -21,6 +24,36 @@ export async function registerUser(input: RegisterInput) {
       return { error: "Pseudo de parrain introuvable." };
     }
     sponsorId = sponsorProfile.id;
+  }
+
+  // Same requirement join-program.ts enforces when the actual join happens
+  // (once the subscription payment confirms — payment is mandatory before
+  // anyone joins the program, wants_ambassador is only ever acted on
+  // there), checked eagerly here for the same reason as the sponsor pseudo
+  // above: failing now is loud and recoverable, failing at payment-webhook
+  // time would roll back an already-paid subscription over a missing
+  // sponsor. Exempt only for the platform's very first-ever member (no
+  // ambassador exists yet to sponsor anyone).
+  if (wantsAmbassador) {
+    if (!sponsorId) {
+      const anyAmbassador = await db.query.ambassadorProfiles.findFirst();
+      if (anyAmbassador) {
+        return {
+          error:
+            "Un pseudo de parrain est requis pour rejoindre le programme ambassadeur.",
+        };
+      }
+    } else {
+      const sponsorAmbassador = await db.query.ambassadorProfiles.findFirst({
+        where: eq(ambassadorProfiles.userId, sponsorId),
+      });
+      if (!sponsorAmbassador || sponsorAmbassador.status !== "ACTIVE") {
+        return {
+          error:
+            "Le parrain indiqué doit être un ambassadeur actif pour vous accueillir dans le programme.",
+        };
+      }
+    }
   }
 
   // Best-effort check — the profile row itself isn't created until email
@@ -37,7 +70,12 @@ export async function registerUser(input: RegisterInput) {
     email,
     password,
     options: {
-      data: { full_name: fullName, username, sponsor_id: sponsorId },
+      data: {
+        full_name: fullName,
+        username,
+        sponsor_id: sponsorId,
+        wants_ambassador: wantsAmbassador ?? false,
+      },
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });

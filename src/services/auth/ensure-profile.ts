@@ -17,6 +17,12 @@ export async function ensureProfile(user: User) {
     typeof user.user_metadata?.username === "string"
       ? user.user_metadata.username
       : `membre_${user.id.slice(0, 8)}`;
+  const wantsAmbassador = user.user_metadata?.wants_ambassador === true;
 
-  return insertProfileIfMissing({ id: user.id, fullName, username });
+  return insertProfileIfMissing({
+    id: user.id,
+    fullName,
+    username,
+    wantsAmbassador,
+  });
 }

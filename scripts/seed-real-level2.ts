@@ -21,7 +21,7 @@ import { commissionRules } from "@/db/schema/commission-rules";
 import { parameterVersions } from "@/db/schema/parameter-versions";
 import { payments } from "@/db/schema/payments";
 import { profiles } from "@/db/schema/profiles";
-import { joinAmbassadorProgram } from "@/services/ambassador/join-program";
+import { joinAmbassadorProgramInNewTransaction } from "@/services/ambassador/join-program";
 import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
 
 const SPONSOR_USERNAME = "ehonam"; // the real account that should complete Level 2
@@ -153,11 +153,15 @@ async function main() {
         const username = `sim_l2_${RUN_ID}_d${depth}_${counter}`;
         const fullName = `Simulation ${username}`;
         const id = await createRealMember(username, fullName);
-        await joinAmbassadorProgram(id, {
+        // Payment now has to land first — joinAmbassadorProgram requires
+        // profiles.status ACTIVE (mandatory-payment-before-ambassador
+        // product decision), and subscribe()/confirmSubscriptionPurchase is
+        // what actually flips it.
+        await subscribe(id, parent.id);
+        await joinAmbassadorProgramInNewTransaction(id, {
           sponsorUsername: parent.username,
           termsVersion: "v1",
         });
-        await subscribe(id, parent.id);
         created.push({
           id,
           username,

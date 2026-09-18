@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "wants_ambassador" boolean DEFAULT false NOT NULL;

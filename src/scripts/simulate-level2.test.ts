@@ -143,7 +143,7 @@ describe("local level-2 simulation (pglite, no shared DB touched)", () => {
         ),
       ]);
 
-      const { joinAmbassadorProgram } = await import(
+      const { joinAmbassadorProgramInNewTransaction } = await import(
         "@/services/ambassador/join-program"
       );
       const { confirmSubscriptionPurchase } = await import(
@@ -151,7 +151,7 @@ describe("local level-2 simulation (pglite, no shared DB touched)", () => {
       );
 
       async function join(userId: string, sponsorUsername?: string) {
-        await joinAmbassadorProgram(userId, {
+        await joinAmbassadorProgramInNewTransaction(userId, {
           sponsorUsername,
           termsVersion: "v1",
         });

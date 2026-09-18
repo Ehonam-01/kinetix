@@ -12,6 +12,11 @@ import {
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { createCommissionEvent } from "@/services/mlm/commission";
 import { propagateSaleVolume } from "@/services/mlm/propagate-sale-volume";
+import {
+  AMBASSADOR_TERMS_VERSION,
+  joinAmbassadorProgram,
+} from "@/services/ambassador/join-program";
+import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
 
 type SubscriptionPaymentMetadata = {
   ambassadorUserId?: string | null;
@@ -111,10 +116,9 @@ export async function confirmSubscriptionPurchase(
     })
     .returning();
 
-  // Mirrors join-program.ts's own ACTIVE bump: a subscription is now the
-  // platform's real paid product (the old paid-registration flow is
-  // dormant, migration 0031), so paying for one activates the account the
-  // same way confirming registration used to.
+  // A subscription is now the platform's real paid product (the old
+  // paid-registration flow is dormant, migration 0031), so paying for one
+  // activates the account the same way confirming registration used to.
   const buyerProfile = await tx.query.profiles.findFirst({
     where: eq(profiles.id, payment.beneficiaryUserId),
   });
@@ -123,6 +127,24 @@ export async function confirmSubscriptionPurchase(
       .update(profiles)
       .set({ status: "ACTIVE" })
       .where(eq(profiles.id, payment.beneficiaryUserId));
+  }
+
+  // Registration's "Devenir ambassadeur" checkbox (profiles.wants_ambassador)
+  // is only ever acted on here: payment is mandatory before anyone can join
+  // the program (explicit product decision), and this is the first moment
+  // the buyer is actually ACTIVE. Reuses this same transaction —
+  // joinAmbassadorProgram takes an Executor for exactly this call site.
+  // Silently skipped if they're already an ambassador (e.g. a renewal, or
+  // they joined manually from the dashboard before this payment landed).
+  if (buyerProfile?.wantsAmbassador) {
+    const alreadyAmbassador = await tx.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, payment.beneficiaryUserId),
+    });
+    if (!alreadyAmbassador) {
+      await joinAmbassadorProgram(tx, payment.beneficiaryUserId, {
+        termsVersion: AMBASSADOR_TERMS_VERSION,
+      });
+    }
   }
 
   if (ambassadorUserId) {

@@ -295,6 +295,27 @@
       "when": 1789730646195,
       "tag": "0041_reward_images_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1789766875397,
+      "tag": "0042_bictorys_payment_provider",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1789766894168,
+      "tag": "0043_payment_settings_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789768587599,
+      "tag": "0044_mandatory_payment_before_ambassador",
+      "breakpoints": true
     }
   ]
 }

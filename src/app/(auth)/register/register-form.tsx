@@ -136,6 +136,19 @@ export function RegisterForm({
             </p>
           ))}
       </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          {...register("wantsAmbassador")}
+        />
+        <span>
+          Je souhaite aussi devenir ambassadeur — gratuit, sans obligation
+          d&apos;achat ni de recrutement. Activé automatiquement dès que
+          l&apos;abonnement est payé (un pseudo de parrain ambassadeur actif
+          est alors requis ci-dessus).
+        </span>
+      </label>
       {serverError && <p className="text-destructive text-sm">{serverError}</p>}
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Inscription..." : "Nous rejoindre"}

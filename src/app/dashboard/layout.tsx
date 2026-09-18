@@ -28,12 +28,37 @@ export default async function DashboardLayout({
     }),
   ]);
 
+  // Payment is mandatory before dashboard access at all (explicit product
+  // decision, reverses the earlier free-browsing model) — a member who has
+  // never paid (profile.status stays PENDING_PAYMENT until
+  // confirm-subscription-payment.ts flips it) sees the same blocking
+  // screen a lapsed renewal does, just with different copy
+  // (neverSubscribed). Deliberately PENDING_PAYMENT specifically, not
+  // "!== ACTIVE": a SUSPENDED account must keep going through its own
+  // existing gate below (showNav={false} + every individual page checking
+  // status itself) — it has nothing to do with payment, and this screen's
+  // copy ("payez votre abonnement") would be actively misleading for an
+  // account that already paid and is blocked for an unrelated reason.
+  // Admins are exempt, same bypass convention as every other gate here.
+  if (profile.role !== "ADMIN" && profile.status === "PENDING_PAYMENT") {
+    const price = await getCurrentParameterValue(
+      db,
+      "subscription.price_in_cfa",
+    );
+    return (
+      <FrozenAccountScreen
+        memberName={profile.fullName}
+        neverSubscribed
+        permanentlyFrozen={false}
+        price={price}
+        username={profile.username}
+      />
+    );
+  }
+
   // A lapsed renewal blocks the whole account, replacing every nested route
   // with the same blocked screen (explicit user decision) — admins are
-  // exempt, same bypass convention as hasCourseAccess/every other gate. A
-  // member who never subscribed at all (expiresAt null) is NOT frozen: this
-  // only fires for an actual lapsed *renewal*, never a first-timer who
-  // hasn't started yet (see repositories/subscriptions.ts's frozen field).
+  // exempt, same bypass convention as hasCourseAccess/every other gate.
   if (status?.frozen) {
     const price = await getCurrentParameterValue(
       db,
@@ -57,12 +82,11 @@ export default async function DashboardLayout({
             memberName={profile.fullName}
             isAdmin={profile.role === "ADMIN"}
             isAmbassador={!!ambassador}
-            // Unlike showNav === ACTIVE before this phase: a plain customer
-            // (PENDING_PAYMENT, never joined the ambassador program) must
-            // still see the nav to reach Cours/Mes achats (section 9/23 of
-            // the master prompt) — only a SUSPENDED account is fully
-            // blocked, same gate every course page already uses since
-            // Phase 11.
+            // PENDING_PAYMENT never reaches this render at all anymore (the
+            // gate above intercepts it) — the only two statuses that get
+            // here are ACTIVE and SUSPENDED, so this is really just "hide
+            // the nav for a suspended account," same gate every course page
+            // already uses since Phase 11.
             showNav={profile.status !== "SUSPENDED"}
           />
           <div className="flex flex-1 flex-col overflow-y-auto">

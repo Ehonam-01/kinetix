@@ -20,6 +20,11 @@ export const registerSchema = z.object({
   // same handle a referral link already uses, and the one a new member is
   // actually likely to know off the top of their head.
   sponsorUsername: z.literal("").or(usernameSchema).optional(),
+  // "Devenir ambassadeur" checkbox (register-form.tsx) — an intent captured
+  // now, acted on later once the subscription payment actually confirms
+  // (services/subscriptions/confirm-subscription-payment.ts): payment is
+  // mandatory before anyone can join the program.
+  wantsAmbassador: z.boolean().optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

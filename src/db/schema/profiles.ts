@@ -1,4 +1,5 @@
 import {
+  boolean,
   jsonb,
   pgEnum,
   pgSchema,
@@ -40,6 +41,13 @@ export const profiles = pgTable("profiles", {
   country: text("country"),
   role: profileRoleEnum("role").notNull().default("USER"),
   status: profileStatusEnum("status").notNull().default("PENDING_PAYMENT"),
+  // Captured from the registration form's "Devenir ambassadeur" checkbox
+  // (schemas/auth.ts's registerSchema) — payment is now mandatory before
+  // anyone can join the ambassador program (explicit product decision), so
+  // this can't be acted on at registration time like sponsorUsername is.
+  // confirm-subscription-payment.ts reads it once the subscription payment
+  // actually confirms and auto-joins the program at that point instead.
+  wantsAmbassador: boolean("wants_ambassador").notNull().default(false),
   // Community directory fields (Phase B, first building block) — all
   // optional and self-service (dashboard/settings), never required at
   // registration. goal stores one of config/goals.ts's GOAL_OPTIONS
