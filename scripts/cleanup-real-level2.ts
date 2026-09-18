@@ -54,33 +54,20 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+// Order matters here, not just "clear every table that references
+// profiles.id": several of these also reference each other (subscriptions
+// -> payments, withdrawal_requests/wallet_transfers -> financial_transactions,
+// financial_transactions -> commission_events, refunds -> sales -> payments)
+// — a referencing row must go before the row it points to, or Postgres
+// rejects the delete on the referenced table instead of the profile-linked
+// one you were expecting. Deleting the referencing table's row never cares
+// what THAT row itself points to, only what points TO it — so ordering by
+// "who references whom" alone (ignoring profiles.id, already handled by
+// every column below) is sufficient.
 async function clearNonCascadingReferences(ids: string[]) {
-  await db.delete(payments).where(
-    or(
-      inArray(payments.beneficiaryUserId, ids),
-      inArray(payments.payerUserId, ids),
-      inArray(payments.grantedByAdminId, ids),
-    ),
-  );
-  await db
-    .delete(subscriptions)
-    .where(
-      or(
-        inArray(subscriptions.userId, ids),
-        inArray(subscriptions.ambassadorUserId, ids),
-      ),
-    );
-  await db
-    .delete(financialTransactions)
-    .where(inArray(financialTransactions.userId, ids));
-  await db
-    .delete(commissionEvents)
-    .where(
-      or(
-        inArray(commissionEvents.beneficiaryUserId, ids),
-        inArray(commissionEvents.sourceUserId, ids),
-      ),
-    );
+  // refunds -> sales
+  await db.delete(refunds).where(inArray(refunds.initiatedByAdminId, ids));
+  // withdrawal_requests -> financial_transactions
   await db
     .delete(withdrawalRequests)
     .where(
@@ -89,9 +76,25 @@ async function clearNonCascadingReferences(ids: string[]) {
         inArray(withdrawalRequests.reviewedBy, ids),
       ),
     );
+  // wallet_transfers -> financial_transactions
   await db
-    .delete(referralClicks)
-    .where(inArray(referralClicks.ambassadorUserId, ids));
+    .delete(walletTransfers)
+    .where(
+      or(
+        inArray(walletTransfers.senderId, ids),
+        inArray(walletTransfers.recipientId, ids),
+      ),
+    );
+  // subscriptions -> payments, referral_clicks
+  await db
+    .delete(subscriptions)
+    .where(
+      or(
+        inArray(subscriptions.userId, ids),
+        inArray(subscriptions.ambassadorUserId, ids),
+      ),
+    );
+  // subscription_wallet_requests -> payments, referral_clicks
   await db
     .delete(subscriptionWalletRequests)
     .where(
@@ -101,19 +104,40 @@ async function clearNonCascadingReferences(ids: string[]) {
         inArray(subscriptionWalletRequests.ambassadorUserId, ids),
       ),
     );
+  // sales -> payments, referral_clicks (after refunds, which reference sales)
+  await db.delete(sales).where(inArray(sales.buyerUserId, ids));
+  // financial_transactions -> commission_events (after withdrawal_requests
+  // and wallet_transfers, which reference financial_transactions)
   await db
-    .delete(walletTransfers)
+    .delete(financialTransactions)
+    .where(inArray(financialTransactions.userId, ids));
+  // commission_events (after financial_transactions, which references it)
+  await db
+    .delete(commissionEvents)
     .where(
       or(
-        inArray(walletTransfers.senderId, ids),
-        inArray(walletTransfers.recipientId, ids),
+        inArray(commissionEvents.beneficiaryUserId, ids),
+        inArray(commissionEvents.sourceUserId, ids),
       ),
     );
+  // payments (after subscriptions, subscription_wallet_requests, sales —
+  // everything that references it)
+  await db.delete(payments).where(
+    or(
+      inArray(payments.beneficiaryUserId, ids),
+      inArray(payments.payerUserId, ids),
+      inArray(payments.grantedByAdminId, ids),
+    ),
+  );
+  // referral_clicks (after subscriptions, subscription_wallet_requests,
+  // sales — everything that references it)
+  await db
+    .delete(referralClicks)
+    .where(inArray(referralClicks.ambassadorUserId, ids));
+  // No cross-table dependencies among these — safe in any order.
   await db.delete(auditLogs).where(inArray(auditLogs.actorUserId, ids));
   await db.delete(memberRewards).where(inArray(memberRewards.userId, ids));
-  await db.delete(sales).where(inArray(sales.buyerUserId, ids));
   await db.delete(quizAttempts).where(inArray(quizAttempts.userId, ids));
-  await db.delete(refunds).where(inArray(refunds.initiatedByAdminId, ids));
   // sponsorships.user_id already cascades from profiles; sponsor_id doesn't
   // — a parent can't be deleted while a child's sponsorship row still
   // names them as sponsor.
