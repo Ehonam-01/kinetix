@@ -24,11 +24,14 @@ import { resendEmailProvider } from "@/services/notifications/resend-email";
 // the one who must authorize spending it, even when that happens to be the
 // buyer themselves.
 //
-// Unlike the Mobile Money path (initiate-subscription-payment.ts), the buyer
-// must already be ACTIVE here — same reasoning as every other wallet-funded
-// action (request-withdrawal.ts, initiate-transfer.ts): a wallet balance
-// only exists for an already-active account, so this can never be a brand
-// new member's very first paid access.
+// The buyer's own status is deliberately never checked, same reasoning as
+// the Mobile Money path (initiate-subscription-payment.ts): payment is now
+// mandatory before dashboard access at all (dashboard/layout.tsx), so this
+// is how a brand new PENDING_PAYMENT account gets its very first paid
+// access too — requiring ACTIVE already would make that impossible. What
+// does have to be ACTIVE is the WALLET being charged (below): a wallet
+// balance only exists for an already-active account, whether or not that
+// happens to be the buyer's own.
 export async function requestSubscriptionWithWallet(input: {
   buyerUserId: string;
   walletUsername: string;
@@ -40,8 +43,8 @@ export async function requestSubscriptionWithWallet(input: {
   );
 
   const buyer = await findProfileById(input.buyerUserId);
-  if (!buyer || buyer.status !== "ACTIVE") {
-    throw new Error("Votre compte doit être actif pour souscrire.");
+  if (!buyer) {
+    throw new Error("Profil introuvable.");
   }
 
   const wallet = await findProfileByUsername(input.walletUsername);
