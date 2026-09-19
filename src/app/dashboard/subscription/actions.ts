@@ -9,22 +9,37 @@ import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-s
 import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
 import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-subscription-wallet";
 
+// {error}-return convention, same as every other action here: a payment
+// provider rejecting the request (bad/placeholder credentials, a network
+// hiccup, Bictorys/Moneroo down) is a real, expected failure mode — left
+// uncaught, it used to crash the whole page render instead of showing a
+// message, since an uncaught Server Action error has no built-in inline
+// handling on the caller's side (SubscribeButton).
 export async function subscribeAction() {
   const { authUser, profile } = await requireUser();
   if (!authUser.email) {
-    throw new Error("Aucun email associé à ce compte.");
+    return { checkoutUrl: null, error: "Aucun email associé à ce compte." };
   }
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
 
-  const { checkoutUrl } = await initiateSubscriptionPayment({
-    buyerUserId: profile.id,
-    email: authUser.email,
-    fullName: profile.fullName,
-    returnUrl: `${origin}/dashboard/subscription`,
-    visitorToken,
-  });
+  let checkoutUrl: string;
+  try {
+    const intent = await initiateSubscriptionPayment({
+      buyerUserId: profile.id,
+      email: authUser.email,
+      fullName: profile.fullName,
+      returnUrl: `${origin}/dashboard/subscription`,
+      visitorToken,
+    });
+    checkoutUrl = intent.checkoutUrl;
+  } catch (err) {
+    return {
+      checkoutUrl: null,
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
 
   redirect(checkoutUrl);
 }
