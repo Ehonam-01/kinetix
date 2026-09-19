@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getBictorysEnv, getBictorysPayoutSecretCode } from "@/config/env.bictorys";
 import type { mobileMoneyOperatorEnum } from "@/db/schema/withdrawals";
+import { OPERATOR_TO_BICTORYS_PAYMENT_TYPE } from "./bictorys-operators";
 
 // https://docs.bictorys.com/reference/createpayout — single (non-batch)
 // payout, distinct from PaymentProvider (services/payments/provider.ts,
@@ -17,23 +18,6 @@ const BASE_URL =
     : "https://api.test.bictorys.com";
 
 const COUNTRY = "TG";
-
-// Bictorys' payment_type values for payouts — same operator set as charges,
-// mapped from this platform's own mobile_money_operator enum
-// (db/schema/withdrawals.ts) so the rest of the app never spells out a
-// Bictorys-specific string.
-const OPERATOR_TO_PAYMENT_TYPE: Record<
-  (typeof mobileMoneyOperatorEnum.enumValues)[number],
-  string
-> = {
-  MTN_MONEY: "mtn_money",
-  ORANGE_MONEY: "orange_money",
-  WAVE_MONEY: "wave_money",
-  MOOV_MONEY: "moov",
-  MOBICASH: "mobicash",
-  TOGOCELL: "togocell",
-  FREE_MONEY: "free_money",
-};
 
 const payoutResponseSchema = z.object({ id: z.string() });
 
@@ -54,7 +38,7 @@ export type PayoutResult = { payoutProviderReference: string };
 export async function createBictorysPayout(
   input: CreatePayoutInput,
 ): Promise<PayoutResult> {
-  const paymentType = OPERATOR_TO_PAYMENT_TYPE[input.operator];
+  const paymentType = OPERATOR_TO_BICTORYS_PAYMENT_TYPE[input.operator];
   const response = await fetch(
     `${BASE_URL}/pay/v1/payouts?payment_type=${paymentType}&country_code=${COUNTRY}`,
     {

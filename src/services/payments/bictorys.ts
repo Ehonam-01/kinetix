@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { getBictorysEnv } from "@/config/env.bictorys";
+import { OPERATOR_TO_BICTORYS_PAYMENT_TYPE } from "./bictorys-operators";
 import type {
   CreatePaymentInput,
   PaymentIntent,
@@ -37,6 +38,10 @@ type BictorysMobilePaymentResponse = {
   type: "MobilePaymentObject";
   transactionId: string;
   link: string;
+  // e.g. "you will receive a sms with instructions to accept payment." —
+  // shown to the member instead of redirecting them anywhere (createPayment
+  // below).
+  message?: string;
 };
 
 type BictorysChargeResponse =
@@ -130,16 +135,24 @@ async function bictorysRequest<T>(
 export const bictorysProvider: PaymentProvider = {
   name: "BICTORYS",
 
-  // No payment_type query param: Bictorys then hosts its own checkout page
-  // (operator/card picker included) and redirects back to returnUrl — same
-  // hosted-checkout shape as monerooProvider.createPayment, so the rest of
-  // the app (initiate-registration-payment.ts, initiate-subscription-
-  // payment.ts) doesn't need to know which provider is active.
+  // input.operator given -> payment_type is set, Bictorys pushes an
+  // SMS/USSD prompt straight to customer.phone ("direct softpay": no
+  // redirect, 201 MobilePaymentObject). input.operator omitted -> Bictorys
+  // instead hosts its own checkout page (operator/card picker included)
+  // and we redirect there (202 CheckoutLinkObject) — same hosted-checkout
+  // shape monerooProvider.createPayment always uses. Both branches return
+  // the same PaymentIntent shape; checkoutUrl null signals the direct case
+  // to every caller without them needing to know which mode was requested.
   async createPayment(input: CreatePaymentInput): Promise<PaymentIntent> {
     const fullName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+    const paymentType = input.operator
+      ? OPERATOR_TO_BICTORYS_PAYMENT_TYPE[
+          input.operator as keyof typeof OPERATOR_TO_BICTORYS_PAYMENT_TYPE
+        ]
+      : undefined;
 
     const result = await bictorysRequest<BictorysChargeResponse>(
-      "/pay/v1/charges",
+      `/pay/v1/charges${paymentType ? `?payment_type=${paymentType}` : ""}`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -168,7 +181,13 @@ export const bictorysProvider: PaymentProvider = {
     );
 
     return result.type === "MobilePaymentObject"
-      ? { providerReference: result.transactionId, checkoutUrl: result.link }
+      ? {
+          providerReference: result.transactionId,
+          checkoutUrl: null,
+          confirmationMessage:
+            result.message ??
+            "Vérifiez votre téléphone pour confirmer le paiement.",
+        }
       : { providerReference: result.chargeId, checkoutUrl: result.link };
   },
 

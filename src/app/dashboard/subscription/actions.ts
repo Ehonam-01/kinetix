@@ -14,17 +14,22 @@ import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-
 // hiccup, Bictorys/Moneroo down) is a real, expected failure mode — left
 // uncaught, it used to crash the whole page render instead of showing a
 // message, since an uncaught Server Action error has no built-in inline
-// handling on the caller's side (SubscribeButton).
-export async function subscribeAction() {
+// handling on the caller's side (SubscribeButton). A null checkoutUrl on
+// success (Bictorys' direct-softpay path — the SMS/USSD push already
+// went out) means don't redirect: it's a real success, just nothing to
+// navigate to, so the {error: null} + confirmationMessage return is what
+// the button shows instead.
+export async function subscribeAction(operator: string, phone: string) {
   const { authUser, profile } = await requireUser();
   if (!authUser.email) {
-    return { checkoutUrl: null, error: "Aucun email associé à ce compte." };
+    return { error: "Aucun email associé à ce compte.", confirmationMessage: null };
   }
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
 
-  let checkoutUrl: string;
+  let checkoutUrl: string | null;
+  let confirmationMessage: string | undefined;
   try {
     const intent = await initiateSubscriptionPayment({
       buyerUserId: profile.id,
@@ -32,15 +37,21 @@ export async function subscribeAction() {
       fullName: profile.fullName,
       returnUrl: `${origin}/dashboard/subscription`,
       visitorToken,
+      operator,
+      phone,
     });
     checkoutUrl = intent.checkoutUrl;
+    confirmationMessage = intent.confirmationMessage;
   } catch (err) {
     return {
-      checkoutUrl: null,
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
+      confirmationMessage: null,
     };
   }
 
+  if (!checkoutUrl) {
+    return { error: null, confirmationMessage: confirmationMessage ?? null };
+  }
   redirect(checkoutUrl);
 }
 

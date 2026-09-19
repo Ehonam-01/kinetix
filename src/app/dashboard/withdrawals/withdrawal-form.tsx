@@ -4,17 +4,8 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
-
-const OPERATOR_OPTIONS = [
-  { value: "MTN_MONEY", label: "MTN Money" },
-  { value: "ORANGE_MONEY", label: "Orange Money" },
-  { value: "WAVE_MONEY", label: "Wave" },
-  { value: "MOOV_MONEY", label: "Moov Money" },
-  { value: "MOBICASH", label: "Mobicash" },
-  { value: "TOGOCELL", label: "T-Money (Togocel)" },
-  { value: "FREE_MONEY", label: "Free Money" },
-];
 
 export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
   const [pending, startTransition] = useTransition();
@@ -143,7 +134,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
           className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
         >
           <option value="">Choisir un opérateur</option>
-          {OPERATOR_OPTIONS.map((o) => (
+          {MOBILE_MONEY_OPERATOR_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>

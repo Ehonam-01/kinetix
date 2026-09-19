@@ -35,6 +35,11 @@ export async function initiateSubscriptionPayment(input: {
   fullName: string;
   returnUrl: string;
   visitorToken?: string;
+  // Bictorys' direct-softpay mode (provider.ts's CreatePaymentInput) — both
+  // required together for it to actually reach the customer's phone;
+  // Moneroo ignores both.
+  operator?: string;
+  phone?: string;
 }) {
   const amount = await getCurrentParameterValue(
     db,
@@ -48,10 +53,11 @@ export async function initiateSubscriptionPayment(input: {
   const intent = await provider.createPayment({
     amount,
     description: "Abonnement annuel Kinetix Africa",
-    customer: { email: input.email, firstName, lastName },
+    customer: { email: input.email, firstName, lastName, phone: input.phone },
     returnUrl: input.returnUrl,
     idempotencyKey,
     metadata: { beneficiary_user_id: input.buyerUserId },
+    operator: input.operator,
   });
 
   const [payment] = await db
@@ -76,5 +82,9 @@ export async function initiateSubscriptionPayment(input: {
     })
     .returning();
 
-  return { payment, checkoutUrl: intent.checkoutUrl };
+  return {
+    payment,
+    checkoutUrl: intent.checkoutUrl,
+    confirmationMessage: intent.confirmationMessage,
+  };
 }

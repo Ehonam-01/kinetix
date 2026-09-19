@@ -16,11 +16,23 @@ export type CreatePaymentInput = {
   returnUrl: string;
   idempotencyKey: string;
   metadata?: Record<string, string>;
+  // Bictorys' "direct softpay" mode: pushes an SMS/USSD prompt straight to
+  // customer.phone via this operator instead of returning a hosted
+  // checkout page to redirect to (see bictorys.ts's createPayment).
+  // Moneroo has no equivalent — its own API is redirect-only — and simply
+  // ignores this field.
+  operator?: string;
 };
 
 export type PaymentIntent = {
   providerReference: string;
-  checkoutUrl: string;
+  // null when the provider pushed the charge directly to the customer's
+  // phone instead of returning a page to send them to — the caller must
+  // not redirect in that case.
+  checkoutUrl: string | null;
+  // Shown to the member when checkoutUrl is null, e.g. Bictorys' own "you
+  // will receive a sms with instructions to accept payment."
+  confirmationMessage?: string;
 };
 
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED";
