@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getBictorysEnv, getBictorysPayoutSecretCode } from "@/config/env.bictorys";
 import type { mobileMoneyOperatorEnum } from "@/db/schema/withdrawals";
@@ -41,7 +42,6 @@ export type CreatePayoutInput = {
   phone: string;
   operator: (typeof mobileMoneyOperatorEnum.enumValues)[number];
   recipientName: string;
-  merchantReference: string;
 };
 
 export type PayoutResult = { payoutProviderReference: string };
@@ -69,7 +69,14 @@ export async function createBictorysPayout(
         currency: "XOF",
         country: COUNTRY,
         transactionType: "transfer",
-        merchantReference: input.merchantReference,
+        // A bare UUID, not a compound string — see bictorys.ts's
+        // createPayment for the same fix and why (Bictorys rejects
+        // anything else with "E400-46: Invalid merchantReference format",
+        // caught live against the charges endpoint). Purely informational
+        // on our side either way: approveWithdrawal matches the webhook
+        // back to this payout via payoutProviderReference (Bictorys' own
+        // returned id), never via merchantReference.
+        merchantReference: randomUUID(),
         customerObject: {
           name: input.recipientName,
           phone: input.phone,

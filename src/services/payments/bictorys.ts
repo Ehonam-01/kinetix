@@ -1,5 +1,5 @@
 import "server-only";
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { getBictorysEnv } from "@/config/env.bictorys";
 import type {
@@ -146,7 +146,16 @@ export const bictorysProvider: PaymentProvider = {
           amount: input.amount,
           currency: "XOF",
           country: COUNTRY,
-          merchantReference: input.idempotencyKey,
+          // A bare UUID, not input.idempotencyKey verbatim — Bictorys
+          // rejects that compound "SUBSCRIPTION:<uuid>:<uuid>" shape with
+          // "E400-46: Invalid merchantReference format" (caught live in
+          // production; their docs don't document the constraint, but their
+          // own example value is a plain UUID). This field is purely
+          // informational on our side regardless — dedupe/lookup already
+          // goes through payments.idempotency_key and the chargeId/
+          // transactionId Bictorys itself returns as providerReference,
+          // never through merchantReference.
+          merchantReference: randomUUID(),
           successRedirectUrl: input.returnUrl,
           errorRedirectUrl: input.returnUrl,
           customerObject: {

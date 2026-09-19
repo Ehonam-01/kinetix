@@ -56,7 +56,6 @@ export async function approveWithdrawal(
     phone: request.payoutPhone,
     operator: request.operator,
     recipientName: recipient.fullName,
-    merchantReference: `WITHDRAWAL:${request.id}`,
   });
 
   return db.transaction(async (tx) => {
