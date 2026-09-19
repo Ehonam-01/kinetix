@@ -68,6 +68,10 @@ export const profiles = pgTable("profiles", {
   bio: text("bio"),
   goal: text("goal"),
   skills: jsonb("skills").$type<string[]>(),
+  // Defaults true so every existing member keeps showing up exactly as
+  // before this column existed — an opt-out, not an opt-in (repositories/
+  // community.ts's listCommunityMembers reads it).
+  directoryVisible: boolean("directory_visible").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -76,7 +76,12 @@ export async function updateProfileFields(
 // identity fields, edited from their own settings card.
 export async function updateCommunityProfileFields(
   userId: string,
-  values: { bio: string | null; goal: string | null; skills: string[] },
+  values: {
+    bio: string | null;
+    goal: string | null;
+    skills: string[];
+    directoryVisible: boolean;
+  },
 ) {
   const [updated] = await db
     .update(profiles)

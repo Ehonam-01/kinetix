@@ -61,6 +61,7 @@ export default async function SettingsPage() {
             bio={profile.bio ?? ""}
             goal={profile.goal ?? ""}
             skills={profile.skills ?? []}
+            directoryVisible={profile.directoryVisible}
           />
         </CardContent>
       </Card>

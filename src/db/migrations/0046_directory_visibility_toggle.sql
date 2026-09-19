@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "directory_visible" boolean DEFAULT true NOT NULL;

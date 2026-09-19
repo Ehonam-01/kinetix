@@ -19,16 +19,19 @@ export function CommunityProfileForm({
   bio,
   goal,
   skills,
+  directoryVisible,
 }: {
   bio: string;
   goal: string;
   skills: string[];
+  directoryVisible: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState({
     bio,
     goal,
     skillsInput: skills.join(", "),
+    directoryVisible,
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -42,6 +45,7 @@ export function CommunityProfileForm({
         bio: values.bio,
         goal: values.goal,
         skills: parseSkills(values.skillsInput),
+        directoryVisible: values.directoryVisible,
       });
       if (result.error) {
         setError(result.error);
@@ -53,6 +57,24 @@ export function CommunityProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={values.directoryVisible}
+          onChange={(e) =>
+            setValues((v) => ({ ...v, directoryVisible: e.target.checked }))
+          }
+        />
+        <span>
+          Afficher mon profil dans l&apos;annuaire des membres
+          <span className="text-muted-foreground block text-xs">
+            Décoché, ton nom et tes informations n&apos;apparaissent plus
+            dans la liste des autres membres.
+          </span>
+        </span>
+      </label>
+
       <div className="space-y-2">
         <Label htmlFor="goal">Ton objectif</Label>
         <select
