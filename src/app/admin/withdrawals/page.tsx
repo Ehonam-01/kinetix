@@ -39,7 +39,8 @@ export default async function AdminWithdrawalsPage() {
                     </p>
                     <p className="text-muted-foreground text-xs">
                       Numéro : {r.payoutPhone}
-                      {r.operator ? ` (${r.operator})` : ""} · Confirmé le{" "}
+                      {r.operator ? ` (${r.operator})` : ""}
+                      {r.country ? ` · ${r.country}` : ""} · Confirmé le{" "}
                       {(r.confirmedAt ?? r.createdAt).toLocaleDateString(
                         "fr-FR",
                         { dateStyle: "medium" },
@@ -77,6 +78,7 @@ export default async function AdminWithdrawalsPage() {
                 <p className="text-muted-foreground text-xs">
                   Numéro : {r.payoutPhone}
                   {r.operator ? ` (${r.operator})` : ""}
+                  {r.country ? ` · ${r.country}` : ""}
                 </p>
               </div>
             ))}

@@ -36,6 +36,19 @@ export const mobileMoneyOperatorEnum = pgEnum("mobile_money_operator", [
   "FREE_MONEY",
 ]);
 
+// The 6 countries Bictorys currently covers (config/bictorys-countries.ts),
+// ISO 3166-1 alpha-2 — required by the payout endpoint alongside operator,
+// same reasoning: chosen by the member upfront since there's no hosted page
+// to ask them there.
+export const bictorysCountryEnum = pgEnum("bictorys_country", [
+  "SN",
+  "CI",
+  "BJ",
+  "BF",
+  "ML",
+  "TG",
+]);
+
 // A member's request to cash out available_balance, gated by an email OTP
 // exactly like wallet_transfers (services/wallet/request-withdrawal.ts,
 // confirm-withdrawal.ts) — same reasoning: confirming a real payout
@@ -70,6 +83,7 @@ export const withdrawalRequests = pgTable(
     // new request going forward requires it (services/wallet/
     // request-withdrawal.ts).
     operator: mobileMoneyOperatorEnum("operator"),
+    country: bictorysCountryEnum("country"),
     status: withdrawalRequestStatusEnum("status")
       .notNull()
       .default("PENDING_OTP"),

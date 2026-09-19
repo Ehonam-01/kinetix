@@ -13,6 +13,7 @@ export async function requestWithdrawalAction(
   amount: number,
   payoutPhone: string,
   operator: string,
+  country: string,
 ) {
   const { profile } = await requireUser();
   try {
@@ -21,6 +22,7 @@ export async function requestWithdrawalAction(
       amount,
       payoutPhone,
       operator,
+      country,
     );
     return { requestId: request.id as string, error: null };
   } catch (err) {

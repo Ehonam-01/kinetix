@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { subscribeAction } from "./actions";
 
 export function SubscribeButton({ price }: { price: number }) {
   const [pending, startTransition] = useTransition();
+  const [country, setCountry] = useState("");
   const [operator, setOperator] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +20,8 @@ export function SubscribeButton({ price }: { price: number }) {
 
   function handleClick() {
     setError(null);
-    if (!operator || !phone.trim()) {
-      setError("Renseignez un opérateur et un numéro mobile money.");
+    if (!country || !operator || !phone.trim()) {
+      setError("Renseignez un pays, un opérateur et un numéro mobile money.");
       return;
     }
     startTransition(async () => {
@@ -29,7 +31,7 @@ export function SubscribeButton({ price }: { price: number }) {
       // provider error, or on Bictorys' direct-softpay success (no page to
       // redirect to — confirmationMessage tells the member what happens
       // next instead).
-      const result = await subscribeAction(operator, phone.trim());
+      const result = await subscribeAction(country, operator, phone.trim());
       if (result.error) {
         setError(result.error);
         return;
@@ -51,6 +53,22 @@ export function SubscribeButton({ price }: { price: number }) {
 
   return (
     <div className="space-y-3">
+      <div className="space-y-2">
+        <Label htmlFor="subscribe-country">Pays</Label>
+        <select
+          id="subscribe-country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
+        >
+          <option value="">Choisir un pays</option>
+          {BICTORYS_COUNTRY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="subscribe-operator">Opérateur</Label>
         <select

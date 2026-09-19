@@ -19,7 +19,11 @@ import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-
 // went out) means don't redirect: it's a real success, just nothing to
 // navigate to, so the {error: null} + confirmationMessage return is what
 // the button shows instead.
-export async function subscribeAction(operator: string, phone: string) {
+export async function subscribeAction(
+  country: string,
+  operator: string,
+  phone: string,
+) {
   const { authUser, profile } = await requireUser();
   if (!authUser.email) {
     return { error: "Aucun email associé à ce compte.", confirmationMessage: null };
@@ -37,6 +41,7 @@ export async function subscribeAction(operator: string, phone: string) {
       fullName: profile.fullName,
       returnUrl: `${origin}/dashboard/subscription`,
       visitorToken,
+      country,
       operator,
       phone,
     });

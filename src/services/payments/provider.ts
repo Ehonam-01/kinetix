@@ -22,6 +22,9 @@ export type CreatePaymentInput = {
   // Moneroo has no equivalent — its own API is redirect-only — and simply
   // ignores this field.
   operator?: string;
+  // ISO 3166-1 alpha-2 — one of config/bictorys-countries.ts's 6 supported
+  // countries. Moneroo ignores this too.
+  country?: string;
 };
 
 export type PaymentIntent = {

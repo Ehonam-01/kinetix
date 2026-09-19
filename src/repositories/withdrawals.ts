@@ -46,6 +46,7 @@ export type AdminWithdrawalRequest = {
   amount: number;
   payoutPhone: string;
   operator: string | null;
+  country: string | null;
   createdAt: Date;
   confirmedAt: Date | null;
   payoutFailureReason: string | null;
@@ -59,6 +60,7 @@ const ADMIN_WITHDRAWAL_REQUEST_COLUMNS = {
   amount: withdrawalRequests.amount,
   payoutPhone: withdrawalRequests.payoutPhone,
   operator: withdrawalRequests.operator,
+  country: withdrawalRequests.country,
   createdAt: withdrawalRequests.createdAt,
   confirmedAt: withdrawalRequests.confirmedAt,
   payoutFailureReason: withdrawalRequests.payoutFailureReason,

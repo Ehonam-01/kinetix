@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
 
@@ -13,6 +14,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
   const [amount, setAmount] = useState("");
   const [payoutPhone, setPayoutPhone] = useState("");
   const [operator, setOperator] = useState("");
+  const [country, setCountry] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,11 +25,12 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
     if (
       !payoutPhone.trim() ||
       !operator ||
+      !country ||
       !Number.isInteger(parsedAmount) ||
       parsedAmount <= 0
     ) {
       setError(
-        "Renseignez un numéro mobile money, un opérateur et un montant valides.",
+        "Renseignez un numéro mobile money, un opérateur, un pays et un montant valides.",
       );
       return;
     }
@@ -36,6 +39,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
         parsedAmount,
         payoutPhone.trim(),
         operator,
+        country,
       );
       if (result.error || !result.requestId) {
         setError(result.error ?? "Une erreur est survenue.");
@@ -65,6 +69,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
     setCode("");
     setError(null);
     setOperator("");
+    setCountry("");
   }
 
   if (step === "done") {
@@ -137,6 +142,22 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
           {MOBILE_MONEY_OPERATOR_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="withdrawal-country">Pays</Label>
+        <select
+          id="withdrawal-country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
+        >
+          <option value="">Choisir un pays</option>
+          {BICTORYS_COUNTRY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
             </option>
           ))}
         </select>

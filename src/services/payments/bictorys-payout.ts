@@ -17,14 +17,15 @@ const BASE_URL =
     ? "https://api.bictorys.com"
     : "https://api.test.bictorys.com";
 
-const COUNTRY = "TG";
-
 const payoutResponseSchema = z.object({ id: z.string() });
 
 export type CreatePayoutInput = {
   amount: number;
   phone: string;
   operator: (typeof mobileMoneyOperatorEnum.enumValues)[number];
+  // ISO 3166-1 alpha-2 — chosen by the member on the withdrawal form
+  // (config/bictorys-countries.ts), same as the payment side.
+  country: string;
   recipientName: string;
 };
 
@@ -40,7 +41,7 @@ export async function createBictorysPayout(
 ): Promise<PayoutResult> {
   const paymentType = OPERATOR_TO_BICTORYS_PAYMENT_TYPE[input.operator];
   const response = await fetch(
-    `${BASE_URL}/pay/v1/payouts?payment_type=${paymentType}&country_code=${COUNTRY}`,
+    `${BASE_URL}/pay/v1/payouts?payment_type=${paymentType}&country_code=${input.country}`,
     {
       method: "POST",
       headers: {
@@ -51,7 +52,7 @@ export async function createBictorysPayout(
       body: JSON.stringify({
         amount: input.amount,
         currency: "XOF",
-        country: COUNTRY,
+        country: input.country,
         transactionType: "transfer",
         // A bare UUID, not a compound string — see bictorys.ts's
         // createPayment for the same fix and why (Bictorys rejects

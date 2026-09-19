@@ -35,9 +35,9 @@ export async function approveWithdrawal(
   if (request.status !== "PENDING_REVIEW") {
     throw new Error("Cette demande n'est plus en attente de validation.");
   }
-  if (!request.operator) {
+  if (!request.operator || !request.country) {
     throw new Error(
-      "Cette demande a été créée avant la sélection de l'opérateur mobile money et ne peut pas être payée automatiquement.",
+      "Cette demande a été créée avant la sélection de l'opérateur/pays mobile money et ne peut pas être payée automatiquement.",
     );
   }
 
@@ -55,6 +55,7 @@ export async function approveWithdrawal(
     amount: request.amount,
     phone: request.payoutPhone,
     operator: request.operator,
+    country: request.country,
     recipientName: recipient.fullName,
   });
 

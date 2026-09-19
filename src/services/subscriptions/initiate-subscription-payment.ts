@@ -35,9 +35,10 @@ export async function initiateSubscriptionPayment(input: {
   fullName: string;
   returnUrl: string;
   visitorToken?: string;
-  // Bictorys' direct-softpay mode (provider.ts's CreatePaymentInput) — both
-  // required together for it to actually reach the customer's phone;
-  // Moneroo ignores both.
+  // Bictorys' direct-softpay mode (provider.ts's CreatePaymentInput) — all
+  // three required together for it to actually reach the customer's phone;
+  // Moneroo ignores them.
+  country?: string;
   operator?: string;
   phone?: string;
 }) {
@@ -58,6 +59,7 @@ export async function initiateSubscriptionPayment(input: {
     idempotencyKey,
     metadata: { beneficiary_user_id: input.buyerUserId },
     operator: input.operator,
+    country: input.country,
   });
 
   const [payment] = await db

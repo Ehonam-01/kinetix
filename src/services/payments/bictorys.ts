@@ -21,12 +21,11 @@ const BASE_URL =
     ? "https://api.bictorys.com"
     : "https://api.test.bictorys.com";
 
-// Kinetix Africa's members are in Togo (the withdrawal form's phone
-// placeholder is "+228..."). Bictorys' charge/transaction endpoints accept
-// a "country" field; there's no per-member country capture reliable enough
-// to derive this from today (profiles.country is free-text, not an ISO
-// code) — revisit if the platform ever expands beyond Togo.
-const COUNTRY = "TG";
+// Fallback only — every real caller now passes input.country (chosen by
+// the member on the payment form, config/bictorys-countries.ts). Kept for
+// the one dead call site that doesn't (initiate-registration-payment.ts,
+// unreachable from any UI since the free-registration pivot).
+const DEFAULT_COUNTRY = "TG";
 
 type BictorysCheckoutLinkResponse = {
   type: "CheckoutLinkObject";
@@ -158,7 +157,7 @@ export const bictorysProvider: PaymentProvider = {
         body: JSON.stringify({
           amount: input.amount,
           currency: "XOF",
-          country: COUNTRY,
+          country: input.country ?? DEFAULT_COUNTRY,
           // A bare UUID, not input.idempotencyKey verbatim — Bictorys
           // rejects that compound "SUBSCRIPTION:<uuid>:<uuid>" shape with
           // "E400-46: Invalid merchantReference format" (caught live in

@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
+  bictorysCountryEnum,
   mobileMoneyOperatorEnum,
   withdrawalRequests,
 } from "@/db/schema/withdrawals";
@@ -27,6 +28,7 @@ export async function requestWithdrawal(
   amount: number,
   payoutPhone: string,
   operator: string,
+  country: string,
 ) {
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error("Le montant doit être un nombre entier positif.");
@@ -43,6 +45,10 @@ export async function requestWithdrawal(
     throw new Error("Opérateur mobile money invalide.");
   }
   const validOperator = operator as (typeof mobileMoneyOperatorEnum.enumValues)[number];
+  if (!(bictorysCountryEnum.enumValues as readonly string[]).includes(country)) {
+    throw new Error("Pays invalide.");
+  }
+  const validCountry = country as (typeof bictorysCountryEnum.enumValues)[number];
 
   const user = await findProfileById(userId);
   if (!user || user.status !== "ACTIVE") {
@@ -89,6 +95,7 @@ export async function requestWithdrawal(
       amount,
       payoutPhone: trimmedPhone,
       operator: validOperator,
+      country: validCountry,
       otpCodeHash: hashOtpCode(code),
       otpExpiresAt,
     })
