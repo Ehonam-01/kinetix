@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
@@ -35,12 +36,16 @@ export async function initiateSubscriptionPayment(input: {
   fullName: string;
   returnUrl: string;
   visitorToken?: string;
-  // Bictorys' direct-softpay mode (provider.ts's CreatePaymentInput) — all
-  // three required together for it to actually reach the customer's phone;
-  // Moneroo ignores them.
+  // Bictorys'/PayDunya's direct-softpay mode (provider.ts's
+  // CreatePaymentInput) — country/operator/phone required together for it
+  // to actually reach the customer's phone; Moneroo ignores all of them.
+  // otp/address are PayDunya-only, required only for specific operators
+  // (services/payments/paydunya.ts's operator table).
   country?: string;
   operator?: string;
   phone?: string;
+  otp?: string;
+  address?: string;
 }) {
   const amount = await getCurrentParameterValue(
     db,
@@ -51,18 +56,14 @@ export async function initiateSubscriptionPayment(input: {
   const { firstName, lastName } = splitFullName(input.fullName);
   const provider = await getActivePaymentProvider(db);
 
-  const intent = await provider.createPayment({
-    amount,
-    description: "Abonnement annuel Kinetix Africa",
-    customer: { email: input.email, firstName, lastName, phone: input.phone },
-    returnUrl: input.returnUrl,
-    idempotencyKey,
-    metadata: { beneficiary_user_id: input.buyerUserId },
-    operator: input.operator,
-    country: input.country,
-  });
-
-  const [payment] = await db
+  // Inserted before calling the provider, deliberately — providerReference
+  // is filled in once createPayment returns, below. If that call throws
+  // (network timeout, provider outage) after the provider has actually
+  // accepted/processed the charge on their end regardless, this row is
+  // what lets an admin find and manually reconcile it later (/admin/
+  // payments). The reverse ordering left zero local trace of a real
+  // charge whenever the two disagreed — caught live in production.
+  const [pendingPayment] = await db
     .insert(payments)
     .values({
       beneficiaryUserId: input.buyerUserId,
@@ -70,7 +71,6 @@ export async function initiateSubscriptionPayment(input: {
       method: "MOBILE_MONEY",
       amount,
       provider: provider.name,
-      providerReference: intent.providerReference,
       idempotencyKey,
       status: "PENDING",
       // The only place confirm-subscription-payment.ts can recover the
@@ -84,9 +84,29 @@ export async function initiateSubscriptionPayment(input: {
     })
     .returning();
 
+  const intent = await provider.createPayment({
+    amount,
+    description: "Abonnement annuel Kinetix Africa",
+    customer: { email: input.email, firstName, lastName, phone: input.phone },
+    returnUrl: input.returnUrl,
+    idempotencyKey,
+    metadata: { beneficiary_user_id: input.buyerUserId },
+    operator: input.operator,
+    country: input.country,
+    otp: input.otp,
+    address: input.address,
+  });
+
+  const [payment] = await db
+    .update(payments)
+    .set({ providerReference: intent.providerReference })
+    .where(eq(payments.id, pendingPayment.id))
+    .returning();
+
   return {
     payment,
     checkoutUrl: intent.checkoutUrl,
     confirmationMessage: intent.confirmationMessage,
+    pendingWizallConfirmation: intent.pendingWizallConfirmation,
   };
 }

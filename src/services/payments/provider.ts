@@ -25,6 +25,13 @@ export type CreatePaymentInput = {
   // ISO 3166-1 alpha-2 — one of config/bictorys-countries.ts's 6 supported
   // countries. Moneroo ignores this too.
   country?: string;
+  // PayDunya-only: some (country, operator) combinations require a USSD
+  // code the customer generates themselves before this call (e.g. Orange
+  // Money Côte d'Ivoire/Burkina Faso — see paydunya.ts's operator table),
+  // or a physical address (e.g. Moov Togo, Orange Money/Moov Mali). Every
+  // other provider ignores both.
+  otp?: string;
+  address?: string;
 };
 
 export type PaymentIntent = {
@@ -36,6 +43,12 @@ export type PaymentIntent = {
   // Shown to the member when checkoutUrl is null, e.g. Bictorys' own "you
   // will receive a sms with instructions to accept payment."
   confirmationMessage?: string;
+  // PayDunya's Wizall Money (Sénégal) only: the initial call above doesn't
+  // confirm the charge by itself — the customer receives an authorization
+  // code out of band (SMS) that a second, separate call must submit
+  // (services/payments/paydunya.ts's confirmWizallPayment). No other
+  // operator/provider needs this.
+  pendingWizallConfirmation?: { transactionId: string };
 };
 
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED";
@@ -60,7 +73,7 @@ export type RefundResult = {
   refundReference: string;
 };
 
-export type PaymentProviderName = "MONEROO" | "BICTORYS";
+export type PaymentProviderName = "MONEROO" | "BICTORYS" | "PAYDUNYA";
 
 export interface PaymentProvider {
   // Written verbatim to payments.provider (a plain text column) — lets

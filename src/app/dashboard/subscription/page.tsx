@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { db } from "@/db/client";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import { getActiveProviderKey } from "@/repositories/payment-settings";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import {
@@ -15,9 +16,10 @@ import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
   const { profile } = await requireUser();
-  const [status, price] = await Promise.all([
+  const [status, price, activeProvider] = await Promise.all([
     getSubscriptionStatus(db, profile.id),
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
+    getActiveProviderKey(db),
   ]);
 
   return (
@@ -69,7 +71,11 @@ export default async function SubscriptionPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SubscriptionPanel price={price} username={profile.username} />
+          <SubscriptionPanel
+            price={price}
+            username={profile.username}
+            activeProvider={activeProvider}
+          />
         </CardContent>
       </Card>
     </div>

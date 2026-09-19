@@ -31,12 +31,14 @@ export function FrozenAccountScreen({
   permanentlyFrozen,
   price,
   username,
+  activeProvider,
 }: {
   memberName: string;
   neverSubscribed?: boolean;
   permanentlyFrozen: boolean;
   price: number;
   username: string;
+  activeProvider: string;
 }) {
   return (
     <div className="from-primary/15 via-background to-accent/40 flex min-h-screen items-center justify-center bg-linear-to-br p-4">
@@ -56,7 +58,11 @@ export function FrozenAccountScreen({
         </CardHeader>
         {!permanentlyFrozen && (
           <CardContent className="space-y-4">
-            <SubscriptionPanel price={price} username={username} />
+            <SubscriptionPanel
+              price={price}
+              username={username}
+              activeProvider={activeProvider}
+            />
           </CardContent>
         )}
         <CardContent className={permanentlyFrozen ? undefined : "pt-0"}>

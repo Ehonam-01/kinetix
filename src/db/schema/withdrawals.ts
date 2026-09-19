@@ -34,6 +34,13 @@ export const mobileMoneyOperatorEnum = pgEnum("mobile_money_operator", [
   "MOBICASH",
   "TOGOCELL",
   "FREE_MONEY",
+  // PayDunya-only, added alongside the subscription payment provider
+  // (services/payments/paydunya.ts) — Bictorys doesn't support these, so
+  // they never appear in the withdrawal (payout) operator picker.
+  "EXPRESSO",
+  "WIZALL",
+  "DJAMO",
+  "CELTIIS_CASH",
 ]);
 
 // The 6 countries Bictorys currently covers (config/bictorys-countries.ts),

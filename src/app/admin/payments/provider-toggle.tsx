@@ -8,6 +8,7 @@ import { updatePaymentProviderAction } from "./actions";
 const PROVIDERS = [
   { value: "MONEROO", label: "Moneroo" },
   { value: "BICTORYS", label: "Bictorys" },
+  { value: "PAYDUNYA", label: "PayDunya" },
 ] as const;
 
 export function ProviderToggle({

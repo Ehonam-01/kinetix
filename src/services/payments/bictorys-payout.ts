@@ -40,6 +40,9 @@ export async function createBictorysPayout(
   input: CreatePayoutInput,
 ): Promise<PayoutResult> {
   const paymentType = OPERATOR_TO_BICTORYS_PAYMENT_TYPE[input.operator];
+  if (!paymentType) {
+    throw new Error(`Bictorys ne supporte pas l'opérateur ${input.operator}.`);
+  }
   const response = await fetch(
     `${BASE_URL}/pay/v1/payouts?payment_type=${paymentType}&country_code=${input.country}`,
     {

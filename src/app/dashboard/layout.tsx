@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import { getActiveProviderKey } from "@/repositories/payment-settings";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { MobileSidebarProvider } from "@/components/mobile-sidebar-context";
@@ -43,10 +44,10 @@ export default async function DashboardLayout({
   // account that already paid and is blocked for an unrelated reason.
   // Admins are exempt, same bypass convention as every other gate here.
   if (profile.role !== "ADMIN" && profile.status === "PENDING_PAYMENT") {
-    const price = await getCurrentParameterValue(
-      db,
-      "subscription.price_in_cfa",
-    );
+    const [price, activeProvider] = await Promise.all([
+      getCurrentParameterValue(db, "subscription.price_in_cfa"),
+      getActiveProviderKey(db),
+    ]);
     return (
       <FrozenAccountScreen
         memberName={profile.fullName}
@@ -54,6 +55,7 @@ export default async function DashboardLayout({
         permanentlyFrozen={false}
         price={price}
         username={profile.username}
+        activeProvider={activeProvider}
       />
     );
   }
@@ -62,16 +64,17 @@ export default async function DashboardLayout({
   // with the same blocked screen (explicit user decision) — admins are
   // exempt, same bypass convention as hasCourseAccess/every other gate.
   if (status?.frozen) {
-    const price = await getCurrentParameterValue(
-      db,
-      "subscription.price_in_cfa",
-    );
+    const [price, activeProvider] = await Promise.all([
+      getCurrentParameterValue(db, "subscription.price_in_cfa"),
+      getActiveProviderKey(db),
+    ]);
     return (
       <FrozenAccountScreen
         memberName={profile.fullName}
         permanentlyFrozen={status.permanentlyFrozen}
         price={price}
         username={profile.username}
+        activeProvider={activeProvider}
       />
     );
   }

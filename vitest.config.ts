@@ -32,6 +32,9 @@ export default defineConfig({
       BICTORYS_SECRET_KEY: "test_unit_test_fake_key",
       BICTORYS_WEBHOOK_SECRET: "test_unit_test_fake_webhook_secret",
       BICTORYS_MERCHANT_SECRET_CODE: "1234",
+      PAYDUNYA_MASTER_KEY: "test_unit_test_fake_master_key",
+      PAYDUNYA_PRIVATE_KEY: "test_unit_test_fake_private_key",
+      PAYDUNYA_TOKEN: "test_unit_test_fake_token",
     },
   },
 });

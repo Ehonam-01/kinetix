@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { MonerooSubscribeButton } from "./moneroo-subscribe-button";
+import { PaydunyaSubscribeForm } from "./paydunya-subscribe-form";
 import { SubscribeButton } from "./subscribe-button";
 import { WalletSubscribeForm } from "./wallet-subscribe-form";
 
 export function SubscriptionPanel({
   price,
   username,
+  activeProvider,
 }: {
   price: number;
   username: string;
+  activeProvider: string;
 }) {
   const [method, setMethod] = useState<"MOBILE_MONEY" | "WALLET">(
     "MOBILE_MONEY",
@@ -46,7 +50,13 @@ export function SubscriptionPanel({
       </div>
 
       {method === "MOBILE_MONEY" ? (
-        <SubscribeButton price={price} />
+        activeProvider === "PAYDUNYA" ? (
+          <PaydunyaSubscribeForm price={price} />
+        ) : activeProvider === "BICTORYS" ? (
+          <SubscribeButton price={price} />
+        ) : (
+          <MonerooSubscribeButton price={price} />
+        )
       ) : (
         <WalletSubscribeForm price={price} defaultUsername={username} />
       )}

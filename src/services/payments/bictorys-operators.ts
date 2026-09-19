@@ -3,10 +3,11 @@ import type { mobileMoneyOperatorEnum } from "@/db/schema/withdrawals";
 // Bictorys' payment_type values — shared by bictorys.ts's direct-softpay
 // createPayment path and bictorys-payout.ts, mapped from this platform's
 // own mobile_money_operator enum so neither ever spells out a
-// Bictorys-specific string itself.
-export const OPERATOR_TO_BICTORYS_PAYMENT_TYPE: Record<
-  (typeof mobileMoneyOperatorEnum.enumValues)[number],
-  string
+// Bictorys-specific string itself. Partial, not a full Record: Expresso/
+// Wizall/Djamo/Celtiis Cash are PayDunya-only operators (services/
+// payments/paydunya.ts) that Bictorys doesn't support at all.
+export const OPERATOR_TO_BICTORYS_PAYMENT_TYPE: Partial<
+  Record<(typeof mobileMoneyOperatorEnum.enumValues)[number], string>
 > = {
   MTN_MONEY: "mtn_money",
   ORANGE_MONEY: "orange_money",

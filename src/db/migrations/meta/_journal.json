@@ -337,6 +337,13 @@
       "when": 1789822242491,
       "tag": "0047_bictorys_country_selection",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789845314394,
+      "tag": "0048_paydunya_provider",
+      "breakpoints": true
     }
   ]
 }

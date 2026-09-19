@@ -4,6 +4,7 @@ import { profiles } from "./profiles";
 export const paymentProviderEnum = pgEnum("payment_provider", [
   "MONEROO",
   "BICTORYS",
+  "PAYDUNYA",
 ]);
 
 // Singleton row (fixed id "default") holding which PaymentProvider

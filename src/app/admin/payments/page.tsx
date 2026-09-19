@@ -71,9 +71,17 @@ export default async function AdminPaymentsPage() {
                   >
                     {STATUS_LABEL[p.status] ?? p.status}
                   </span>
-                  {p.status === "PENDING" && p.providerReference && (
-                    <ReconcilePaymentButton paymentId={p.id} />
-                  )}
+                  {p.status === "PENDING" &&
+                    (p.providerReference ? (
+                      <ReconcilePaymentButton paymentId={p.id} />
+                    ) : (
+                      <span
+                        className="text-destructive text-xs"
+                        title="L'appel au fournisseur n'a jamais abouti — vérifier manuellement sur le tableau de bord Bictorys/Moneroo si un paiement correspondant existe."
+                      >
+                        Sans référence fournisseur
+                      </span>
+                    ))}
                 </div>
               </div>
             ))}
