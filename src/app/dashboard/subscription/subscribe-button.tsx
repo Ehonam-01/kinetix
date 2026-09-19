@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
+import { OPERATORS_BY_COUNTRY } from "@/config/bictorys-country-operators";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,19 @@ export function SubscribeButton({ price }: { price: number }) {
   const [confirmationMessage, setConfirmationMessage] = useState<
     string | null
   >(null);
+
+  const availableOperators = country
+    ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
+        (OPERATORS_BY_COUNTRY[country] ?? []).includes(o.value),
+      )
+    : MOBILE_MONEY_OPERATOR_OPTIONS;
+
+  function handleCountryChange(next: string) {
+    setCountry(next);
+    // The previously picked operator may not exist in the new country —
+    // never leave an invalid pairing selected.
+    setOperator("");
+  }
 
   function handleClick() {
     setError(null);
@@ -58,7 +72,7 @@ export function SubscribeButton({ price }: { price: number }) {
         <select
           id="subscribe-country"
           value={country}
-          onChange={(e) => setCountry(e.target.value)}
+          onChange={(e) => handleCountryChange(e.target.value)}
           className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
         >
           <option value="">Choisir un pays</option>
@@ -74,11 +88,14 @@ export function SubscribeButton({ price }: { price: number }) {
         <select
           id="subscribe-operator"
           value={operator}
+          disabled={!country}
           onChange={(e) => setOperator(e.target.value)}
-          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 disabled:opacity-50 md:text-sm"
         >
-          <option value="">Choisir un opérateur</option>
-          {MOBILE_MONEY_OPERATOR_OPTIONS.map((o) => (
+          <option value="">
+            {country ? "Choisir un opérateur" : "Choisissez d'abord un pays"}
+          </option>
+          {availableOperators.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>

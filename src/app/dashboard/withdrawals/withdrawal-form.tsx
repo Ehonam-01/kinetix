@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
+import { OPERATORS_BY_COUNTRY } from "@/config/bictorys-country-operators";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
 
@@ -18,6 +19,19 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const availableOperators = country
+    ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
+        (OPERATORS_BY_COUNTRY[country] ?? []).includes(o.value),
+      )
+    : MOBILE_MONEY_OPERATOR_OPTIONS;
+
+  function handleCountryChange(next: string) {
+    setCountry(next);
+    // The previously picked operator may not exist in the new country —
+    // never leave an invalid pairing selected.
+    setOperator("");
+  }
 
   function handleRequest() {
     setError(null);
@@ -131,33 +145,36 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="operator">Opérateur</Label>
-        <select
-          id="operator"
-          value={operator}
-          onChange={(e) => setOperator(e.target.value)}
-          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
-        >
-          <option value="">Choisir un opérateur</option>
-          {MOBILE_MONEY_OPERATOR_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="space-y-2">
         <Label htmlFor="withdrawal-country">Pays</Label>
         <select
           id="withdrawal-country"
           value={country}
-          onChange={(e) => setCountry(e.target.value)}
+          onChange={(e) => handleCountryChange(e.target.value)}
           className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 md:text-sm"
         >
           <option value="">Choisir un pays</option>
           {BICTORYS_COUNTRY_OPTIONS.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="operator">Opérateur</Label>
+        <select
+          id="operator"
+          value={operator}
+          disabled={!country}
+          onChange={(e) => setOperator(e.target.value)}
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 disabled:opacity-50 md:text-sm"
+        >
+          <option value="">
+            {country ? "Choisir un opérateur" : "Choisissez d'abord un pays"}
+          </option>
+          {availableOperators.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
             </option>
           ))}
         </select>
