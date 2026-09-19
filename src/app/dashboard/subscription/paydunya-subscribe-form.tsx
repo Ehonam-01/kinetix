@@ -232,7 +232,7 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
         <Label htmlFor="paydunya-phone">Numéro mobile money</Label>
         <Input
           id="paydunya-phone"
-          placeholder="+228..."
+          placeholder="Sans indicatif, ex : 91282590"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />

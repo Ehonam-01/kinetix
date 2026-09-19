@@ -28,6 +28,31 @@ const BASE_URL =
 
 type Operator = (typeof mobileMoneyOperatorEnum.enumValues)[number];
 
+// Unlike Bictorys (which accepts "+228..."), PayDunya rejects a phone
+// number with a country calling code prefix — caught live in production
+// ("Désolé, vous devez fournir un numéro valide du Togo." for
+// "+22891282590"), their own documented examples are all bare local
+// numbers (e.g. "70707070" for Togo, no "+228"). Stripped here rather than
+// relying on the form's own input format, so this holds regardless of how
+// the member actually typed it (with "+", a leading "00", spaces, ...).
+const COUNTRY_CALLING_CODES: Record<string, string> = {
+  SN: "221",
+  CI: "225",
+  BJ: "229",
+  BF: "226",
+  TG: "228",
+  ML: "223",
+};
+
+function toLocalPhoneNumber(phone: string, country: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const callingCode = COUNTRY_CALLING_CODES[country];
+  if (callingCode && digits.startsWith(callingCode)) {
+    return digits.slice(callingCode.length);
+  }
+  return digits;
+}
+
 type ChargeFields = {
   name: string;
   email: string;
@@ -305,7 +330,10 @@ async function paydunyaRequest<T>(path: string, init: RequestInit): Promise<T> {
 
 type InvoiceCreateResponse = { response_code: string; response_text: string; token?: string };
 
-async function createInvoice(input: CreatePaymentInput): Promise<string> {
+async function createInvoice(
+  input: CreatePaymentInput,
+  localPhone: string | undefined,
+): Promise<string> {
   const result = await paydunyaRequest<InvoiceCreateResponse>(
     "/checkout-invoice/create",
     {
@@ -317,7 +345,7 @@ async function createInvoice(input: CreatePaymentInput): Promise<string> {
           customer: {
             name: `${input.customer.firstName} ${input.customer.lastName}`.trim(),
             email: input.customer.email,
-            phone: input.customer.phone,
+            phone: localPhone,
           },
         },
         store: { name: SITE_NAME },
@@ -372,11 +400,12 @@ export const paydunyaProvider: PaymentProvider = {
     if (!input.customer.phone) {
       throw new Error("Un numéro de téléphone est requis.");
     }
+    const localPhone = toLocalPhoneNumber(input.customer.phone, input.country);
 
     // The invoice token doubles as our providerReference: PayDunya's IPN
     // payload identifies the transaction by it (invoice.token), same as
     // Bictorys' transactionId — see parseWebhook/verifyPayment below.
-    const token = await createInvoice(input);
+    const token = await createInvoice(input, localPhone);
 
     const result = await paydunyaRequest<SoftpayChargeResponse>(
       `/softpay/${config.endpoint}`,
@@ -386,7 +415,7 @@ export const paydunyaProvider: PaymentProvider = {
           config.buildBody({
             name: `${input.customer.firstName} ${input.customer.lastName}`.trim(),
             email: input.customer.email,
-            phone: input.customer.phone,
+            phone: localPhone,
             token,
             otp: input.otp,
             address: input.address,
