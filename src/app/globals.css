@@ -147,4 +147,15 @@
   html {
     @apply font-sans;
   }
+
+  /* Native <option> popups render with the OS/browser's own light
+     background regardless of the page's dark theme, in every browser this
+     was checked against — without this, options inherit dark mode's light
+     foreground color and become nearly illegible against that white popup
+     (caught live: a member reported the country/operator dropdowns as
+     blank). Fixed, not dark: aware, on purpose — matches the popup's own
+     fixed light background rather than the page's theme. */
+  select option {
+    @apply bg-white text-gray-900;
+  }
 }
