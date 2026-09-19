@@ -1,15 +1,23 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
 import { OPERATORS_BY_COUNTRY } from "@/config/bictorys-country-operators";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { subscribeAction } from "./actions";
+import { checkSubscriptionConfirmedAction, subscribeAction } from "./actions";
+
+// ~5 minutes at 4s per poll — long enough for a real SMS/USSD confirmation,
+// short enough not to poll forever if the member never confirms on their
+// phone (or the payment genuinely failed silently on the operator's side).
+const POLL_INTERVAL_MS = 4000;
+const MAX_POLLS = 75;
 
 export function SubscribeButton({ price }: { price: number }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [country, setCountry] = useState("");
   const [operator, setOperator] = useState("");
@@ -18,12 +26,43 @@ export function SubscribeButton({ price }: { price: number }) {
   const [confirmationMessage, setConfirmationMessage] = useState<
     string | null
   >(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   const availableOperators = country
     ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
         (OPERATORS_BY_COUNTRY[country] ?? []).includes(o.value),
       )
     : MOBILE_MONEY_OPERATOR_OPTIONS;
+
+  // Polls for the webhook's own confirmation instead of asking the member
+  // to reload manually — there's no way to push it straight to this one
+  // open tab, so the client asks. router.refresh() re-renders
+  // dashboard/layout.tsx's server-side gate, which is what actually
+  // unlocks the dashboard once profiles.status flips to ACTIVE; for a
+  // renewal (already ACTIVE) it just re-renders this page with the
+  // updated expiry date instead.
+  useEffect(() => {
+    if (!paymentId || confirmed) return;
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts += 1;
+      checkSubscriptionConfirmedAction(paymentId)
+        .then((isConfirmed) => {
+          if (isConfirmed) {
+            clearInterval(interval);
+            setConfirmed(true);
+            router.refresh();
+          } else if (attempts >= MAX_POLLS) {
+            clearInterval(interval);
+          }
+        })
+        .catch(() => {
+          clearInterval(interval);
+        });
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [paymentId, confirmed, router]);
 
   function handleCountryChange(next: string) {
     setCountry(next);
@@ -44,7 +83,7 @@ export function SubscribeButton({ price }: { price: number }) {
       // subscribeAction redirects server-side. It only resolves here on a
       // provider error, or on Bictorys' direct-softpay success (no page to
       // redirect to — confirmationMessage tells the member what happens
-      // next instead).
+      // next instead, and polling above takes over from there).
       const result = await subscribeAction(country, operator, phone.trim());
       if (result.error) {
         setError(result.error);
@@ -54,13 +93,17 @@ export function SubscribeButton({ price }: { price: number }) {
         result.confirmationMessage ??
           "Vérifiez votre téléphone pour confirmer le paiement.",
       );
+      setPaymentId(result.paymentId);
     });
   }
 
   if (confirmationMessage) {
     return (
       <p className="text-sm text-green-600">
-        {confirmationMessage} Rechargez cette page une fois confirmé.
+        {confirmationMessage}{" "}
+        {confirmed
+          ? "Paiement confirmé !"
+          : "En attente de confirmation — cette page se mettra à jour automatiquement."}
       </p>
     );
   }

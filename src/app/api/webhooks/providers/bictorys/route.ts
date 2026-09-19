@@ -6,6 +6,13 @@ import { bictorysProvider } from "@/services/payments/bictorys";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 import { processPayoutWebhookEvent } from "@/services/payments/handle-payout-webhook";
 
+// URL path fixed to /api/webhooks/providers/bictorys deliberately — it must
+// match the "New webhook" URL entered in the Bictorys dashboard exactly
+// (a mismatch here means every webhook 404s silently: Bictorys still
+// thinks it delivered, but confirm-subscription-payment.ts never runs,
+// leaving a real charge stuck PENDING forever — caught live in production
+// this way, money already taken from a member with no account unlocked).
+//
 // One endpoint for both event kinds Bictorys sends this merchant account —
 // charge/payment confirmations and payout/transfer confirmations — since
 // the two aren't distinguishable by payload shape alone (both are just

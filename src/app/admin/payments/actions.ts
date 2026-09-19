@@ -6,6 +6,7 @@ import {
   updatePaymentProvider,
   type PaymentProviderKey,
 } from "@/services/admin/update-payment-provider";
+import { reconcilePayment } from "@/services/admin/reconcile-payment";
 
 export async function updatePaymentProviderAction(
   provider: PaymentProviderKey,
@@ -20,4 +21,20 @@ export async function updatePaymentProviderAction(
   }
   revalidatePath("/admin/payments");
   return { error: null };
+}
+
+// Manual safety net for a PENDING payment whose webhook never arrived —
+// see services/admin/reconcile-payment.ts.
+export async function reconcilePaymentAction(paymentId: string) {
+  const { profile } = await requireAdmin();
+  try {
+    const result = await reconcilePayment(profile.id, paymentId);
+    revalidatePath("/admin/payments");
+    return { result, error: null };
+  } catch (err) {
+    return {
+      result: null,
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
 }

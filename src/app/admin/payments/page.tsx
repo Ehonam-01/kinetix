@@ -3,6 +3,7 @@ import { listPayments } from "@/repositories/payments";
 import { getActiveProviderKey } from "@/repositories/payment-settings";
 import { cn } from "@/lib/utils";
 import { ProviderToggle } from "./provider-toggle";
+import { ReconcilePaymentButton } from "./reconcile-payment-button";
 
 const METHOD_LABEL: Record<string, string> = {
   MOBILE_MONEY: "Mobile money",
@@ -40,7 +41,7 @@ export default async function AdminPaymentsPage() {
             {payments.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between px-4 py-3 text-sm"
+                className="flex items-center justify-between gap-4 px-4 py-3 text-sm"
               >
                 <div>
                   <p className="font-medium">{p.beneficiaryName}</p>
@@ -70,6 +71,9 @@ export default async function AdminPaymentsPage() {
                   >
                     {STATUS_LABEL[p.status] ?? p.status}
                   </span>
+                  {p.status === "PENDING" && p.providerReference && (
+                    <ReconcilePaymentButton paymentId={p.id} />
+                  )}
                 </div>
               </div>
             ))}

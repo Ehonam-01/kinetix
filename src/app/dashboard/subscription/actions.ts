@@ -3,6 +3,8 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { db } from "@/db/client";
+import { findPaymentById } from "@/repositories/payments";
 import { requireUser } from "@/services/auth/current-user";
 import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
 import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
@@ -26,7 +28,11 @@ export async function subscribeAction(
 ) {
   const { authUser, profile } = await requireUser();
   if (!authUser.email) {
-    return { error: "Aucun email associé à ce compte.", confirmationMessage: null };
+    return {
+      error: "Aucun email associé à ce compte.",
+      confirmationMessage: null,
+      paymentId: null,
+    };
   }
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
@@ -34,6 +40,7 @@ export async function subscribeAction(
 
   let checkoutUrl: string | null;
   let confirmationMessage: string | undefined;
+  let paymentId: string;
   try {
     const intent = await initiateSubscriptionPayment({
       buyerUserId: profile.id,
@@ -47,17 +54,40 @@ export async function subscribeAction(
     });
     checkoutUrl = intent.checkoutUrl;
     confirmationMessage = intent.confirmationMessage;
+    paymentId = intent.payment.id;
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
       confirmationMessage: null,
+      paymentId: null,
     };
   }
 
   if (!checkoutUrl) {
-    return { error: null, confirmationMessage: confirmationMessage ?? null };
+    return {
+      error: null,
+      confirmationMessage: confirmationMessage ?? null,
+      paymentId,
+    };
   }
   redirect(checkoutUrl);
+}
+
+// Polled by SubscribeButton once it's showing the "check your phone"
+// confirmation state (direct-softpay push sent, no page to redirect to) —
+// there's no way to push the webhook's own confirmation straight to a
+// specific open browser tab, so the client asks instead. Checks this exact
+// payment's own status, not profile.status/getSubscriptionStatus: for a
+// renewal the buyer is already ACTIVE before paying, so either of those
+// would read as "confirmed" immediately and never actually wait for the
+// webhook.
+export async function checkSubscriptionConfirmedAction(paymentId: string) {
+  const { profile } = await requireUser();
+  const payment = await findPaymentById(db, paymentId);
+  if (!payment || payment.beneficiaryUserId !== profile.id) {
+    throw new Error("Paiement introuvable.");
+  }
+  return payment.status === "CONFIRMED";
 }
 
 // {error}-return convention, same as dashboard/transfer/actions.ts: a bad
