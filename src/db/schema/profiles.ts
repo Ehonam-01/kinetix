@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   jsonb,
   pgEnum,
@@ -25,6 +26,15 @@ export const profileStatusEnum = pgEnum("profile_status", [
   "PENDING_PAYMENT",
   "ACTIVE",
   "SUSPENDED",
+  // Terminal, never reversed — services/account/confirm-account-deletion.ts
+  // anonymizes the row (name/username/phone/country/bio/goal/skills wiped)
+  // instead of deleting it: binary_nodes, sponsorships, commission_events
+  // and financial_transactions referencing this id stay intact so nobody
+  // else's genealogy or ledger history breaks. The Supabase auth.users row
+  // is banned and its credentials randomized (services/account/lock-auth-
+  // account.ts), never deleted either — deleting it would cascade-delete
+  // this very row (see the FK below).
+  "DELETED",
 ]);
 
 export const profiles = pgTable("profiles", {
@@ -61,4 +71,9 @@ export const profiles = pgTable("profiles", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  // Who confirmed the deletion — the member themself (self-service) or an
+  // admin (admin/members/[userId]). Distinguishes the two in the audit log
+  // without needing a separate boolean column.
+  deletedBy: uuid("deleted_by").references((): AnyPgColumn => profiles.id),
 });

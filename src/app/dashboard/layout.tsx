@@ -12,6 +12,8 @@ import { FrozenAccountScreen } from "./frozen-account-screen";
 export default async function DashboardLayout({
   children,
 }: LayoutProps<"/dashboard">) {
+  // DELETED accounts never reach this point — requireUser() itself
+  // redirects them straight to /login (services/auth/current-user.ts).
   const { profile } = await requireUser();
 
   // Subscription status and ambassador lookup don't depend on each other —

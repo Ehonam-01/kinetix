@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
 import { StatusActionButton } from "./status-action-button";
 
@@ -25,6 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING_PAYMENT: "Client (non-ambassadeur)",
   ACTIVE: "Actif",
   SUSPENDED: "Suspendu",
+  DELETED: "Supprimé",
 };
 
 const REWARD_STATUS_LABEL: Record<string, string> = {
@@ -70,7 +72,7 @@ export default async function AdminMemberDetailPage(
           <h1 className="text-2xl font-semibold">{member.fullName}</h1>
           <p className="text-muted-foreground text-sm">{email}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(member.status === "ACTIVE" ||
             member.status === "PENDING_PAYMENT") && (
             <StatusActionButton
@@ -85,6 +87,9 @@ export default async function AdminMemberDetailPage(
               target="ACTIVE"
               label="Réactiver"
             />
+          )}
+          {member.status !== "DELETED" && (
+            <DeleteAccountButton userId={member.id} />
           )}
         </div>
       </div>

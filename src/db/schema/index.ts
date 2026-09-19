@@ -24,3 +24,4 @@ export * from "./withdrawals";
 export * from "./subscriptions";
 export * from "./subscription-wallet-requests";
 export * from "./payment-settings";
+export * from "./account-deletion-requests";

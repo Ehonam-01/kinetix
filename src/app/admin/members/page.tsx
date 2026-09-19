@@ -12,6 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   PENDING_PAYMENT: "Client (non-ambassadeur)",
   ACTIVE: "Actif",
   SUSPENDED: "Suspendu",
+  DELETED: "Supprimé",
 };
 
 const AVATAR_COLORS = [
@@ -113,6 +114,8 @@ export default async function AdminMembersPage(
                             "bg-destructive/10 text-destructive",
                           m.status === "PENDING_PAYMENT" &&
                             "bg-muted text-muted-foreground",
+                          m.status === "DELETED" &&
+                            "bg-muted text-muted-foreground line-through",
                         )}
                       >
                         {STATUS_LABEL[m.status]}

@@ -11,7 +11,7 @@ export type MemberListRow = {
   fullName: string;
   email: string | null;
   role: "USER" | "ADMIN";
-  status: "PENDING_PAYMENT" | "ACTIVE" | "SUSPENDED";
+  status: "PENDING_PAYMENT" | "ACTIVE" | "SUSPENDED" | "DELETED";
   createdAt: Date;
   currentLevelCode: number | null;
   availableBalance: number;

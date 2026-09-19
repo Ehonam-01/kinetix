@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/services/auth/current-user";
 import { setMemberStatus } from "@/services/admin/set-member-status";
+import { confirmAccountDeletion } from "@/services/account/confirm-account-deletion";
+import { requestAccountDeletion } from "@/services/account/request-account-deletion";
 import { grantSubscriptionCredit } from "@/services/subscriptions/grant-subscription-credit";
 
 export async function setMemberStatusAction(
@@ -23,4 +25,35 @@ export async function grantSubscriptionCreditAction(userId: string) {
   const { profile } = await requireAdmin();
   await grantSubscriptionCredit(profile.id, userId);
   revalidatePath(`/admin/members/${userId}`);
+}
+
+export async function requestMemberDeletionAction(userId: string) {
+  const { profile } = await requireAdmin();
+  try {
+    const request = await requestAccountDeletion(profile.id, userId);
+    return { requestId: request.id as string, error: null };
+  } catch (err) {
+    return {
+      requestId: null,
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+}
+
+export async function confirmMemberDeletionAction(
+  userId: string,
+  requestId: string,
+  code: string,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await confirmAccountDeletion(profile.id, requestId, code);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePath(`/admin/members/${userId}`);
+  revalidatePath("/admin/members");
+  return { error: null };
 }

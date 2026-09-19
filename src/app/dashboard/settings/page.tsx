@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CommunityProfileForm } from "./community-profile-form";
+import { DeleteAccountForm } from "./delete-account-form";
 import { PasswordForm } from "./password-form";
 import { ProfileForm } from "./profile-form";
 
@@ -73,6 +74,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <PasswordForm />
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle className="text-destructive">Zone de danger</CardTitle>
+          <CardDescription>
+            Supprimer définitivement votre compte.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeleteAccountForm />
         </CardContent>
       </Card>
     </div>
