@@ -337,8 +337,23 @@ async function paydunyaRequest<T>(path: string, init: RequestInit): Promise<T> {
 
   const body = (await response.json()) as T;
   if (!response.ok) {
+    // PayDunya's own error bodies carry a "message" field already meant to
+    // be shown to the end user (French, human-readable — e.g. "le service
+    // de paiement par TMoney est momentanément indisponible"), unlike the
+    // raw status code + JSON dump this used to throw — that leaked
+    // straight through to the member's screen (every caller here just
+    // does `error: err.message` with no further wrapping). Full detail
+    // still goes to the server log for debugging.
+    console.error(`PayDunya ${path} a répondu ${response.status} :`, body);
+    const message =
+      body &&
+      typeof body === "object" &&
+      "message" in body &&
+      typeof (body as { message: unknown }).message === "string"
+        ? (body as { message: string }).message
+        : null;
     throw new Error(
-      `PayDunya ${path} a répondu ${response.status} : ${JSON.stringify(body)}`,
+      message ?? "Le paiement PayDunya a échoué. Veuillez réessayer.",
     );
   }
   return body;
