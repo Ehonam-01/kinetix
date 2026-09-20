@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 
-export const OTP_TTL_MINUTES = 10;
+export const OTP_TTL_MINUTES = 5;
 export const MAX_OTP_ATTEMPTS = 5;
 
 // crypto.randomInt (CSPRNG), not Math.random() — same rigor as the
