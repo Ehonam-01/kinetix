@@ -124,10 +124,10 @@ export default async function LevelsPage() {
                         <img
                           src={reward.imageUrl}
                           alt=""
-                          className="size-14 shrink-0 rounded-lg object-cover"
+                          className="aspect-video w-20 shrink-0 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="bg-muted text-muted-foreground flex size-14 shrink-0 items-center justify-center rounded-lg text-xs">
+                        <div className="bg-muted text-muted-foreground flex aspect-video w-20 shrink-0 items-center justify-center rounded-lg text-xs">
                           🎁
                         </div>
                       )}

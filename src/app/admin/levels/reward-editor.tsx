@@ -66,7 +66,7 @@ export function RewardEditor({
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row">
-      <div className="border-border bg-muted relative aspect-square w-full shrink-0 overflow-hidden rounded-xl border sm:w-32">
+      <div className="border-border bg-muted relative aspect-video w-full shrink-0 overflow-hidden rounded-xl border sm:w-48">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL, no remotePatterns configured (same as course-card.tsx)
           <img src={imageUrl} alt="" className="size-full object-cover" />

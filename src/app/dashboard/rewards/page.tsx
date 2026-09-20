@@ -41,7 +41,7 @@ export default async function RewardsPage() {
                     <img
                       src={r.reward.imageUrl}
                       alt=""
-                      className="size-12 shrink-0 rounded-lg object-cover"
+                      className="aspect-video w-20 shrink-0 rounded-lg object-cover"
                     />
                   )}
                   <div>

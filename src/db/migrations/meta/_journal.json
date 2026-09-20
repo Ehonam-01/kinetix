@@ -344,6 +344,20 @@
       "when": 1789845314394,
       "tag": "0048_paydunya_provider",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1789926928750,
+      "tag": "0049_profile_ancestor_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1789927230035,
+      "tag": "0050_fix_storage_admin_check",
+      "breakpoints": true
     }
   ]
 }
