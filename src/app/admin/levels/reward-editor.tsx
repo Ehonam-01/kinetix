@@ -93,11 +93,9 @@ export function RewardEditor({
             <Label htmlFor={`value-${levelCode}`}>Valeur (F CFA)</Label>
             <Input
               id={`value-${levelCode}`}
-              type="number"
-              min={0}
-              step={1}
+              inputMode="numeric"
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => setValue(e.target.value.replace(/\D/g, ""))}
             />
           </div>
         </div>

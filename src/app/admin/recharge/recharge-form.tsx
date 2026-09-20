@@ -163,11 +163,9 @@ export function RechargeForm({
         <Label htmlFor="recharge-amount">Montant à créditer (F CFA)</Label>
         <Input
           id="recharge-amount"
-          type="number"
-          min={1}
-          step={1}
+          inputMode="numeric"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
         />
       </div>
       <div className="space-y-2">

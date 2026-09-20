@@ -44,11 +44,9 @@ export function EditPricingForm({
           <Label htmlFor="price">Prix affiché (F CFA, optionnel)</Label>
           <Input
             id="price"
-            type="number"
-            min={0}
-            step={1}
+            inputMode="numeric"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
             placeholder="ex : 50000"
           />
         </div>
