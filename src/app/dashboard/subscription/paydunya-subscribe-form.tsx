@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
+import { PAYDUNYA_COUNTRY_OPTIONS } from "@/config/paydunya-countries";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import {
   PAYDUNYA_OPERATORS_BY_COUNTRY,
@@ -23,11 +23,7 @@ import {
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75;
-
-// PayDunya only covers these 6 countries with operators this platform
-// already lists (config/paydunya-country-operators.ts) — Cameroon (MTN) is
-// in PayDunya's own coverage too but out of scope, see that file.
-const COUNTRY_OPTIONS = BICTORYS_COUNTRY_OPTIONS;
+const COUNTRY_OPTIONS = PAYDUNYA_COUNTRY_OPTIONS;
 
 export function PaydunyaSubscribeForm({ price }: { price: number }) {
   const router = useRouter();

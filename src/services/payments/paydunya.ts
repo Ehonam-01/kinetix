@@ -42,6 +42,7 @@ const COUNTRY_CALLING_CODES: Record<string, string> = {
   BF: "226",
   TG: "228",
   ML: "223",
+  CM: "237",
 };
 
 function toLocalPhoneNumber(phone: string, country: string): string {
@@ -292,6 +293,21 @@ const OPERATOR_CONFIG: Partial<Record<`${string}:${Operator}`, OperatorConfig>> 
       moov_ml_phone_number: f.phone,
       moov_ml_customer_address: f.address,
       payment_token: f.token,
+    }),
+  },
+  "CM:MTN_MONEY": {
+    endpoint: "mtn-cameroun",
+    responseKind: "push",
+    buildBody: (f) => ({
+      mtn_cameroun_customer_fullname: f.name,
+      mtn_cameroun_email: f.email,
+      mtn_cameroun_phone_number: f.phone,
+      mtn_cameroun_wallet_provider: "MTNCAMEROUN",
+      payment_token: f.token,
+      // The one PayDunya operator outside the XOF zone — every other
+      // buildBody above omits this field, letting PayDunya's default
+      // (XOF) apply.
+      currency: "XAF",
     }),
   },
 };
