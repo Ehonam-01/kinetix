@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db/client";
 import { findAuthEmailByUserId } from "@/repositories/auth-users";
@@ -10,6 +11,7 @@ import { listMemberRewards } from "@/repositories/member-rewards";
 import { getNetworkView } from "@/repositories/network";
 import { findProfileById } from "@/repositories/profiles";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CreditBalanceForm } from "./credit-balance-form";
 import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
 import { StatusActionButton } from "./status-action-button";
@@ -90,6 +91,14 @@ export default async function AdminMemberDetailPage(
             />
           )}
           {member.status !== "DELETED" && (
+            <Link
+              href={`/admin/recharge?username=${encodeURIComponent(member.username)}`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Recharger ce membre
+            </Link>
+          )}
+          {member.status !== "DELETED" && (
             <DeleteAccountButton userId={member.id} />
           )}
         </div>
@@ -129,19 +138,6 @@ export default async function AdminMemberDetailPage(
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Créditer le solde</CardTitle>
-          <CardDescription>
-            Ajoute un montant directement au solde disponible du membre
-            (recharge manuelle, hors provider de paiement).
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CreditBalanceForm userId={member.id} />
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">

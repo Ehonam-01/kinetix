@@ -23,6 +23,12 @@ describe("findAdminSectionLabel", () => {
     expect(findAdminSectionLabel("/admin/transfers")).toBe("Transferts");
   });
 
+  it("resolves the recharge page to its own section, not Membres", () => {
+    expect(findAdminSectionLabel("/admin/recharge")).toBe(
+      "Recharger un compte",
+    );
+  });
+
   it("resolves the withdrawals page to the Retraits section", () => {
     expect(findAdminSectionLabel("/admin/withdrawals")).toBe("Retraits");
   });

@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CreditCard,
   Gift,
+  HandCoins,
   Landmark,
   LayoutGrid,
   Layers,
@@ -25,6 +26,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin", label: "Vue d'ensemble", icon: LayoutGrid },
   { href: "/admin/members", label: "Membres", icon: Users },
+  { href: "/admin/recharge", label: "Recharger un compte", icon: HandCoins },
   { href: "/admin/payments", label: "Paiements", icon: CreditCard },
   {
     href: "/admin/subscriptions",
