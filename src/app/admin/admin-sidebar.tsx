@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SITE_NAME } from "@/config/site";
 import { useMobileSidebar } from "@/components/mobile-sidebar-context";
 import { LogoutButton } from "@/app/dashboard/logout-button";
 import { ADMIN_NAV_ITEMS } from "./nav-items";
@@ -34,7 +35,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
               M
             </div>
             <span className="font-heading text-sm font-semibold">
-              MLM Admin
+              {SITE_NAME}
             </span>
           </div>
           <button
