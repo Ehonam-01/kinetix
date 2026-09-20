@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "became_ancestor_at" timestamp with time zone;

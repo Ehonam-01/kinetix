@@ -110,6 +110,14 @@ export default async function AdminMemberDetailPage(
             <CardTitle className="text-lg">
               {currentLevel ? `Niveau ${currentLevel.code}` : "Aucun"}
             </CardTitle>
+            {member.becameAncestorAt && (
+              <p className="text-primary text-xs font-medium">
+                🏆 Ancêtre depuis le{" "}
+                {member.becameAncestorAt.toLocaleDateString("fr-FR", {
+                  dateStyle: "medium",
+                })}
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card size="sm">

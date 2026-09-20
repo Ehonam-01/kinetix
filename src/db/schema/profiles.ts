@@ -72,6 +72,13 @@ export const profiles = pgTable("profiles", {
   // before this column existed — an opt-out, not an opt-in (repositories/
   // community.ts's listCommunityMembers reads it).
   directoryVisible: boolean("directory_visible").notNull().default(true),
+  // Set once, by completeLevel (services/mlm/unlock-level.ts) reaching
+  // level 5 — the top of the compensation plan. A pure status badge (no
+  // effect on how this member's own ascendants' commissions are
+  // calculated): only createCommissionEvent (services/mlm/commission.ts)
+  // reads it, to stop crediting this member with any further commission of
+  // any kind. Their existing balance and dashboard access are untouched.
+  becameAncestorAt: timestamp("became_ancestor_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

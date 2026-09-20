@@ -1,7 +1,9 @@
 import "server-only";
+import { eq } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { commissionEvents } from "@/db/schema/commission-events";
 import { financialTransactions } from "@/db/schema/financial-transactions";
+import { profiles } from "@/db/schema/profiles";
 import { creditBalance } from "./credit-balance";
 
 type CommissionInput = {
@@ -43,6 +45,18 @@ export async function createCommissionEvent(
   executor: Executor,
   input: CommissionInput,
 ) {
+  // A member who completed level 5 ("ancêtre", profiles.became_ancestor_at
+  // set by completeLevel) has graduated out of the earning structure — no
+  // further commission of any kind, from here on, regardless of type or
+  // source. Checked first, before the dedupe insert, so a blocked event
+  // never occupies its dedupe_key (an admin fixing a misconfigured
+  // ancestor flag later can still have it paid retroactively).
+  const beneficiary = await executor.query.profiles.findFirst({
+    where: eq(profiles.id, input.beneficiaryUserId),
+    columns: { becameAncestorAt: true },
+  });
+  if (beneficiary?.becameAncestorAt) return null;
+
   const [event] = await executor
     .insert(commissionEvents)
     .values({

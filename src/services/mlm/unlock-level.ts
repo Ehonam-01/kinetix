@@ -1,10 +1,11 @@
 import "server-only";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import type { Executor } from "@/db/executor";
 import { generationProgress } from "@/db/schema/generation-progress";
 import { levels, type LevelConfig } from "@/db/schema/levels";
 import { memberLevels } from "@/db/schema/member-levels";
+import { profiles } from "@/db/schema/profiles";
 import {
   findAncestors,
   findBinaryNodeByUserId,
@@ -233,6 +234,15 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
 
   if (levelCode < 5) {
     await unlockLevel(tx, userId, levelCode + 1);
+  } else {
+    // The top of the compensation plan — this member becomes an "ancêtre"
+    // (see createCommissionEvent, the only place that reads this column).
+    // isNull guard keeps this a true one-time transition even if
+    // completeLevel were ever invoked again for level 5 for this user.
+    await tx
+      .update(profiles)
+      .set({ becameAncestorAt: sql`now()` })
+      .where(and(eq(profiles.id, userId), isNull(profiles.becameAncestorAt)));
   }
 }
 

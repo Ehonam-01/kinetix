@@ -30,6 +30,22 @@ export default async function LevelsPage() {
 
   return (
     <div className="space-y-6">
+      {profile.becameAncestorAt && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle>🏆 Ancêtre</CardTitle>
+            <CardDescription>
+              Vous avez atteint le sommet du plan de compensation (niveau 5)
+              le{" "}
+              {profile.becameAncestorAt.toLocaleDateString("fr-FR", {
+                dateStyle: "long",
+              })}
+              . Votre solde et l&apos;accès à la plateforme restent
+              inchangés, mais vous ne recevez plus de nouvelles commissions.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
       <div className="space-y-4">
         {levelProgress.map((level) => {
           const reward = rewardByLevel.get(level.code);
