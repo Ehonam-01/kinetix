@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CreditBalanceForm } from "./credit-balance-form";
 import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
 import { StatusActionButton } from "./status-action-button";
@@ -120,6 +121,19 @@ export default async function AdminMemberDetailPage(
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Créditer le solde</CardTitle>
+          <CardDescription>
+            Ajoute un montant directement au solde disponible du membre
+            (recharge manuelle, hors provider de paiement).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreditBalanceForm userId={member.id} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
