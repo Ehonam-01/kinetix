@@ -9,20 +9,24 @@ import { logAdminAction } from "@/services/admin/audit-log";
 // Admin-only, role re-checked inside the transaction (defense in depth, same
 // convention as grantAdminCredit/updateRewardDeliveryStatus).
 //
-// Every course is public to browse — access comes from the subscription, not
-// a per-course price (explicit user decision, "remplacement complet" — see
-// db/schema/subscriptions.ts), so this no longer takes price/businessVolume/
-// category (retired admin pricing UI) or levelCodes (no more level-gating,
+// Every course is unlocked by the subscription, never bought individually
+// (explicit user decision, "remplacement complet" — see db/schema/
+// subscriptions.ts) — price here is display-only (a perceived-value figure
+// shown alongside "Gratuit avec l'abonnement", never charged), unlike its
+// pre-pivot meaning. levelCodes stays retired (no more level-gating,
 // hasCourseAccess no longer reads course_levels at all — see
-// repositories/courses.ts). slug is auto-derived from the title when
-// omitted, same rule as migration 0022's SQL backfill (see lib/utils.ts's
-// slugify), so every course created from now on gets one without the admin
-// having to think about URLs.
+// repositories/courses.ts), and businessVolume stays untouched too — no
+// code computes commission from a course's BV anymore. slug is
+// auto-derived from the title when omitted, same rule as migration 0022's
+// SQL backfill (see lib/utils.ts's slugify), so every course created from
+// now on gets one without the admin having to think about URLs.
 export async function createCourse(
   adminUserId: string,
   input: {
     title: string;
     description?: string;
+    price?: number;
+    category?: string;
   },
 ) {
   return db.transaction(async (tx) => {
@@ -39,6 +43,8 @@ export async function createCourse(
         title: input.title,
         slug: slugify(input.title),
         description: input.description,
+        price: input.price,
+        category: input.category,
       })
       .returning();
 

@@ -13,6 +13,7 @@ import { AddLessonForm } from "./add-lesson-form";
 import { AddModuleForm } from "./add-module-form";
 import { CourseStatusForm } from "./course-status-form";
 import { EditModuleForm } from "./edit-module-form";
+import { EditPricingForm } from "./edit-pricing-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
 
 export default async function AdminCourseDetailPage(
@@ -47,6 +48,22 @@ export default async function AdminCourseDetailPage(
           <EditThumbnailForm
             courseId={courseId}
             currentThumbnailUrl={content.course.thumbnailUrl}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Prix et catégorie</CardTitle>
+          <CardDescription>
+            Affichés sur la page d&apos;accueil et la fiche du cours.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EditPricingForm
+            courseId={courseId}
+            currentPrice={content.course.price}
+            currentCategory={content.course.category}
           />
         </CardContent>
       </Card>

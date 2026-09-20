@@ -35,6 +35,16 @@ export default async function CourseDetailPage(
               {content.course.description}
             </p>
           )}
+          {content.course.price != null && (
+            <p className="mt-1 text-sm">
+              <span className="text-muted-foreground line-through">
+                {content.course.price.toLocaleString("fr-FR")} F
+              </span>{" "}
+              <span className="font-medium text-green-600">
+                Gratuit avec l&apos;abonnement
+              </span>
+            </p>
+          )}
         </div>
         <Card className="max-w-sm">
           <CardHeader>
@@ -70,6 +80,16 @@ export default async function CourseDetailPage(
         {content.course.description && (
           <p className="text-muted-foreground mt-1 text-sm">
             {content.course.description}
+          </p>
+        )}
+        {content.course.price != null && (
+          <p className="mt-1 text-sm">
+            <span className="text-muted-foreground line-through">
+              {content.course.price.toLocaleString("fr-FR")} F
+            </span>{" "}
+            <span className="font-medium text-green-600">
+              Gratuit avec l&apos;abonnement
+            </span>
           </p>
         )}
       </div>

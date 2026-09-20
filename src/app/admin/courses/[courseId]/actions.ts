@@ -6,6 +6,7 @@ import { createModule } from "@/services/lms/create-module";
 import { createLesson } from "@/services/lms/create-lesson";
 import { updateModule } from "@/services/lms/update-module";
 import { updateCourseStatus } from "@/services/lms/update-course-status";
+import { updateCoursePricing } from "@/services/lms/update-course-pricing";
 import type {
   courseStatusEnum,
   lessonTypeEnum,
@@ -65,4 +66,21 @@ export async function updateCourseStatusAction(
   revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath("/admin/courses");
   revalidatePath("/");
+}
+
+export async function updateCoursePricingAction(
+  courseId: string,
+  input: { price: number | null; category: string | null },
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await updateCoursePricing(profile.id, courseId, input);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePath("/");
+  return { error: null };
 }

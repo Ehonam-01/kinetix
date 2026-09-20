@@ -364,6 +364,7 @@ export type MarketingCourseSummary = {
   title: string;
   description: string | null;
   category: string | null;
+  price: number | null;
   thumbnailUrl: string | null;
   durationMinutes: number | null;
   moduleCount: number;
@@ -372,8 +373,8 @@ export type MarketingCourseSummary = {
 
 // Public homepage listing — no auth, no per-viewer fields (accessible/
 // completedLessons come from listCoursesForUser instead). Every PUBLISHED,
-// active course is shown — no price field to require anymore: access comes
-// from the subscription, not a per-course price (see
+// active course is shown — price is display-only here (see create-course.ts):
+// access always comes from the subscription, never a per-course charge (see
 // db/schema/subscriptions.ts). Most recent first.
 export async function listPublishedCoursesForMarketing(
   executor: Executor,
@@ -430,6 +431,7 @@ export async function listPublishedCoursesForMarketing(
     title: course.title,
     description: course.description,
     category: course.category,
+    price: course.price,
     thumbnailUrl: course.thumbnailUrl,
     durationMinutes: course.durationMinutes,
     moduleCount: moduleCountByCourse.get(course.id) ?? 0,
