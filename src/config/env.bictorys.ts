@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { parseProviderEnv } from "@/config/parse-provider-env";
 
 const bictorysEnvSchema = z.object({
   BICTORYS_SECRET_KEY: z.string().min(1),
@@ -15,7 +16,7 @@ let cached: BictorysEnv | undefined;
 // build/boot depend on Bictorys being configured, when only an actual
 // charge/refund/webhook call needs these keys to exist.
 export function getBictorysEnv(): BictorysEnv {
-  cached ??= bictorysEnvSchema.parse({
+  cached ??= parseProviderEnv(bictorysEnvSchema, {
     BICTORYS_SECRET_KEY: process.env.BICTORYS_SECRET_KEY,
     BICTORYS_WEBHOOK_SECRET: process.env.BICTORYS_WEBHOOK_SECRET,
   });
@@ -31,9 +32,11 @@ let cachedPayoutSecretCode: string | undefined;
 // call fail closed on a PIN that only services/payments/bictorys-payout.ts
 // actually needs.
 export function getBictorysPayoutSecretCode(): string {
-  cachedPayoutSecretCode ??= z
-    .string()
-    .regex(/^\d{4}$/, "BICTORYS_MERCHANT_SECRET_CODE doit être 4 chiffres.")
-    .parse(process.env.BICTORYS_MERCHANT_SECRET_CODE);
+  cachedPayoutSecretCode ??= parseProviderEnv(
+    z
+      .string()
+      .regex(/^\d{4}$/, "BICTORYS_MERCHANT_SECRET_CODE doit être 4 chiffres."),
+    process.env.BICTORYS_MERCHANT_SECRET_CODE,
+  );
   return cachedPayoutSecretCode;
 }

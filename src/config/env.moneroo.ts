@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { parseProviderEnv } from "@/config/parse-provider-env";
 
 const monerooEnvSchema = z.object({
   MONEROO_SECRET_KEY: z.string().min(1),
@@ -17,7 +18,7 @@ let cached: MonerooEnv | undefined;
 // only actually calling this (a real payment or webhook request) needs
 // the keys to exist.
 export function getMonerooEnv(): MonerooEnv {
-  cached ??= monerooEnvSchema.parse({
+  cached ??= parseProviderEnv(monerooEnvSchema, {
     MONEROO_SECRET_KEY: process.env.MONEROO_SECRET_KEY,
     MONEROO_WEBHOOK_SECRET: process.env.MONEROO_WEBHOOK_SECRET,
   });

@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { parseProviderEnv } from "@/config/parse-provider-env";
 
 const paydunyaEnvSchema = z.object({
   PAYDUNYA_MASTER_KEY: z.string().min(1),
@@ -15,7 +16,7 @@ let cached: PaydunyaEnv | undefined;
 // for why: only services/payments/paydunya.ts actually needs these keys,
 // so the rest of the app's build/boot shouldn't depend on them existing.
 export function getPaydunyaEnv(): PaydunyaEnv {
-  cached ??= paydunyaEnvSchema.parse({
+  cached ??= parseProviderEnv(paydunyaEnvSchema, {
     PAYDUNYA_MASTER_KEY: process.env.PAYDUNYA_MASTER_KEY,
     PAYDUNYA_PRIVATE_KEY: process.env.PAYDUNYA_PRIVATE_KEY,
     PAYDUNYA_TOKEN: process.env.PAYDUNYA_TOKEN,
