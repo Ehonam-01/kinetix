@@ -28,6 +28,9 @@ export function SubscribeButton({ price }: { price: number }) {
   >(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [pollOutcome, setPollOutcome] = useState<"failed" | "timeout" | null>(
+    null,
+  );
 
   const availableOperators = country
     ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
@@ -43,18 +46,22 @@ export function SubscribeButton({ price }: { price: number }) {
   // renewal (already ACTIVE) it just re-renders this page with the
   // updated expiry date instead.
   useEffect(() => {
-    if (!paymentId || confirmed) return;
+    if (!paymentId || confirmed || pollOutcome) return;
     let attempts = 0;
     const interval = setInterval(() => {
       attempts += 1;
       checkSubscriptionConfirmedAction(paymentId)
-        .then((isConfirmed) => {
-          if (isConfirmed) {
+        .then((status) => {
+          if (status === "CONFIRMED") {
             clearInterval(interval);
             setConfirmed(true);
             router.refresh();
+          } else if (status === "FAILED") {
+            clearInterval(interval);
+            setPollOutcome("failed");
           } else if (attempts >= MAX_POLLS) {
             clearInterval(interval);
+            setPollOutcome("timeout");
           }
         })
         .catch(() => {
@@ -62,7 +69,7 @@ export function SubscribeButton({ price }: { price: number }) {
         });
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [paymentId, confirmed, router]);
+  }, [paymentId, confirmed, pollOutcome, router]);
 
   function handleCountryChange(next: string) {
     setCountry(next);
@@ -98,12 +105,35 @@ export function SubscribeButton({ price }: { price: number }) {
   }
 
   if (confirmationMessage) {
+    if (pollOutcome === "failed") {
+      return (
+        <div className="space-y-2">
+          <p className="text-destructive text-sm">
+            Le paiement a échoué. Veuillez réessayer.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setConfirmationMessage(null);
+              setPaymentId(null);
+              setPollOutcome(null);
+            }}
+          >
+            Réessayer
+          </Button>
+        </div>
+      );
+    }
     return (
-      <p className="text-sm text-green-600">
+      <p
+        className={`text-sm ${confirmed ? "text-green-600" : pollOutcome === "timeout" ? "text-muted-foreground" : "text-green-600"}`}
+      >
         {confirmationMessage}{" "}
         {confirmed
           ? "Paiement confirmé !"
-          : "En attente de confirmation — cette page se mettra à jour automatiquement."}
+          : pollOutcome === "timeout"
+            ? "Nous n'avons pas encore reçu de confirmation. Si vous avez déjà payé, patientez quelques minutes puis rechargez la page ; sinon réessayez."
+            : "En attente de confirmation — cette page se mettra à jour automatiquement."}
       </p>
     );
   }

@@ -39,6 +39,9 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
   >(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [pollOutcome, setPollOutcome] = useState<"failed" | "timeout" | null>(
+    null,
+  );
   const [wizall, setWizall] = useState<{ transactionId: string } | null>(
     null,
   );
@@ -58,24 +61,28 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
   // component's comment for why it actively re-verifies instead of only
   // trusting a webhook to have already landed.
   useEffect(() => {
-    if (!paymentId || confirmed || wizall) return;
+    if (!paymentId || confirmed || wizall || pollOutcome) return;
     let attempts = 0;
     const interval = setInterval(() => {
       attempts += 1;
       checkSubscriptionConfirmedAction(paymentId)
-        .then((isConfirmed) => {
-          if (isConfirmed) {
+        .then((status) => {
+          if (status === "CONFIRMED") {
             clearInterval(interval);
             setConfirmed(true);
             router.refresh();
+          } else if (status === "FAILED") {
+            clearInterval(interval);
+            setPollOutcome("failed");
           } else if (attempts >= MAX_POLLS) {
             clearInterval(interval);
+            setPollOutcome("timeout");
           }
         })
         .catch(() => clearInterval(interval));
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [paymentId, confirmed, wizall, router]);
+  }, [paymentId, confirmed, wizall, pollOutcome, router]);
 
   function handleCountryChange(next: string) {
     setCountry(next);
@@ -171,12 +178,35 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
   }
 
   if (confirmationMessage) {
+    if (pollOutcome === "failed") {
+      return (
+        <div className="space-y-2">
+          <p className="text-destructive text-sm">
+            Le paiement a échoué. Veuillez réessayer.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setConfirmationMessage(null);
+              setPaymentId(null);
+              setPollOutcome(null);
+            }}
+          >
+            Réessayer
+          </Button>
+        </div>
+      );
+    }
     return (
-      <p className="text-sm text-green-600">
+      <p
+        className={`text-sm ${confirmed ? "text-green-600" : pollOutcome === "timeout" ? "text-muted-foreground" : "text-green-600"}`}
+      >
         {confirmationMessage}{" "}
         {confirmed
           ? "Paiement confirmé !"
-          : "En attente de confirmation — cette page se mettra à jour automatiquement."}
+          : pollOutcome === "timeout"
+            ? "Nous n'avons pas encore reçu de confirmation. Si vous avez déjà payé, patientez quelques minutes puis rechargez la page ; sinon réessayez."
+            : "En attente de confirmation — cette page se mettra à jour automatiquement."}
       </p>
     );
   }

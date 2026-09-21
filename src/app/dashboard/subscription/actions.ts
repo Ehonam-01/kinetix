@@ -140,19 +140,29 @@ export async function confirmWizallPaymentAction(
 // misconfigured URL, an undocumented payload shape, ...) must never leave
 // a real successful payment stuck waiting forever. Caught live in
 // production twice already for exactly this reason.
-export async function checkSubscriptionConfirmedAction(paymentId: string) {
+//
+// Returns the real status instead of a plain boolean: a provider-confirmed
+// FAILED must be written to the row (same processWebhookEvent path as
+// CONFIRMED) so it stops showing up as a stuck PENDING in the admin
+// dashboard — this used to silently return false and leave the row
+// PENDING forever, requiring a manual admin reconcile. Never invented
+// client-side from a poll timeout though (see reconcile-payment.ts): only
+// a status the provider itself reports is ever written.
+export async function checkSubscriptionConfirmedAction(
+  paymentId: string,
+): Promise<"CONFIRMED" | "FAILED" | "PENDING"> {
   const { profile } = await requireUser();
   const payment = await findPaymentById(db, paymentId);
   if (!payment || payment.beneficiaryUserId !== profile.id) {
     throw new Error("Paiement introuvable.");
   }
-  if (payment.status === "CONFIRMED") return true;
-  if (payment.status !== "PENDING") return false;
-  if (!payment.provider || !payment.providerReference) return false;
+  if (payment.status === "CONFIRMED") return "CONFIRMED";
+  if (payment.status !== "PENDING") return "FAILED";
+  if (!payment.provider || !payment.providerReference) return "PENDING";
 
   const provider = getPaymentProviderByName(payment.provider);
   const verified = await provider.verifyPayment(payment.providerReference);
-  if (verified.status !== "CONFIRMED") return false;
+  if (verified.status === "PENDING") return "PENDING";
 
   await db.transaction((tx) =>
     processWebhookEvent(tx, {
@@ -163,7 +173,7 @@ export async function checkSubscriptionConfirmedAction(paymentId: string) {
       raw: verified,
     }),
   );
-  return true;
+  return verified.status;
 }
 
 // {error}-return convention, same as dashboard/transfer/actions.ts: a bad
