@@ -13,13 +13,13 @@ export const registerSchema = z.object({
   username: usernameSchema,
   email: z.string().trim().email("Email invalide"),
   password: z.string().min(8, "8 caractères minimum").max(72),
-  // Optional: only the platform root has no sponsor. Empty string (from an
-  // untouched form field) is a valid "no sponsor" value, not a validation
-  // error — callers should treat "" the same as undefined (both falsy).
-  // Identified by pseudo, not email (section: registration form) — the
-  // same handle a referral link already uses, and the one a new member is
-  // actually likely to know off the top of their head.
-  sponsorUsername: z.literal("").or(usernameSchema).optional(),
+  // Mandatory — business decision: every new member must be sponsored by an
+  // existing one, no organic/unsponsored signups (the platform's own root
+  // account predates this rule and isn't affected). Identified by pseudo,
+  // not email (section: registration form) — the same handle a referral
+  // link already uses, and the one a new member is actually likely to know
+  // off the top of their head.
+  sponsorUsername: usernameSchema,
   // "Devenir ambassadeur" checkbox (register-form.tsx) — an intent captured
   // now, acted on later once the subscription payment actually confirms
   // (services/subscriptions/confirm-subscription-payment.ts): payment is

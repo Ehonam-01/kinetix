@@ -76,6 +76,30 @@ export function RegisterForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
+        <Label htmlFor="sponsorUsername">Pseudo du parrain</Label>
+        <Input
+          id="sponsorUsername"
+          autoComplete="off"
+          required
+          {...register("sponsorUsername")}
+        />
+        {errors.sponsorUsername && (
+          <p className="text-destructive text-sm">
+            {errors.sponsorUsername.message}
+          </p>
+        )}
+        {!errors.sponsorUsername &&
+          sponsorUsername?.trim() &&
+          sponsorAnsweredFor === sponsorUsername.trim() &&
+          (sponsorName ? (
+            <p className="text-sm text-green-600">Parrain : {sponsorName}</p>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Aucun membre ne correspond à ce pseudo.
+            </p>
+          ))}
+      </div>
+      <div className="space-y-2">
         <Label htmlFor="fullName">Nom complet</Label>
         <Input id="fullName" autoComplete="name" {...register("fullName")} />
         {errors.fullName && (
@@ -112,29 +136,6 @@ export function RegisterForm({
         {errors.password && (
           <p className="text-destructive text-sm">{errors.password.message}</p>
         )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="sponsorUsername">Pseudo du parrain (facultatif)</Label>
-        <Input
-          id="sponsorUsername"
-          autoComplete="off"
-          {...register("sponsorUsername")}
-        />
-        {errors.sponsorUsername && (
-          <p className="text-destructive text-sm">
-            {errors.sponsorUsername.message}
-          </p>
-        )}
-        {!errors.sponsorUsername &&
-          sponsorUsername?.trim() &&
-          sponsorAnsweredFor === sponsorUsername.trim() &&
-          (sponsorName ? (
-            <p className="text-sm text-green-600">Parrain : {sponsorName}</p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Aucun membre ne correspond à ce pseudo.
-            </p>
-          ))}
       </div>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">

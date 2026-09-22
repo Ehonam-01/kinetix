@@ -16,15 +16,16 @@ export async function registerUser(input: RegisterInput) {
 
   // Resolved and validated up front so a typo'd sponsor pseudo fails loudly
   // at registration time, instead of silently dropping the attribution
-  // later in the email-confirmation callback.
-  let sponsorId: string | null = null;
-  if (sponsorUsername) {
-    const sponsorProfile = await findProfileByUsername(sponsorUsername);
-    if (!sponsorProfile) {
-      return { error: "Pseudo de parrain introuvable." };
-    }
-    sponsorId = sponsorProfile.id;
+  // later in the email-confirmation callback. sponsorUsername is a
+  // mandatory schema field now (see schemas/auth.ts) — every registration
+  // through this form names an existing member, no "no sponsor" case left
+  // to handle here (the platform's own root account was created before
+  // this rule existed).
+  const sponsorProfile = await findProfileByUsername(sponsorUsername);
+  if (!sponsorProfile) {
+    return { error: "Pseudo de parrain introuvable." };
   }
+  const sponsorId = sponsorProfile.id;
 
   // Same requirement join-program.ts enforces when the actual join happens
   // (once the subscription payment confirms — payment is mandatory before
@@ -32,27 +33,16 @@ export async function registerUser(input: RegisterInput) {
   // there), checked eagerly here for the same reason as the sponsor pseudo
   // above: failing now is loud and recoverable, failing at payment-webhook
   // time would roll back an already-paid subscription over a missing
-  // sponsor. Exempt only for the platform's very first-ever member (no
-  // ambassador exists yet to sponsor anyone).
+  // sponsor.
   if (wantsAmbassador) {
-    if (!sponsorId) {
-      const anyAmbassador = await db.query.ambassadorProfiles.findFirst();
-      if (anyAmbassador) {
-        return {
-          error:
-            "Un pseudo de parrain est requis pour rejoindre le programme ambassadeur.",
-        };
-      }
-    } else {
-      const sponsorAmbassador = await db.query.ambassadorProfiles.findFirst({
-        where: eq(ambassadorProfiles.userId, sponsorId),
-      });
-      if (!sponsorAmbassador || sponsorAmbassador.status !== "ACTIVE") {
-        return {
-          error:
-            "Le parrain indiqué doit être un ambassadeur actif pour vous accueillir dans le programme.",
-        };
-      }
+    const sponsorAmbassador = await db.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, sponsorId),
+    });
+    if (!sponsorAmbassador || sponsorAmbassador.status !== "ACTIVE") {
+      return {
+        error:
+          "Le parrain indiqué doit être un ambassadeur actif pour vous accueillir dans le programme.",
+      };
     }
   }
 

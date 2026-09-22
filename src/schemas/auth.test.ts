@@ -13,6 +13,7 @@ describe("registerSchema", () => {
       username: "ama_k",
       email: "ama@example.com",
       password: "supersecret1",
+      sponsorUsername: "papa",
     });
     expect(result.success).toBe(true);
   });
@@ -23,6 +24,7 @@ describe("registerSchema", () => {
       username: "  Ama_K  ",
       email: "  ama@example.com  ",
       password: "supersecret1",
+      sponsorUsername: "papa",
     });
     expect(result.fullName).toBe("Ama Koffi");
     expect(result.username).toBe("ama_k");
@@ -35,6 +37,7 @@ describe("registerSchema", () => {
       username: "ama_k",
       email: "ama@example.com",
       password: "short",
+      sponsorUsername: "papa",
     });
     expect(result.success).toBe(false);
   });
@@ -45,6 +48,7 @@ describe("registerSchema", () => {
       username: "ama_k",
       email: "not-an-email",
       password: "supersecret1",
+      sponsorUsername: "papa",
     });
     expect(result.success).toBe(false);
   });
@@ -55,6 +59,7 @@ describe("registerSchema", () => {
       username: "ama_k",
       email: "ama@example.com",
       password: "supersecret1",
+      sponsorUsername: "papa",
     });
     expect(result.success).toBe(false);
   });
@@ -65,6 +70,7 @@ describe("registerSchema", () => {
       username: "ak",
       email: "ama@example.com",
       password: "supersecret1",
+      sponsorUsername: "papa",
     });
     expect(result.success).toBe(false);
   });
@@ -75,6 +81,28 @@ describe("registerSchema", () => {
       username: "ama koffi!",
       email: "ama@example.com",
       password: "supersecret1",
+      sponsorUsername: "papa",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a registration with no sponsor pseudo — mandatory, no organic signups", () => {
+    const result = registerSchema.safeParse({
+      fullName: "Ama Koffi",
+      username: "ama_k",
+      email: "ama@example.com",
+      password: "supersecret1",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty sponsor pseudo", () => {
+    const result = registerSchema.safeParse({
+      fullName: "Ama Koffi",
+      username: "ama_k",
+      email: "ama@example.com",
+      password: "supersecret1",
+      sponsorUsername: "",
     });
     expect(result.success).toBe(false);
   });
