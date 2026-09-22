@@ -136,19 +136,39 @@ export function RegisterForm({
             </p>
           ))}
       </div>
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          className="mt-0.5"
-          {...register("wantsAmbassador")}
-        />
-        <span>
-          Je souhaite aussi devenir ambassadeur — gratuit, sans obligation
-          d&apos;achat ni de recrutement. Activé automatiquement dès que
-          l&apos;abonnement est payé (un pseudo de parrain ambassadeur actif
-          est alors requis ci-dessus).
-        </span>
-      </label>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">
+          Souhaitez-vous aussi devenir ambassadeur ?
+        </legend>
+        <p className="text-muted-foreground text-xs">
+          Gratuit, sans obligation d&apos;achat ni de recrutement. Activé
+          automatiquement dès que l&apos;abonnement est payé (un pseudo de
+          parrain ambassadeur actif est alors requis ci-dessus).
+        </p>
+        <div className="flex gap-4 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              value="true"
+              {...register("wantsAmbassador", {
+                setValueAs: (value) => value === "true",
+              })}
+            />
+            Oui
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              value="false"
+              defaultChecked
+              {...register("wantsAmbassador", {
+                setValueAs: (value) => value === "true",
+              })}
+            />
+            Non
+          </label>
+        </div>
+      </fieldset>
       {serverError && <p className="text-destructive text-sm">{serverError}</p>}
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Inscription..." : "Nous rejoindre"}
