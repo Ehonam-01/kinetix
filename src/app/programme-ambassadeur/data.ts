@@ -52,7 +52,19 @@ export async function getCompensationData(
   const rateByLevel = new Map<number, number>();
   for (const rule of generationRules) {
     if (rule.levelCode == null) continue;
-    if (rule.commissionType === "BV_PERCENTAGE" && rule.rate > 0) {
+    // Both express "X% of what the generation is worth" and render
+    // identically as a percentage badge — BV_PERCENTAGE is what every rule
+    // is configured as today, PERCENTAGE is the price-indexed replacement
+    // (business decision: BV no longer has a reason to exist now that every
+    // sale is the same flat-price subscription, see repositories/
+    // commission-rules.ts's computeGenerationCommission). Only matching
+    // BV_PERCENTAGE here silently dropped a level from this page the moment
+    // an admin migrated it to PERCENTAGE from /admin/commission-rules.
+    if (
+      (rule.commissionType === "PERCENTAGE" ||
+        rule.commissionType === "BV_PERCENTAGE") &&
+      rule.rate > 0
+    ) {
       rateByLevel.set(rule.levelCode, rule.rate / 100);
     }
   }
