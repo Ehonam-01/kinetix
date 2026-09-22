@@ -9,7 +9,7 @@ import {
   findProfileByUsername,
 } from "@/repositories/profiles";
 import { findAuthEmailByUserId } from "@/repositories/auth-users";
-import { resolveAttribution } from "@/services/attribution/resolve-referral";
+import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import {
   generateOtpCode,
   hashOtpCode,
@@ -68,7 +68,10 @@ export async function requestSubscriptionWithWallet(input: {
   // Captured now, while a request context (cookies) still exists — the
   // same reasoning as initiateSubscriptionPayment, since confirmation later
   // runs with no browser context at all.
-  const attribution = await resolveAttribution(input.visitorToken);
+  const attribution = await resolveSaleAttribution(
+    input.buyerUserId,
+    input.visitorToken,
+  );
 
   await db
     .update(subscriptionWalletRequests)

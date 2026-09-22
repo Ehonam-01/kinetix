@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import { resolveAttribution } from "@/services/attribution/resolve-referral";
+import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
 
 function splitFullName(fullName: string): {
@@ -51,7 +51,10 @@ export async function initiateSubscriptionPayment(input: {
     db,
     "subscription.price_in_cfa",
   );
-  const attribution = await resolveAttribution(input.visitorToken);
+  const attribution = await resolveSaleAttribution(
+    input.buyerUserId,
+    input.visitorToken,
+  );
   const idempotencyKey = `SUBSCRIPTION:${input.buyerUserId}:${randomUUID()}`;
   const { firstName, lastName } = splitFullName(input.fullName);
   const provider = await getActivePaymentProvider(db);
