@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/config/site";
+import { FloatingBubbles } from "@/app/_components/floating-bubbles";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
 import { Logo } from "@/app/_components/logo";
 import { MediaSlot } from "@/app/_components/media-slot";
@@ -21,14 +22,7 @@ export default function AuthLayout({
       <div className="border-border bg-card flex w-full flex-col overflow-hidden lg:max-w-5xl lg:flex-row lg:rounded-3xl lg:border lg:shadow-2xl">
         <div className="from-primary to-primary/70 relative hidden overflow-hidden bg-linear-to-br lg:flex lg:w-[44%] lg:flex-col lg:items-center lg:justify-center lg:px-10 lg:py-12">
           <GridBackdrop className="opacity-[0.12]" />
-          <span
-            aria-hidden="true"
-            className="bg-primary-foreground/50 absolute top-16 right-[15%] size-1.5 rounded-full"
-          />
-          <span
-            aria-hidden="true"
-            className="bg-primary-foreground/30 absolute bottom-20 left-[12%] size-1 rounded-full"
-          />
+          <FloatingBubbles />
 
           <div className="text-primary-foreground relative max-w-sm text-center">
             <h2 className="text-2xl font-semibold tracking-tight text-balance">

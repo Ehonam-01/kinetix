@@ -159,3 +159,28 @@
     @apply bg-white text-gray-900;
   }
 }
+
+/* Floating-bubbles decoration (auth split-screen panel, FloatingBubbles
+   component) — a gentle drift + bob, not a bounce, so it reads as ambient
+   texture rather than something demanding attention. Disabled entirely
+   under reduced motion rather than just slowed down, matching how Reveal
+   (app/_components/reveal.tsx) treats the same preference. */
+@keyframes float-bubble {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(var(--bubble-drift, 8px), -18px);
+  }
+}
+
+.animate-float-bubble {
+  animation: float-bubble 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-bubble {
+    animation: none;
+  }
+}
