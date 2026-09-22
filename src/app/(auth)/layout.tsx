@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SITE_NAME } from "@/config/site";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
 import { Logo } from "@/app/_components/logo";
-import { ProductMockup } from "@/app/_components/product-mockup";
+import { MediaSlot } from "@/app/_components/media-slot";
 
 // Shared by every (auth) page — login, register, forgot/reset password —
 // so the whole auth flow reads as one consistent, branded experience
@@ -38,12 +38,12 @@ export default function AuthLayout({
               Le repère de celles et ceux qui se préparent à l&apos;avenir :
               formations pratiques, mentorat réel et communauté qui avance.
             </p>
-            {/* text-foreground resets the color cascade here — the mockup
-                is a white/bg-card surface and expects normal dark-on-light
-                text regardless of the primary_foreground panel around it. */}
-            <div className="text-foreground mt-8">
-              <ProductMockup />
-            </div>
+            <MediaSlot
+              src="/community-photo.png"
+              alt="Membres de la communauté Kinetix qui échangent"
+              brief="Photo ou capture : des membres réels qui discutent, collaborent ou se rencontrent."
+              className="border-primary-foreground/20 mt-8 aspect-video w-full overflow-hidden rounded-2xl border shadow-2xl"
+            />
           </div>
         </div>
 
