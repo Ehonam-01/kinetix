@@ -90,14 +90,20 @@ async function maybeCompleteGeneration(
 
   if (row.levelCode !== 1) {
     if (rule) {
-      const bvValueInCfa = await getCurrentParameterValue(
-        tx,
-        "bv.value_in_cfa",
-      );
+      // Both fetched unconditionally rather than branching on
+      // rule.commissionType first — a generation completion is rare enough
+      // that one extra parameter lookup is free, and it keeps this
+      // straight-line instead of duplicating the createCommissionEvent call
+      // below per commissionType.
+      const [bvValueInCfa, subscriptionPriceInCfa] = await Promise.all([
+        getCurrentParameterValue(tx, "bv.value_in_cfa"),
+        getCurrentParameterValue(tx, "subscription.price_in_cfa"),
+      ]);
       const amount = computeGenerationCommission(rule, {
         bvTotal: row.bvTotal,
         requiredCount: row.requiredCount,
         bvValueInCfa,
+        subscriptionPriceInCfa,
       });
       if (amount > 0) {
         await createCommissionEvent(tx, {

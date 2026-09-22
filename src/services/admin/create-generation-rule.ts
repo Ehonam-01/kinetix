@@ -15,7 +15,7 @@ export async function createGenerationCommissionRule(
   input: {
     levelCode: number;
     generation: number;
-    commissionType: "FIXED" | "BV_PERCENTAGE";
+    commissionType: "FIXED" | "PERCENTAGE" | "BV_PERCENTAGE";
     rate: number;
     cap?: number;
     requirePresence: boolean;

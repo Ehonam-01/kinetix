@@ -155,22 +155,45 @@ export function isGenerationQualified(
 // FIXED -> rate x requiredCount, same "per generation, scaled by its size"
 // semantics as the pre-Phase-11 flat-rate calculation (MLM_RULES.md: "les
 // niveaux 2 à 5 paient par génération complétée... taux × taille de la
-// génération"). BV_PERCENTAGE -> rate/10000 of the generation's accumulated
-// bvTotal, itself first converted to F CFA via bvValueInCfa (parameter_versions
-// key bv.value_in_cfa, e.g. 1000 -> 1 BV point = 1000 F CFA) — bvTotal is a
-// count of BV points, never assumed to already be an F CFA amount (section 7
-// of the master prompt: price and BV are never interchangeable). PERCENTAGE
-// has no natural meaning at generation scope (there is no single "price" to
-// take a percentage of, unlike a single sale) — deliberately not offered for
-// GENERATION-scope rules in the admin form.
+// génération"). PERCENTAGE -> rate/10000 of the generation's total
+// subscription revenue (requiredCount × subscription.price_in_cfa) — the
+// single product being a flat-price subscription now (education-first
+// pivot) makes "% of what the generation actually paid" well-defined,
+// unlike the old per-course world this scope's PERCENTAGE case used to be
+// deliberately withheld for. Stays correct if subscription.price_in_cfa
+// ever changes, unlike hand-computing an equivalent FIXED rate once and
+// leaving it stale. BV_PERCENTAGE -> rate/10000 of the generation's
+// accumulated bvTotal, itself converted to F CFA via bvValueInCfa —
+// retained for any pre-existing rule still configured this way, but BV
+// itself is legacy (it only ever existed to normalize commissions across
+// courses of different prices) and no longer needed now that every sale is
+// the same subscription at the same price.
 export function computeGenerationCommission(
   rule: EffectiveCommissionRule,
-  input: { bvTotal: number; requiredCount: number; bvValueInCfa: number },
+  input: {
+    bvTotal: number;
+    requiredCount: number;
+    bvValueInCfa: number;
+    subscriptionPriceInCfa: number;
+  },
 ): number {
-  const amount =
-    rule.commissionType === "FIXED"
-      ? rule.rate * input.requiredCount
-      : Math.floor((input.bvTotal * input.bvValueInCfa * rule.rate) / 10_000);
+  let amount: number;
+  switch (rule.commissionType) {
+    case "FIXED":
+      amount = rule.rate * input.requiredCount;
+      break;
+    case "PERCENTAGE":
+      amount = Math.floor(
+        (input.requiredCount * input.subscriptionPriceInCfa * rule.rate) /
+          10_000,
+      );
+      break;
+    case "BV_PERCENTAGE":
+      amount = Math.floor(
+        (input.bvTotal * input.bvValueInCfa * rule.rate) / 10_000,
+      );
+      break;
+  }
   return rule.cap != null ? Math.min(amount, rule.cap) : amount;
 }
 

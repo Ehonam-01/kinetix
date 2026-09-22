@@ -9,6 +9,10 @@ import { createGenerationRuleAction } from "./actions";
 
 const TYPES = [
   { value: "FIXED", label: "Montant fixe × taille de la génération" },
+  {
+    value: "PERCENTAGE",
+    label: "% du prix de l'abonnement × taille de la génération",
+  },
   { value: "BV_PERCENTAGE", label: "% du volume généré par la génération" },
 ] as const;
 

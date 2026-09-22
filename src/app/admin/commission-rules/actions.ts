@@ -27,7 +27,7 @@ export async function createDirectSaleRuleAction(input: {
 export async function createGenerationRuleAction(input: {
   levelCode: number;
   generation: number;
-  commissionType: "FIXED" | "BV_PERCENTAGE";
+  commissionType: "FIXED" | "PERCENTAGE" | "BV_PERCENTAGE";
   rate: number;
   cap?: number;
   requirePresence: boolean;

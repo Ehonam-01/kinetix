@@ -31,16 +31,18 @@ function describeDirectSaleRule(
 function describeGenerationRule(
   rule: Awaited<ReturnType<typeof listEffectiveGenerationRules>>[number],
 ) {
-  const amount =
+  const amountLabel =
     rule.commissionType === "FIXED"
       ? `${rule.rate.toLocaleString("fr-FR")} F / personne`
-      : `${(rule.rate / 100).toLocaleString("fr-FR")} % du volume généré par la génération`;
+      : rule.commissionType === "PERCENTAGE"
+        ? `${(rule.rate / 100).toLocaleString("fr-FR")} % du prix de l'abonnement / personne`
+        : `${(rule.rate / 100).toLocaleString("fr-FR")} % du volume généré par la génération`;
   const req = rule.qualificationRequirement;
   const conditions = [
     req?.presence !== false && "effectif complet",
     req?.minBv != null && `volume ≥ ${req.minBv.toLocaleString("fr-FR")} pts`,
   ].filter(Boolean);
-  return { amount, conditions: conditions.join(" et ") };
+  return { amount: amountLabel, conditions: conditions.join(" et ") };
 }
 
 export default async function AdminCommissionRulesPage() {

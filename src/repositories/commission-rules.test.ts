@@ -89,16 +89,40 @@ describe("computeGenerationCommission", () => {
   it("FIXED: rate scaled by the generation's required headcount", () => {
     const amount = computeGenerationCommission(
       rule({ commissionType: "FIXED", rate: 2000 }),
-      { bvTotal: 0, requiredCount: 4, bvValueInCfa: 1000 },
+      {
+        bvTotal: 0,
+        requiredCount: 4,
+        bvValueInCfa: 1000,
+        subscriptionPriceInCfa: 0,
+      },
     );
     expect(amount).toBe(8000);
+  });
+
+  it("PERCENTAGE: basis points of the generation's total subscription revenue (requiredCount x price)", () => {
+    // 4 people x 15000 F/subscription = 60000 F revenue, 10% of it = 6000.
+    const amount = computeGenerationCommission(
+      rule({ commissionType: "PERCENTAGE", rate: 1000 }), // 10%
+      {
+        bvTotal: 0,
+        requiredCount: 4,
+        bvValueInCfa: 1000,
+        subscriptionPriceInCfa: 15000,
+      },
+    );
+    expect(amount).toBe(6000);
   });
 
   it("BV_PERCENTAGE: basis points of the generation's accumulated BV, converted to F CFA via bvValueInCfa", () => {
     // 50 BV points x 1000 F CFA/point = 50000 F CFA, 10% of it = 5000.
     const amount = computeGenerationCommission(
       rule({ commissionType: "BV_PERCENTAGE", rate: 1000 }), // 10%
-      { bvTotal: 50, requiredCount: 4, bvValueInCfa: 1000 },
+      {
+        bvTotal: 50,
+        requiredCount: 4,
+        bvValueInCfa: 1000,
+        subscriptionPriceInCfa: 0,
+      },
     );
     expect(amount).toBe(5000);
   });
@@ -106,7 +130,12 @@ describe("computeGenerationCommission", () => {
   it("BV_PERCENTAGE: a bvValueInCfa of 1 is a pure passthrough (BV already in F CFA)", () => {
     const amount = computeGenerationCommission(
       rule({ commissionType: "BV_PERCENTAGE", rate: 1000 }), // 10%
-      { bvTotal: 50000, requiredCount: 4, bvValueInCfa: 1 },
+      {
+        bvTotal: 50000,
+        requiredCount: 4,
+        bvValueInCfa: 1,
+        subscriptionPriceInCfa: 0,
+      },
     );
     expect(amount).toBe(5000);
   });
@@ -114,7 +143,12 @@ describe("computeGenerationCommission", () => {
   it("caps the amount regardless of commissionType", () => {
     const amount = computeGenerationCommission(
       rule({ commissionType: "FIXED", rate: 2000, cap: 5000 }),
-      { bvTotal: 0, requiredCount: 8, bvValueInCfa: 1000 }, // would be 16000 uncapped
+      {
+        bvTotal: 0,
+        requiredCount: 8,
+        bvValueInCfa: 1000,
+        subscriptionPriceInCfa: 0,
+      }, // would be 16000 uncapped
     );
     expect(amount).toBe(5000);
   });
