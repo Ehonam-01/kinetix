@@ -151,6 +151,7 @@ export function RegisterForm({
             <input
               type="radio"
               value="true"
+              defaultChecked
               {...register("wantsAmbassador", {
                 setValueAs: (value) => value === "true",
               })}
@@ -161,7 +162,6 @@ export function RegisterForm({
             <input
               type="radio"
               value="false"
-              defaultChecked
               {...register("wantsAmbassador", {
                 setValueAs: (value) => value === "true",
               })}
