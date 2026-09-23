@@ -8,13 +8,11 @@ export const mentorRequestStatusEnum = pgEnum("mentor_request_status", [
 ]);
 
 // A member's request to be listed as a mentor in one domain — category is
-// free text, deliberately not its own enum: it reuses whatever values
-// admins have already typed into courses.category (repositories/courses.ts's
-// listDistinctCourseCategories), the same "no separate taxonomy to
-// maintain" choice courses.ts itself made. One row per user (unique
-// userId), not one per domain: the product decision is a single declared
-// domain per mentor for now, same simplicity as ambassador_profiles being
-// one row per user.
+// free text the member types themselves (not sourced from courses.category):
+// a mentor's expertise doesn't have to match an existing course taxonomy.
+// One row per user (unique userId), not one per domain: the product decision
+// is a single declared domain per mentor for now, same simplicity as
+// ambassador_profiles being one row per user.
 //
 // requestMentorStatus (services/mentorship/request-mentor-status.ts) is the
 // only place that resubmits a REJECTED row back to PENDING_REVIEW —

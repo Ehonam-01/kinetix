@@ -84,3 +84,16 @@ export function listApprovedMentors(
     .where(and(...conditions))
     .orderBy(desc(mentorProfiles.reviewedAt));
 }
+
+// dashboard/mentors' filter dropdown — the domains actually declared by
+// approved mentors (free text, no fixed taxonomy), not courses.category.
+export async function listDistinctMentorCategories(
+  executor: Executor,
+): Promise<string[]> {
+  const rows = await executor
+    .selectDistinct({ category: mentorProfiles.category })
+    .from(mentorProfiles)
+    .where(eq(mentorProfiles.status, "APPROVED"))
+    .orderBy(asc(mentorProfiles.category));
+  return rows.map((r) => r.category);
+}

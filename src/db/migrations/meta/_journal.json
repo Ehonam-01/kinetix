@@ -372,6 +372,13 @@
       "when": 1790180705583,
       "tag": "0052_next_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1790183197692,
+      "tag": "0053_flawless_vindicator",
+      "breakpoints": true
     }
   ]
 }

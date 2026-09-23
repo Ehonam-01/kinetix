@@ -3,15 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestMentorStatusAction } from "./actions";
 
 export function RequestMentorForm({
-  categories,
   defaultCategory,
   defaultPitch,
 }: {
-  categories: string[];
   defaultCategory?: string;
   defaultPitch?: string;
 }) {
@@ -25,8 +24,8 @@ export function RequestMentorForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!category) {
-      setError("Choisissez un domaine.");
+    if (!category.trim()) {
+      setError("Indiquez un domaine.");
       return;
     }
     startTransition(async () => {
@@ -52,25 +51,13 @@ export function RequestMentorForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="mentor-category">Domaine</Label>
-        <select
+        <Input
           id="mentor-category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-9 w-full rounded-lg border bg-transparent px-3 text-sm outline-none focus-visible:ring-3"
-        >
-          <option value="">Choisir un domaine</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        {categories.length === 0 && (
-          <p className="text-muted-foreground text-xs">
-            Aucun domaine disponible pour le moment — les domaines
-            correspondent aux catégories des formations publiées.
-          </p>
-        )}
+          maxLength={60}
+          placeholder="Ex : Marketing digital, Vente, Comptabilité..."
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="mentor-pitch">
@@ -88,11 +75,7 @@ export function RequestMentorForm({
         <p className="text-muted-foreground text-xs">{pitch.length}/280</p>
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}
-      <Button
-        type="submit"
-        disabled={pending || categories.length === 0}
-        className="w-full"
-      >
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Envoi..." : "Envoyer la demande"}
       </Button>
     </form>
