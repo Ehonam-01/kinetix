@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { courses, lessons, modules } from "@/db/schema/courses";
 import { lessonProgress } from "@/db/schema/lesson-progress";
@@ -437,4 +437,22 @@ export async function listPublishedCoursesForMarketing(
     moduleCount: moduleCountByCourse.get(course.id) ?? 0,
     lessonCount: lessonCountByCourse.get(course.id) ?? 0,
   }));
+}
+
+// The mentor program (services/mentorship/request-mentor-status.ts,
+// dashboard/become-mentor) reuses this instead of inventing a separate
+// domain taxonomy — a mentor's declared domain is exactly one of the
+// categories an admin has already typed into a course. category stays
+// nullable on courses (see db/schema/courses.ts), so both isNotNull and a
+// non-empty check are needed: a category column defaulting to "" would
+// otherwise show up here as a selectable blank option.
+export async function listDistinctCourseCategories(
+  executor: Executor,
+): Promise<string[]> {
+  const rows = await executor
+    .selectDistinct({ category: courses.category })
+    .from(courses)
+    .where(and(isNotNull(courses.category), ne(courses.category, "")))
+    .orderBy(asc(courses.category));
+  return rows.map((r) => r.category!);
 }

@@ -33,6 +33,10 @@ describe("findAdminSectionLabel", () => {
     expect(findAdminSectionLabel("/admin/withdrawals")).toBe("Retraits");
   });
 
+  it("resolves the mentors page to the Mentorat section", () => {
+    expect(findAdminSectionLabel("/admin/mentors")).toBe("Mentorat");
+  });
+
   it("falls back to a generic label for an unrecognized path", () => {
     expect(findAdminSectionLabel("/admin/does-not-exist")).toBe(
       "Administration",

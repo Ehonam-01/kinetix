@@ -26,3 +26,4 @@ export * from "./subscription-wallet-requests";
 export * from "./payment-settings";
 export * from "./account-deletion-requests";
 export * from "./admin-recharge-requests";
+export * from "./mentor-profiles";

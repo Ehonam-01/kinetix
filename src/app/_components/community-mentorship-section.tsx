@@ -27,6 +27,7 @@ export function CommunityMentorshipSection() {
           title: "Mentorat",
           description:
             "Être mis en relation avec des personnes expérimentées dans ton domaine, pour ne plus tout devoir comprendre seul.",
+          href: "/dashboard/mentors",
           image: {
             src: "/mentorship-photo.jpg",
             alt: "Un mentor Kinetix accompagnant un jeune",

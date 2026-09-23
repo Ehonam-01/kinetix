@@ -26,4 +26,6 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PAYMENT_PROVIDER_CHANGED: "Fournisseur de paiement modifié",
   ACCOUNT_DELETED: "Compte supprimé (anonymisé)",
   TEST_SUBSCRIPTION_DELETED: "Abonnement de test supprimé",
+  MENTOR_REQUEST_APPROVED: "Mentor validé",
+  MENTOR_REQUEST_REJECTED: "Demande de mentorat refusée",
 };

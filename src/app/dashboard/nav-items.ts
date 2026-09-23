@@ -3,6 +3,7 @@ import {
   BookOpen,
   CalendarClock,
   CreditCard,
+  GraduationCap,
   Gift,
   Landmark,
   LayoutGrid,
@@ -60,6 +61,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   },
   { href: "/dashboard/courses", label: "Cours", icon: BookOpen },
   { href: "/dashboard/community", label: "Communauté", icon: Users2 },
+  { href: "/dashboard/mentors", label: "Mentorat", icon: GraduationCap },
   {
     href: "/dashboard/subscription",
     label: "Mon abonnement",

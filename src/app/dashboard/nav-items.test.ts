@@ -42,6 +42,10 @@ describe("findDashboardSectionLabel", () => {
     );
   });
 
+  it("resolves the mentors directory to the Mentorat section", () => {
+    expect(findDashboardSectionLabel("/dashboard/mentors")).toBe("Mentorat");
+  });
+
   it("falls back to a generic label for an unrecognized path", () => {
     expect(findDashboardSectionLabel("/dashboard/does-not-exist")).toBe(
       "Tableau de bord",
