@@ -1,19 +1,34 @@
-import { BookOpen, Clock, Gift, UserCheck } from "lucide-react";
+import {
+  Banknote,
+  BookOpen,
+  Clock,
+  Coins,
+  Gift,
+  TrendingUp,
+  UserCheck,
+  UserPlus,
+} from "lucide-react";
 import { db } from "@/db/client";
 import { listMembers } from "@/repositories/admin-members";
 import { listAllCoursesForAdmin } from "@/repositories/courses";
 import { listAuditLogs } from "@/repositories/audit-logs";
 import { listAllMemberRewards } from "@/repositories/member-rewards";
+import { getAdminOverviewStats, getRevenueHistory } from "@/repositories/admin-stats";
+import { AdminRevenueChart } from "@/components/admin-revenue-chart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { AUDIT_ACTION_LABEL } from "./audit-action-labels";
 
 export default async function AdminOverviewPage() {
-  const [members, courses, rewards, recentActivity] = await Promise.all([
-    listMembers(db),
-    listAllCoursesForAdmin(db),
-    listAllMemberRewards(db),
-    listAuditLogs(db, 8),
-  ]);
+  const [members, courses, rewards, recentActivity, stats, revenueHistory] =
+    await Promise.all([
+      listMembers(db),
+      listAllCoursesForAdmin(db),
+      listAllMemberRewards(db),
+      listAuditLogs(db, 8),
+      getAdminOverviewStats(db),
+      getRevenueHistory(db, 30),
+    ]);
 
   const activeMembers = members.filter((m) => m.status === "ACTIVE").length;
   const pendingMembers = members.filter(
@@ -25,6 +40,37 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard
+          icon={Banknote}
+          label="Chiffre d'affaires total"
+          value={`${stats.totalRevenue.toLocaleString("fr-FR")} F`}
+          href="/admin/subscriptions"
+          color="emerald"
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Chiffre d'affaires (ce mois)"
+          value={`${stats.revenueThisMonth.toLocaleString("fr-FR")} F`}
+          href="/admin/subscriptions"
+          color="blue"
+        />
+        <StatCard
+          icon={Coins}
+          label="Commissions versées"
+          value={`${stats.totalCommissionsPaid.toLocaleString("fr-FR")} F`}
+          href="/admin/commissions"
+          color="rose"
+        />
+        <StatCard
+          icon={UserPlus}
+          label="Nouveaux abonnements (30j)"
+          value={stats.newSubscriptionsThisMonth}
+          href="/admin/subscriptions"
+          color="cyan"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={UserCheck}
@@ -55,6 +101,15 @@ export default async function AdminOverviewPage() {
           color="violet"
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Chiffre d&apos;affaires — 30 derniers jours</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminRevenueChart points={revenueHistory} />
+        </CardContent>
+      </Card>
 
       <div>
         <h2 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
