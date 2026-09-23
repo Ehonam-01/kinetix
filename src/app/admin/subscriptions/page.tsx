@@ -1,6 +1,7 @@
 import { db } from "@/db/client";
 import { listSubscriptionsForAdmin } from "@/repositories/subscriptions";
 import { cn } from "@/lib/utils";
+import { DeleteTestSubscriptionButton } from "./delete-test-subscription-button";
 
 export default async function AdminSubscriptionsPage() {
   const subscriptions = await listSubscriptionsForAdmin(db);
@@ -52,6 +53,9 @@ export default async function AdminSubscriptionsPage() {
                     {s.active ? "Actif" : "Expiré"}
                   </span>
                 </div>
+              </div>
+              <div className="flex justify-end">
+                <DeleteTestSubscriptionButton subscriptionId={s.id} />
               </div>
             </div>
           ))}
