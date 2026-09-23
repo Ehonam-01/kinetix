@@ -1,11 +1,35 @@
 import "server-only";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
-import { payments } from "@/db/schema/payments";
+import { payments, type paymentPurposeEnum } from "@/db/schema/payments";
 import { profiles } from "@/db/schema/profiles";
 
 export function findPaymentById(executor: Executor, id: string) {
   return executor.query.payments.findFirst({ where: eq(payments.id, id) });
+}
+
+// Picks up a hosted-checkout payment (Moneroo, or PayDunya/Bictorys with no
+// operator recognized) right where the member left it: after redirecting to
+// the provider's own page, the return trip lands back on
+// dashboard/subscription with no paymentId in the URL to poll — this is how
+// that page finds it anyway. Bounded to the last 20 minutes (a generous
+// checkout-session lifetime) so a payment abandoned days ago never resurrects
+// a "confirmation en cours" banner for someone just visiting the page.
+export function findRecentPendingPayment(
+  executor: Executor,
+  beneficiaryUserId: string,
+  purpose: (typeof paymentPurposeEnum.enumValues)[number],
+) {
+  const cutoff = new Date(Date.now() - 20 * 60 * 1000);
+  return executor.query.payments.findFirst({
+    where: and(
+      eq(payments.beneficiaryUserId, beneficiaryUserId),
+      eq(payments.purpose, purpose),
+      eq(payments.status, "PENDING"),
+      gte(payments.createdAt, cutoff),
+    ),
+    orderBy: desc(payments.createdAt),
+  });
 }
 
 export function findPaymentByProviderReference(

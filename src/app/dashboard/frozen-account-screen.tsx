@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PendingPaymentWatcher } from "./subscription/pending-payment-watcher";
 import { SubscriptionPanel } from "./subscription/subscription-panel";
 import { LogoutButton } from "./logout-button";
 
@@ -32,6 +33,7 @@ export function FrozenAccountScreen({
   price,
   username,
   activeProvider,
+  pendingPaymentId,
 }: {
   memberName: string;
   neverSubscribed?: boolean;
@@ -39,6 +41,15 @@ export function FrozenAccountScreen({
   price: number;
   username: string;
   activeProvider: string;
+  // A payment started (mobile money or hosted checkout) in the last 20
+  // minutes, per dashboard/layout.tsx's findRecentPendingPayment lookup —
+  // set only when the webhook hasn't confirmed it yet. Without this, a
+  // member redirected back from a hosted checkout (Moneroo, or PayDunya/
+  // Bictorys with no operator recognized) landed right back on this exact
+  // screen — profile.status is still PENDING_PAYMENT until the webhook
+  // lands — with no way to know a payment was already in flight, and no
+  // way to find out short of manually reloading until it did.
+  pendingPaymentId?: string | null;
 }) {
   return (
     <div className="from-primary/15 via-background to-accent/40 flex min-h-screen items-center justify-center bg-linear-to-br p-4">
@@ -58,11 +69,24 @@ export function FrozenAccountScreen({
         </CardHeader>
         {!permanentlyFrozen && (
           <CardContent className="space-y-4">
-            <SubscriptionPanel
-              price={price}
-              username={username}
-              activeProvider={activeProvider}
-            />
+            {pendingPaymentId ? (
+              <PendingPaymentWatcher
+                paymentId={pendingPaymentId}
+                fallback={
+                  <SubscriptionPanel
+                    price={price}
+                    username={username}
+                    activeProvider={activeProvider}
+                  />
+                }
+              />
+            ) : (
+              <SubscriptionPanel
+                price={price}
+                username={username}
+                activeProvider={activeProvider}
+              />
+            )}
           </CardContent>
         )}
         <CardContent className={permanentlyFrozen ? undefined : "pt-0"}>

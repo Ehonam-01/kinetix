@@ -2,6 +2,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { db } from "@/db/client";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { getActiveProviderKey } from "@/repositories/payment-settings";
+import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import {
@@ -12,14 +13,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner";
+import { PendingPaymentWatcher } from "./pending-payment-watcher";
 import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
   const { profile } = await requireUser();
-  const [status, price, activeProvider] = await Promise.all([
+  const [status, price, activeProvider, pendingPayment] = await Promise.all([
     getSubscriptionStatus(db, profile.id),
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
     getActiveProviderKey(db),
+    findRecentPendingPayment(db, profile.id, "SUBSCRIPTION"),
   ]);
 
   return (
@@ -31,6 +34,15 @@ export default async function SubscriptionPage() {
           plateforme.
         </p>
       </div>
+
+      {/* Covers the hosted-checkout redirect (Moneroo, or PayDunya/Bictorys
+          with no operator recognized): the member left for the provider's
+          own page and comes back here with no client state left to poll —
+          this is what picks the confirmation up automatically instead of
+          leaving them stuck on a manual reload (see PendingPaymentWatcher). */}
+      {pendingPayment && (
+        <PendingPaymentWatcher paymentId={pendingPayment.id} />
+      )}
 
       <SubscriptionAlertBanner status={status} />
 

@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { getActiveProviderKey } from "@/repositories/payment-settings";
+import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { MobileSidebarProvider } from "@/components/mobile-sidebar-context";
@@ -22,13 +23,16 @@ export default async function DashboardLayout({
   // whichever round trip is slower, not the sum of both. The ambassador
   // query still fires even when it'll turn out to be unneeded (frozen
   // admin-exempt path below) — cheap enough to trade for the common case.
-  const [status, ambassador] = await Promise.all([
+  const [status, ambassador, pendingPayment] = await Promise.all([
     profile.role !== "ADMIN"
       ? getSubscriptionStatus(db, profile.id)
       : Promise.resolve(null),
     db.query.ambassadorProfiles.findFirst({
       where: eq(ambassadorProfiles.userId, profile.id),
     }),
+    profile.role !== "ADMIN"
+      ? findRecentPendingPayment(db, profile.id, "SUBSCRIPTION")
+      : Promise.resolve(null),
   ]);
 
   // Payment is mandatory before dashboard access at all (explicit product
@@ -56,6 +60,7 @@ export default async function DashboardLayout({
         price={price}
         username={profile.username}
         activeProvider={activeProvider}
+        pendingPaymentId={pendingPayment?.id}
       />
     );
   }
@@ -75,6 +80,7 @@ export default async function DashboardLayout({
         price={price}
         username={profile.username}
         activeProvider={activeProvider}
+        pendingPaymentId={pendingPayment?.id}
       />
     );
   }
