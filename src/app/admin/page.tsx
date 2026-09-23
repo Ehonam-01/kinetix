@@ -19,6 +19,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { AUDIT_ACTION_LABEL } from "./audit-action-labels";
 
+// Live financial data (chiffre d'affaires, commissions versées) must never
+// be frozen at build time — force-dynamic also sidesteps the build-time
+// static-generation attempt that was timing out at 60s once this page
+// picked up two more DB round trips (getAdminOverviewStats/
+// getRevenueHistory) on top of its existing queries.
+export const dynamic = "force-dynamic";
+
 export default async function AdminOverviewPage() {
   const [members, courses, rewards, recentActivity, stats, revenueHistory] =
     await Promise.all([
