@@ -65,14 +65,14 @@ pas seulement une garantie applicative, c'est vérifié à l'exécution.
 | Type                                   | Déclencheur                                             | Montant par défaut             | Bénéficiaire                         |
 | -------------------------------------- | ------------------------------------------------------- | ------------------------------ | ------------------------------------ |
 | Commission directe                     | Paiement d'inscription confirmé                         | 500 F CFA                      | Le parrain direct                    |
-| Bonus fin de niveau 1                  | Les 2 générations du niveau 1 sont complètes            | 1 000 F CFA                    | Le membre lui-même                   |
 | Commission de génération (niveaux 2-5) | Une génération de ce niveau atteint son effectif requis | taux × taille de la génération | L'ascendant dont c'est la génération |
 
 Les niveaux 2 à 5 paient **par génération complétée**, pas par membre individuel : compléter G1
 (2 membres) au niveau 2 déclenche un paiement unique de 2 × 2 000 = 4 000 F, distinct du paiement
-de G2 (4 × 2 000 = 8 000 F) plus tard. Le niveau 1 ne suit pas ce schéma : il n'y a pas de
-commission par génération, seulement le bonus de 1 000 F versé une fois les deux générations
-complètes.
+de G2 (4 × 2 000 = 8 000 F) plus tard. Le niveau 1 ne déclenche aucune commission propre — décision
+produit explicite (migration `0040_reward_catalog_reset.sql`, qui a supprimé le paramètre
+`commission.level_1_bonus`) : le compléter ne fait que débloquer le niveau 2 (séquentialité), sans
+paiement associé.
 
 Barème actuel (`parameter_versions`, modifiable depuis l'admin sans redéploiement) :
 
@@ -80,7 +80,6 @@ Barème actuel (`parameter_versions`, modifiable depuis l'admin sans redéploiem
 | ------------------- | -------------------------- | ----------------- |
 | Prix inscription    | `registration_price`       | 4 500 F           |
 | Commission directe  | `commission.direct`        | 500 F             |
-| Bonus niveau 1      | `commission.level_1_bonus` | 1 000 F           |
 | Commission niveau 2 | `commission.level.2`       | 2 000 F           |
 | Commission niveau 3 | `commission.level.3`       | 3 000 F           |
 | Commission niveau 4 | `commission.level.4`       | 20 000 F          |
@@ -96,7 +95,6 @@ commission déjà versée, seulement les futures (section 29/43 du prompt direct
 
 Chaque commission porte une `dedupe_key` unique, dérivée déterministement de son identité :
 
-- Bonus niveau 1 : `LEVEL_1_BONUS:{userId}`
 - Commission de génération : `LEVEL_COMMISSION:{userId}:{levelCode}:{generation}`
 
 Un second appel avec la même clé est un no-op (`ON CONFLICT DO NOTHING`) — pas une erreur, pas un
@@ -324,9 +322,11 @@ l'ancienne branche de repli à taux fixe de `unlock-level.ts` définitivement in
 Contrairement à `commission_rules`/`parameter_versions` d'habitude (jamais réécrit, seulement
 fermé via `effective_to`), ces lignes ont été supprimées pour de bon plutôt que closes — décision
 explicite de l'utilisateur, aucune commission réelle n'ayant jamais dépendu d'elles
-(`commission_events` à zéro ligne). `commission.level_1_bonus` (1000 F) reste actif : contrairement
-aux autres, `completeLevel` le lit sans condition dès qu'un membre complète son niveau 1, aussi
-bien via l'ancien flux payant que via le nouvel accès gratuit au programme.
+(`commission_events` à zéro ligne). `commission.level_1_bonus` (1000 F) est resté actif à ce
+stade — contrairement aux autres, `completeLevel` le lisait alors sans condition dès qu'un membre
+complétait son niveau 1. **Retiré depuis** (migration `0040_reward_catalog_reset.sql`, décision
+produit ultérieure) : `completeLevel` ne verse plus aucune commission au niveau 1, voir la section
+Commissions plus haut.
 
 **Le pivot est terminé** — les 8 phases validées avec l'utilisateur sont toutes construites et
 vérifiées en conditions réelles. Détail phase par phase dans `ARCHITECTURE.md`.
