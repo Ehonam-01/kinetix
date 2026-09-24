@@ -13,8 +13,7 @@ export function CommunityMentorshipSection() {
           icon: Users2,
           title: "Communauté",
           description:
-            "L'annuaire des membres est disponible : découvre qui apprend, quels objectifs ils poursuivent et quelles compétences ils développent.",
-          href: "/dashboard/community",
+            "Découvre qui apprend à tes côtés, quels objectifs ils poursuivent et quelles compétences ils développent.",
           image: {
             src: "/community-photo.png",
             alt: "Membres de la communauté Kinetix qui échangent",

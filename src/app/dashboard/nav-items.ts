@@ -10,7 +10,6 @@ import {
   Layers,
   Settings,
   Share2,
-  Users2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,7 +59,6 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     ambassadorOnly: true,
   },
   { href: "/dashboard/courses", label: "Cours", icon: BookOpen },
-  { href: "/dashboard/community", label: "Communauté", icon: Users2 },
   { href: "/dashboard/mentors", label: "Mentorat", icon: GraduationCap },
   {
     href: "/dashboard/subscription",

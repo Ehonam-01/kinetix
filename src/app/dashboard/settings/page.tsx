@@ -47,13 +47,13 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Profil communautaire</CardTitle>
+          <CardTitle>Bio publique</CardTitle>
           <CardDescription>
-            Visible par les autres membres dans{" "}
-            <Link href="/dashboard/community" className="underline">
-              l&apos;annuaire
-            </Link>
-            .
+            Affichée sur votre profil dans{" "}
+            <Link href="/dashboard/mentors" className="underline">
+              l&apos;annuaire des mentors
+            </Link>{" "}
+            si vous êtes mentor validé.
           </CardDescription>
         </CardHeader>
         <CardContent>
