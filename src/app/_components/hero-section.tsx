@@ -18,35 +18,28 @@ export function HeroSection() {
         alt=""
         fill
         priority
-        // hero2.png is a wide 16:9 shot with the Kinetix logo/tagline baked
-        // into the top band. On a narrow mobile viewport the section is
-        // much taller than wide, so object-cover's default center crop
-        // shows the image's full height through a narrow column that lands
-        // right on that logo band — object-left here shifts that column to
-        // the clean office/plants side instead, sm+ reverts to the
-        // centered crop the wider desktop hero was designed around.
-        className="object-left sm:object-center"
+        className="object-cover"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-linear-to-b from-black/82 via-black/78 to-black/90 sm:from-black/75 sm:via-black/70 sm:to-black/85"
+        className="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/85"
       />
 
-      <div className="relative mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-32 lg:px-8">
+      <div className="relative mx-auto max-w-5xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:px-8">
         <Reveal>
-          <h1 className="text-shadow-lg text-shadow-black/60 text-3xl leading-[1.15] font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+          <h1 className="text-shadow-lg text-shadow-black/60 text-4xl leading-[1.1] font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
             <span className="block">Les bonnes compétences.</span>
             <span className="block">Les bonnes personnes.</span>
             <span className="text-brand-accent block">
               Les bonnes opportunités.
             </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/80 sm:mt-8 sm:text-lg">
+          <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-pretty text-white/80">
             Kinetix t&apos;aide à développer les compétences qui comptent,
             rencontrer les bonnes personnes et transformer ton potentiel en
             projets et opportunités.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
               href="/register"
               className={cn(
@@ -66,7 +59,7 @@ export function HeroSection() {
               Découvrir la communauté
             </a>
           </div>
-          <p className="mt-5 flex items-center justify-center gap-2 text-sm text-white/70 sm:mt-6">
+          <p className="mt-6 flex items-center justify-center gap-2 text-sm text-white/70">
             <CheckCircle2 className="text-brand-accent size-4 shrink-0" />
             Formations pratiques. Mentorat réel. Une communauté qui avance.
           </p>
