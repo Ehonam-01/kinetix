@@ -5,6 +5,7 @@ import { db } from "@/db/client";
 import { getCourseContent, hasCourseAccess } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
 import { cn } from "@/lib/utils";
+import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MarkCompleteButton } from "./mark-complete-button";
@@ -13,6 +14,7 @@ export default async function CourseDetailPage(
   props: PageProps<"/dashboard/courses/[courseId]">,
 ) {
   const { courseId } = await props.params;
+  const { lesson: openLessonId } = await props.searchParams;
   const { profile } = await requireUser();
   // Same reasoning as /dashboard/courses/page.tsx: reachable by a plain
   // customer, not just an ACTIVE ambassador.
@@ -106,65 +108,94 @@ export default async function CourseDetailPage(
                 <CardTitle>{module.title}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {module.lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
-                  >
-                    <div>
-                      {lesson.locked ? (
-                        <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
-                          <Lock className="size-3.5" />
-                          {lesson.title}
-                        </span>
-                      ) : lesson.lessonType === "TEXT" ? (
-                        <Link
-                          href={`/dashboard/courses/${courseId}/lessons/${lesson.id}`}
-                          className="font-medium underline-offset-4 hover:underline"
-                        >
-                          {lesson.title}
-                        </Link>
-                      ) : lesson.videoUrl ? (
-                        <a
-                          href={lesson.videoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium underline-offset-4 hover:underline"
-                        >
-                          {lesson.title}
-                        </a>
-                      ) : (
-                        <span className="font-medium">{lesson.title}</span>
-                      )}
-                      {lesson.description && (
-                        <p className="text-muted-foreground text-xs">
-                          {lesson.description}
-                        </p>
+                {module.lessons.map((lesson) => {
+                  const embedUrl =
+                    !lesson.locked && lesson.lessonType === "VIDEO" && lesson.videoUrl
+                      ? getVideoEmbedUrl(lesson.videoProvider, lesson.videoUrl)
+                      : null;
+                  const isOpen = embedUrl !== null && openLessonId === lesson.id;
+
+                  return (
+                    <div key={lesson.id}>
+                      <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div>
+                          {lesson.locked ? (
+                            <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                              <Lock className="size-3.5" />
+                              {lesson.title}
+                            </span>
+                          ) : lesson.lessonType === "TEXT" ? (
+                            <Link
+                              href={`/dashboard/courses/${courseId}/lessons/${lesson.id}`}
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
+                              {lesson.title}
+                            </Link>
+                          ) : embedUrl ? (
+                            <Link
+                              href={
+                                isOpen
+                                  ? `/dashboard/courses/${courseId}`
+                                  : `/dashboard/courses/${courseId}?lesson=${lesson.id}`
+                              }
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
+                              {lesson.title}
+                            </Link>
+                          ) : lesson.videoUrl ? (
+                            <a
+                              href={lesson.videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
+                              {lesson.title}
+                            </a>
+                          ) : (
+                            <span className="font-medium">{lesson.title}</span>
+                          )}
+                          {lesson.description && (
+                            <p className="text-muted-foreground text-xs">
+                              {lesson.description}
+                            </p>
+                          )}
+                        </div>
+                        {lesson.locked ? (
+                          <span className="text-muted-foreground text-xs">
+                            Verrouillée
+                          </span>
+                        ) : lesson.completed ? (
+                          <span className="text-xs font-medium text-green-600">
+                            Terminée
+                          </span>
+                        ) : lesson.lessonType === "TEXT" ? (
+                          <Link
+                            href={`/dashboard/courses/${courseId}/lessons/${lesson.id}`}
+                            className="text-primary text-xs font-medium hover:underline"
+                          >
+                            {lesson.hasQuiz ? "Lire + quiz" : "Lire"}
+                          </Link>
+                        ) : (
+                          <MarkCompleteButton
+                            courseId={courseId}
+                            lessonId={lesson.id}
+                          />
+                        )}
+                      </div>
+                      {isOpen && (
+                        <div className="mt-2 overflow-hidden rounded-lg border">
+                          <iframe
+                            src={embedUrl}
+                            title={lesson.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="aspect-video w-full"
+                          />
+                        </div>
                       )}
                     </div>
-                    {lesson.locked ? (
-                      <span className="text-muted-foreground text-xs">
-                        Verrouillée
-                      </span>
-                    ) : lesson.completed ? (
-                      <span className="text-xs font-medium text-green-600">
-                        Terminée
-                      </span>
-                    ) : lesson.lessonType === "TEXT" ? (
-                      <Link
-                        href={`/dashboard/courses/${courseId}/lessons/${lesson.id}`}
-                        className="text-primary text-xs font-medium hover:underline"
-                      >
-                        {lesson.hasQuiz ? "Lire + quiz" : "Lire"}
-                      </Link>
-                    ) : (
-                      <MarkCompleteButton
-                        courseId={courseId}
-                        lessonId={lesson.id}
-                      />
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
           ))}
