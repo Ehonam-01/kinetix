@@ -2,14 +2,19 @@ import { Wallet } from "lucide-react";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { getBalance } from "@/repositories/financial-transactions";
+import { listPendingWalletPaymentRequestsForOwner } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
+import { PendingWalletRequests } from "./pending-wallet-requests";
 import { TransferForm } from "./transfer-form";
 
 export default async function TransferPage() {
   const { profile } = await requireUser();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
-  const balance = await getBalance(db, profile.id);
+  const [balance, pendingWalletRequests] = await Promise.all([
+    getBalance(db, profile.id),
+    listPendingWalletPaymentRequestsForOwner(db, profile.id),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -26,6 +31,7 @@ export default async function TransferPage() {
           </p>
         </div>
       </div>
+      <PendingWalletRequests requests={pendingWalletRequests} />
       <TransferForm />
     </div>
   );

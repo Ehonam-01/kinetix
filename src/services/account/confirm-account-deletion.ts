@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { accountDeletionRequests } from "@/db/schema/account-deletion-requests";
 import { profiles } from "@/db/schema/profiles";
@@ -24,35 +24,49 @@ export async function confirmAccountDeletion(
   requestId: string,
   code: string,
 ) {
-  const request = await db.query.accountDeletionRequests.findFirst({
-    where: eq(accountDeletionRequests.id, requestId),
-  });
-  if (!request || request.requestedByUserId !== requesterUserId) {
-    throw new Error("Demande de suppression introuvable.");
-  }
-  if (request.status !== "PENDING_OTP") {
-    throw new Error("Cette demande a déjà été traitée ou a expiré.");
-  }
-  if (request.otpExpiresAt.getTime() < Date.now()) {
+  // Attempt consumed atomically before comparing the code — see
+  // confirmTransfer (security audit H2).
+  const [request] = await db
+    .update(accountDeletionRequests)
+    .set({ otpAttempts: sql`${accountDeletionRequests.otpAttempts} + 1` })
+    .where(
+      and(
+        eq(accountDeletionRequests.id, requestId),
+        eq(accountDeletionRequests.requestedByUserId, requesterUserId),
+        eq(accountDeletionRequests.status, "PENDING_OTP"),
+        lt(accountDeletionRequests.otpAttempts, MAX_OTP_ATTEMPTS),
+        gt(accountDeletionRequests.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .returning();
+
+  if (!request) {
+    const existing = await db.query.accountDeletionRequests.findFirst({
+      where: eq(accountDeletionRequests.id, requestId),
+    });
+    if (!existing || existing.requestedByUserId !== requesterUserId) {
+      throw new Error("Demande de suppression introuvable.");
+    }
+    if (existing.status !== "PENDING_OTP") {
+      throw new Error("Cette demande a déjà été traitée ou a expiré.");
+    }
     await db
       .update(accountDeletionRequests)
       .set({ status: "EXPIRED" })
-      .where(eq(accountDeletionRequests.id, request.id));
-    throw new Error("Le code a expiré, veuillez recommencer.");
-  }
-  if (request.otpAttempts >= MAX_OTP_ATTEMPTS) {
-    await db
-      .update(accountDeletionRequests)
-      .set({ status: "EXPIRED" })
-      .where(eq(accountDeletionRequests.id, request.id));
-    throw new Error("Trop de tentatives, veuillez recommencer.");
+      .where(
+        and(
+          eq(accountDeletionRequests.id, existing.id),
+          eq(accountDeletionRequests.status, "PENDING_OTP"),
+        ),
+      );
+    throw new Error(
+      existing.otpAttempts >= MAX_OTP_ATTEMPTS
+        ? "Trop de tentatives, veuillez recommencer."
+        : "Le code a expiré, veuillez recommencer.",
+    );
   }
 
   if (!verifyOtpCode(code, request.otpCodeHash)) {
-    await db
-      .update(accountDeletionRequests)
-      .set({ otpAttempts: sql`${accountDeletionRequests.otpAttempts} + 1` })
-      .where(eq(accountDeletionRequests.id, request.id));
     throw new Error("Code incorrect.");
   }
 

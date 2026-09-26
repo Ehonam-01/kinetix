@@ -85,7 +85,8 @@ async function runMigrations(client: PGlite) {
   for (const file of files) {
     if (
       file === "0030_course_thumbnails_storage.sql" ||
-      file === "0041_reward_images_storage.sql"
+      file === "0041_reward_images_storage.sql" ||
+      file === "0050_fix_storage_admin_check.sql"
     )
       continue;
     const sqlText = fs.readFileSync(path.join(dir, file), "utf8");

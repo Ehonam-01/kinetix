@@ -141,8 +141,6 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
     startTransition(async () => {
       const result = await confirmWizallPaymentAction(
         paymentId,
-        wizall.transactionId,
-        phone.trim(),
         wizallCode.trim(),
       );
       if (result.error) {

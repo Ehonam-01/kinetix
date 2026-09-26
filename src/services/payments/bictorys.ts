@@ -120,8 +120,12 @@ async function bictorysRequest<T>(
   });
 
   if (!response.ok) {
+    // Bictorys' raw response body used to go straight into the thrown
+    // message, which callers hand back to the member's screen as-is — kept
+    // in the server log only (security audit M8, same fix as paydunya.ts).
     const body = await response.text();
-    throw new Error(`Bictorys ${path} a répondu ${response.status} : ${body}`);
+    console.error(`Bictorys ${path} a répondu ${response.status} :`, body);
+    throw new Error("Le service de paiement a refusé la requête. Veuillez réessayer.");
   }
 
   if (response.status === 202 && !response.headers.get("content-length")) {

@@ -8,6 +8,7 @@ import { changePasswordAction } from "./actions";
 
 export function PasswordForm() {
   const [pending, startTransition] = useTransition();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,12 +23,16 @@ export function PasswordForm() {
       return;
     }
     startTransition(async () => {
-      const result = await changePasswordAction({ password });
+      const result = await changePasswordAction({
+        currentPassword,
+        password,
+      });
       if (result.error) {
         setError(result.error);
         return;
       }
       setSuccess(true);
+      setCurrentPassword("");
       setPassword("");
       setConfirm("");
     });
@@ -35,6 +40,16 @@ export function PasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="current-password">Mot de passe actuel</Label>
+        <Input
+          id="current-password"
+          type="password"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="password">Nouveau mot de passe</Label>
         <Input

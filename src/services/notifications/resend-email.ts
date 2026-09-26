@@ -27,7 +27,10 @@ export const resendEmailProvider: EmailProvider = {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(`Resend /emails a répondu ${response.status} : ${body}`);
+      // Logged, never thrown as-is: callers return err.message to the
+      // member (security audit M8).
+      console.error(`Resend /emails a répondu ${response.status} :`, body);
+      throw new Error("L'email de confirmation n'a pas pu être envoyé. Veuillez réessayer.");
     }
   },
 };

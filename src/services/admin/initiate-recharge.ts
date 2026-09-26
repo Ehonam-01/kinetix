@@ -8,6 +8,7 @@ import {
   findProfileById,
 } from "@/repositories/profiles";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
+import { escapeHtml } from "@/lib/escape-html";
 import { generateOtpCode, hashOtpCode, OTP_TTL_MINUTES } from "@/services/wallet/otp";
 
 // Mirrors initiateTransfer's shape exactly (services/wallet/initiate-
@@ -67,7 +68,7 @@ export async function initiateAdminRecharge(
     to: adminEmail,
     subject: "Code de confirmation — recharge de compte",
     html: `
-      <p>Vous avez demandé à créditer <strong>${amount.toLocaleString("fr-FR")} F</strong> sur le compte de <strong>${beneficiary.fullName}</strong> (@${beneficiary.username}).</p>
+      <p>Vous avez demandé à créditer <strong>${amount.toLocaleString("fr-FR")} F</strong> sur le compte de <strong>${escapeHtml(beneficiary.fullName)}</strong> (@${escapeHtml(beneficiary.username)}).</p>
       <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>
       <p>Ce code expire dans ${OTP_TTL_MINUTES} minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
     `,

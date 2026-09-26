@@ -31,6 +31,12 @@ export type CreatePayoutInput = {
 
 export type PayoutResult = { payoutProviderReference: string };
 
+// Thrown only when Bictorys (or our own pre-check) explicitly refused the
+// payout — no money can have left. Any other error (network failure,
+// timeout, 5xx, unparseable 2xx body) is ambiguous: the transfer may have
+// gone through, and approveWithdrawal must not make it retryable blindly.
+export class PayoutRejectedError extends Error {}
+
 // Returns once Bictorys has *accepted* the payout request (201) — this is
 // not confirmation the money arrived. approveWithdrawal stores
 // payoutProviderReference and leaves the request in PROCESSING;
@@ -41,7 +47,9 @@ export async function createBictorysPayout(
 ): Promise<PayoutResult> {
   const paymentType = OPERATOR_TO_BICTORYS_PAYMENT_TYPE[input.operator];
   if (!paymentType) {
-    throw new Error(`Bictorys ne supporte pas l'opérateur ${input.operator}.`);
+    throw new PayoutRejectedError(
+      `Bictorys ne supporte pas l'opérateur ${input.operator}.`,
+    );
   }
   const response = await fetch(
     `${BASE_URL}/pay/v1/payouts?payment_type=${paymentType}&country_code=${input.country}`,
@@ -76,9 +84,10 @@ export async function createBictorysPayout(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(
-      `Bictorys /pay/v1/payouts a répondu ${response.status} : ${body}`,
-    );
+    const message = `Bictorys /pay/v1/payouts a répondu ${response.status} : ${body}`;
+    throw response.status >= 400 && response.status < 500
+      ? new PayoutRejectedError(message)
+      : new Error(message);
   }
 
   const result = payoutResponseSchema.parse(await response.json());

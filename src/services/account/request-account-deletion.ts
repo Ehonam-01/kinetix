@@ -6,6 +6,7 @@ import { profiles } from "@/db/schema/profiles";
 import { findAuthEmailByUserId } from "@/repositories/auth-users";
 import { findProfileById } from "@/repositories/profiles";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
+import { escapeHtml } from "@/lib/escape-html";
 import {
   generateOtpCode,
   hashOtpCode,
@@ -96,7 +97,7 @@ export async function requestAccountDeletion(
       <p>${
         isSelfService
           ? "Vous avez demandé la suppression définitive de votre compte."
-          : `Vous avez demandé la suppression définitive du compte de <strong>${target.fullName}</strong> (@${target.username}).`
+          : `Vous avez demandé la suppression définitive du compte de <strong>${escapeHtml(target.fullName)}</strong> (@${escapeHtml(target.username)}).`
       }</p>
       <p>Cette action est irréversible : les informations personnelles seront anonymisées et la connexion définitivement bloquée.</p>
       <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>

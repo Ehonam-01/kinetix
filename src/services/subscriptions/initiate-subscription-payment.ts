@@ -100,9 +100,24 @@ export async function initiateSubscriptionPayment(input: {
     address: input.address,
   });
 
+  // PayDunya's Wizall Money only: the transaction id and phone the second
+  // confirmation step needs are kept server-side, never taken back from
+  // the browser — confirmWizallPaymentAction (dashboard/subscription/
+  // actions.ts) reads them from here, so a client can't point one of its
+  // own payments at some other (already-confirmed) Wizall transaction.
   const [payment] = await db
     .update(payments)
-    .set({ providerReference: intent.providerReference })
+    .set({
+      providerReference: intent.providerReference,
+      ...(intent.pendingWizallConfirmation && {
+        metadata: {
+          ...((pendingPayment.metadata as Record<string, unknown> | null) ??
+            {}),
+          wizallTransactionId: intent.pendingWizallConfirmation.transactionId,
+          wizallPhone: input.phone,
+        },
+      }),
+    })
     .where(eq(payments.id, pendingPayment.id))
     .returning();
 

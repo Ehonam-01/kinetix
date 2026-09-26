@@ -80,6 +80,11 @@ export default async function AdminWithdrawalsPage() {
                   {r.operator ? ` (${r.operator})` : ""}
                   {r.country ? ` · ${r.country}` : ""}
                 </p>
+                {r.payoutFailureReason && (
+                  <p className="text-destructive text-xs">
+                    {r.payoutFailureReason}
+                  </p>
+                )}
               </div>
             ))}
           </div>

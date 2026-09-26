@@ -1,8 +1,10 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { findPaymentById } from "@/repositories/payments";
 import { requireUser } from "@/services/auth/current-user";
@@ -10,7 +12,10 @@ import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
 import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
 import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
 import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-subscription-wallet";
-import { confirmWizallPayment } from "@/services/payments/paydunya";
+import {
+  confirmWizallPayment,
+  paydunyaProvider,
+} from "@/services/payments/paydunya";
 import { getPaymentProviderByName } from "@/services/payments/provider-selector";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 
@@ -42,7 +47,7 @@ export async function subscribeAction(
     };
   }
 
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const origin = await getTrustedOrigin();
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
 
   let checkoutUrl: string | null;
@@ -88,36 +93,79 @@ export async function subscribeAction(
 
 // PayDunya's Wizall Money (Sénégal) only — the charge above only starts
 // the transaction; the member gets an authorization code by SMS and must
-// submit it here to actually complete it. Runs the same confirmation path
-// a webhook/poll would (processWebhookEvent) once PayDunya accepts the
-// code, since there's no separate "confirmed" signal to wait for
-// afterwards — PayDunya's own confirm call IS the confirmation.
+// submit it here to actually complete it. Only the payment id and the code
+// come from the browser: the Wizall transaction id/phone are read from the
+// payment's own metadata (initiate-subscription-payment.ts), and the
+// payment is only ever marked CONFIRMED once PayDunya's invoice-confirm
+// endpoint itself reports it paid for the expected amount — never on the
+// strength of the Wizall confirm call alone (security audit H1).
+const wizallCodeSchema = z.string().trim().regex(/^\d{4,8}$/);
+
 export async function confirmWizallPaymentAction(
   paymentId: string,
-  transactionId: string,
-  phone: string,
   authorizationCode: string,
 ) {
   const { profile } = await requireUser();
+  const code = wizallCodeSchema.safeParse(authorizationCode);
+  if (!code.success) {
+    return { error: "Code d'autorisation invalide." };
+  }
+
   const payment = await findPaymentById(db, paymentId);
-  if (!payment || payment.beneficiaryUserId !== profile.id) {
+  const metadata = payment?.metadata as
+    | { wizallTransactionId?: string; wizallPhone?: string }
+    | null
+    | undefined;
+  const providerReference = payment?.providerReference;
+  if (
+    !payment ||
+    payment.beneficiaryUserId !== profile.id ||
+    payment.provider !== "PAYDUNYA" ||
+    payment.status !== "PENDING" ||
+    !providerReference ||
+    !metadata?.wizallTransactionId ||
+    !metadata.wizallPhone
+  ) {
     return { error: "Paiement introuvable." };
   }
+
   try {
-    await confirmWizallPayment(transactionId, phone, authorizationCode);
+    await confirmWizallPayment(
+      metadata.wizallTransactionId,
+      metadata.wizallPhone,
+      code.data,
+    );
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
     };
   }
 
+  const verified = await paydunyaProvider.verifyPayment(providerReference);
+  if (verified.status !== "CONFIRMED") {
+    return {
+      error:
+        "Paiement pas encore confirmé par PayDunya — réessayez dans un instant.",
+    };
+  }
+  if (verified.amount !== payment.amount) {
+    console.error("Wizall : montant confirmé incohérent", {
+      paymentId,
+      expected: payment.amount,
+      got: verified.amount,
+    });
+    return { error: "Montant incohérent, veuillez contacter le support." };
+  }
+
+  // Same dedupe key as the poll path below, so whichever of the two lands
+  // first is the only one that actually runs the confirmation.
   await db.transaction((tx) =>
     processWebhookEvent(tx, {
-      providerReference: payment.providerReference ?? paymentId,
+      providerReference,
       status: "CONFIRMED",
-      eventType: "wizall-manual-confirm",
-      dedupeKey: `wizall-manual-confirm:${paymentId}`,
-      raw: { transactionId },
+      eventType: "wizall-verified",
+      dedupeKey: `poll-reconcile:${payment.id}:CONFIRMED`,
+      raw: { verifiedAmount: verified.amount },
     }),
   );
 
@@ -163,6 +211,18 @@ export async function checkSubscriptionConfirmedAction(
   const provider = getPaymentProviderByName(payment.provider);
   const verified = await provider.verifyPayment(payment.providerReference);
   if (verified.status === "PENDING") return "PENDING";
+  // A provider-confirmed amount that doesn't match what was charged is
+  // never auto-applied — left PENDING for an admin to look at (security
+  // audit M7).
+  if (verified.status === "CONFIRMED" && verified.amount !== payment.amount) {
+    console.error("Paiement : montant confirmé incohérent", {
+      paymentId: payment.id,
+      provider: payment.provider,
+      expected: payment.amount,
+      got: verified.amount,
+    });
+    return "PENDING";
+  }
 
   await db.transaction((tx) =>
     processWebhookEvent(tx, {
@@ -188,10 +248,17 @@ export async function requestWalletSubscriptionAction(walletUsername: string) {
       walletUsername,
       visitorToken,
     });
-    return { requestId: request.id as string, error: null };
+    return {
+      requestId: request.id as string,
+      // Someone else's wallet: only its owner can confirm, from their own
+      // dashboard/transfer page — the buyer just waits.
+      ownerApproval: request.walletUserId !== profile.id,
+      error: null,
+    };
   } catch (err) {
     return {
       requestId: null,
+      ownerApproval: false,
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
     };
   }
@@ -210,6 +277,7 @@ export async function confirmWalletSubscriptionAction(
     };
   }
   revalidatePath("/dashboard/subscription");
+  revalidatePath("/dashboard/transfer");
   revalidatePath("/dashboard/courses");
   revalidatePath("/dashboard");
   // dashboard/layout.tsx reads subscription status to decide whether to

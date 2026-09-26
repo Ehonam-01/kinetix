@@ -26,7 +26,10 @@ en reprenant ce qui a réellement été construit — pas une checklist aspirati
 
 ## Row Level Security (RLS)
 
-Activée sur toutes les tables — **défense en profondeur uniquement**. Le chemin d'accès réel de
+Activée sur toutes les tables — **défense en profondeur uniquement**. Jusqu'à la migration 0054, 17 tables
+étaient créées sans RLS dans les migrations : la production était protégée par le déclencheur
+Supabase `rls_auto_enable` et l'absence de privilèges, pas par le dépôt. La 0054 aligne les deux
+et retire tous les privilèges de table de `anon`/`authenticated` (audit du 26/09/2026, M5). Le chemin d'accès réel de
 l'application passe par Drizzle en connexion Postgres directe (`DATABASE_URL`), qui contourne RLS
 par construction ; l'autorisation qui compte vraiment est celle décrite ci-dessus. Les policies
 RLS protègent contre un scénario différent : une future requête faite directement avec la clé
@@ -36,9 +39,8 @@ un membre, catalogue public (`SELECT USING (true)`) pour les tables de référen
 (`levels`, `rewards`, `courses`...), aucune policy `INSERT`/`UPDATE`/`DELETE` nulle part (l'écriture
 ne passe jamais par ce chemin).
 
-Aucune clé `service_role` Supabase n'est utilisée dans ce projet (pas d'appel à l'admin API Auth ou
-Storage) — la connexion Postgres directe fait déjà autorité côté serveur, ajouter `service_role`
-serait une deuxième voie d'accès privilégié sans bénéfice actuel.
+La clé `service_role` Supabase n'est utilisée qu'à un seul endroit, `services/account/lock-auth-account.ts`
+(bannir le compte Auth d'un membre supprimé), toujours derrière `requireUser`/`requireAdmin`.
 
 ## Idempotence (protection contre le double paiement)
 
@@ -50,7 +52,7 @@ Toute écriture financière porte une clé d'unicité vérifiée en base, pas se
   de chaînes classique — évite une fuite de timing) avant même d'être parsé métier.
 - Voir `MLM_RULES.md` (section Idempotence) et `FINANCIAL_MODEL.md` pour le détail des clés.
 
-## OTP par email (transferts entre membres)
+## OTP par email (transferts, retraits, paiement par wallet, suppression, recharge)
 
 Deuxième facteur applicatif ajouté après la Phase 10, requis avant tout mouvement d'argent
 membre-à-membre (`services/wallet/`, voir `ARCHITECTURE.md` pour le détail des deux services) :
@@ -62,9 +64,13 @@ membre-à-membre (`services/wallet/`, voir `ARCHITECTURE.md` pour le détail des
   confirmation n'apporterait rien de plus, juste de la latence.
 - Comparaison en temps constant (`crypto.timingSafeEqual`), même principe que la vérification de
   signature webhook Moneroo.
-- Expiration à 10 minutes, plafond de 5 tentatives — au-delà, la demande passe à `EXPIRED` et un
+- Expiration à 5 minutes (30 pour un paiement d'abonnement depuis le wallet d'un tiers), plafond de 5 tentatives — au-delà, la demande passe à `EXPIRED` et un
   nouveau transfert (donc un nouveau code) est requis ; jamais un simple retour "code invalide"
-  sans compteur qui persiste.
+  sans compteur qui persiste. La tentative est consommée **atomiquement avant** la comparaison
+  (`UPDATE ... WHERE otp_attempts < 5 RETURNING`) : des requêtes concurrentes ne peuvent pas
+  dépasser le plafond (audit H2).
+- Paiement d'abonnement depuis le wallet d'un autre membre : seul le **propriétaire** du wallet
+  saisit le code, depuis sa page « Transférer » — jamais l'acheteur (audit H3).
 - Une nouvelle demande de transfert expire explicitement toute demande `PENDING_OTP` encore
   ouverte pour le même émetteur — un attaquant qui intercepterait un ancien code ne peut pas
   l'utiliser contre une demande plus récente portant sur un autre montant/destinataire.

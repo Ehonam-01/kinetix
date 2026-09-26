@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { financialTransactions } from "@/db/schema/financial-transactions";
 import { userBalances } from "@/db/schema/user-balances";
@@ -27,39 +27,51 @@ export async function confirmTransfer(
   transferId: string,
   code: string,
 ) {
-  const transfer = await db.query.walletTransfers.findFirst({
-    where: eq(walletTransfers.id, transferId),
-  });
-  if (!transfer || transfer.senderId !== senderId) {
-    throw new Error("Transfert introuvable.");
-  }
-  if (transfer.status !== "PENDING_OTP") {
-    throw new Error("Ce transfert a déjà été traité ou a expiré.");
-  }
-  if (transfer.otpExpiresAt.getTime() < Date.now()) {
+  // The attempt is consumed atomically BEFORE the code is compared: a
+  // read-check-then-increment let N concurrent requests all read the same
+  // otp_attempts and each try a different code, so the 5-attempt cap only
+  // held for sequential calls (security audit H2).
+  const [transfer] = await db
+    .update(walletTransfers)
+    .set({ otpAttempts: sql`${walletTransfers.otpAttempts} + 1` })
+    .where(
+      and(
+        eq(walletTransfers.id, transferId),
+        eq(walletTransfers.senderId, senderId),
+        eq(walletTransfers.status, "PENDING_OTP"),
+        lt(walletTransfers.otpAttempts, MAX_OTP_ATTEMPTS),
+        gt(walletTransfers.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .returning();
+
+  if (!transfer) {
+    const existing = await db.query.walletTransfers.findFirst({
+      where: eq(walletTransfers.id, transferId),
+    });
+    if (!existing || existing.senderId !== senderId) {
+      throw new Error("Transfert introuvable.");
+    }
+    if (existing.status !== "PENDING_OTP") {
+      throw new Error("Ce transfert a déjà été traité ou a expiré.");
+    }
     await db
       .update(walletTransfers)
       .set({ status: "EXPIRED" })
-      .where(eq(walletTransfers.id, transfer.id));
+      .where(
+        and(
+          eq(walletTransfers.id, existing.id),
+          eq(walletTransfers.status, "PENDING_OTP"),
+        ),
+      );
     throw new Error(
-      "Le code a expiré, veuillez demander un nouveau transfert.",
-    );
-  }
-  if (transfer.otpAttempts >= MAX_OTP_ATTEMPTS) {
-    await db
-      .update(walletTransfers)
-      .set({ status: "EXPIRED" })
-      .where(eq(walletTransfers.id, transfer.id));
-    throw new Error(
-      "Trop de tentatives, veuillez demander un nouveau transfert.",
+      existing.otpAttempts >= MAX_OTP_ATTEMPTS
+        ? "Trop de tentatives, veuillez demander un nouveau transfert."
+        : "Le code a expiré, veuillez demander un nouveau transfert.",
     );
   }
 
   if (!verifyOtpCode(code, transfer.otpCodeHash)) {
-    await db
-      .update(walletTransfers)
-      .set({ otpAttempts: sql`${walletTransfers.otpAttempts} + 1` })
-      .where(eq(walletTransfers.id, transfer.id));
     throw new Error("Code incorrect.");
   }
 

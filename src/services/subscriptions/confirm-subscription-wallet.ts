@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { subscriptionWalletRequests } from "@/db/schema/subscription-wallet-requests";
 import { financialTransactions } from "@/db/schema/financial-transactions";
@@ -17,51 +17,64 @@ import { confirmSubscriptionPurchase } from "./confirm-subscription-payment";
 // the Mobile Money webhook calls — for the subscription row, commission,
 // and BV propagation, so that logic never has to exist twice.
 //
-// callerUserId must be either the buyer or the wallet owner — knowing a
-// request id isn't enough on its own, the same defense-in-depth
-// confirmTransfer applies via transfer.senderId !== senderId.
+// Only the WALLET OWNER can ever enter the code — the person whose balance
+// is at stake authorizes it from their own session. When someone pays with
+// their own wallet, buyer and owner are the same person, so that case is
+// unchanged. When the wallet is someone else's, the buyer used to be able
+// to type the code too, which let any member target any other member's
+// wallet from their own account: brute-force the code, or talk the owner
+// into reading it out (security audit H3). The owner now confirms from
+// dashboard/transfer instead.
 export async function confirmSubscriptionWithWallet(
   callerUserId: string,
   requestId: string,
   code: string,
 ) {
-  const request = await db.query.subscriptionWalletRequests.findFirst({
-    where: eq(subscriptionWalletRequests.id, requestId),
-  });
-  if (
-    !request ||
-    (request.buyerUserId !== callerUserId &&
-      request.walletUserId !== callerUserId)
-  ) {
-    throw new Error("Demande de souscription introuvable.");
-  }
-  if (request.status !== "PENDING_OTP") {
-    throw new Error("Cette demande a déjà été traitée ou a expiré.");
-  }
-  if (request.otpExpiresAt.getTime() < Date.now()) {
+  // Attempt consumed atomically before comparing the code — see
+  // confirmTransfer (security audit H2).
+  const [request] = await db
+    .update(subscriptionWalletRequests)
+    .set({
+      otpAttempts: sql`${subscriptionWalletRequests.otpAttempts} + 1`,
+    })
+    .where(
+      and(
+        eq(subscriptionWalletRequests.id, requestId),
+        eq(subscriptionWalletRequests.walletUserId, callerUserId),
+        eq(subscriptionWalletRequests.status, "PENDING_OTP"),
+        lt(subscriptionWalletRequests.otpAttempts, MAX_OTP_ATTEMPTS),
+        gt(subscriptionWalletRequests.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .returning();
+
+  if (!request) {
+    const existing = await db.query.subscriptionWalletRequests.findFirst({
+      where: eq(subscriptionWalletRequests.id, requestId),
+    });
+    if (!existing || existing.walletUserId !== callerUserId) {
+      throw new Error("Demande de souscription introuvable.");
+    }
+    if (existing.status !== "PENDING_OTP") {
+      throw new Error("Cette demande a déjà été traitée ou a expiré.");
+    }
     await db
       .update(subscriptionWalletRequests)
       .set({ status: "EXPIRED" })
-      .where(eq(subscriptionWalletRequests.id, request.id));
-    throw new Error("Le code a expiré, veuillez recommencer la souscription.");
-  }
-  if (request.otpAttempts >= MAX_OTP_ATTEMPTS) {
-    await db
-      .update(subscriptionWalletRequests)
-      .set({ status: "EXPIRED" })
-      .where(eq(subscriptionWalletRequests.id, request.id));
+      .where(
+        and(
+          eq(subscriptionWalletRequests.id, existing.id),
+          eq(subscriptionWalletRequests.status, "PENDING_OTP"),
+        ),
+      );
     throw new Error(
-      "Trop de tentatives, veuillez recommencer la souscription.",
+      existing.otpAttempts >= MAX_OTP_ATTEMPTS
+        ? "Trop de tentatives, veuillez recommencer la souscription."
+        : "Le code a expiré, veuillez recommencer la souscription.",
     );
   }
 
   if (!verifyOtpCode(code, request.otpCodeHash)) {
-    await db
-      .update(subscriptionWalletRequests)
-      .set({
-        otpAttempts: sql`${subscriptionWalletRequests.otpAttempts} + 1`,
-      })
-      .where(eq(subscriptionWalletRequests.id, request.id));
     throw new Error("Code incorrect.");
   }
 

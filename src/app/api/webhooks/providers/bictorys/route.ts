@@ -31,10 +31,10 @@ export async function POST(request: Request) {
   try {
     event = bictorysProvider.parseWebhook(rawBody, signature);
   } catch (error) {
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 400 },
-    );
+    // Detail stays in the server log — never echoed to the caller, who may
+    // be probing the endpoint (security audit M8).
+    console.warn("Webhook rejeté :", (error as Error).message);
+    return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   }
 
   await db.transaction(async (tx) => {

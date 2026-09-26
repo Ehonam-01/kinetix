@@ -2,14 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { resetPasswordSchema } from "@/schemas/auth";
+import { changePasswordSchema } from "@/schemas/auth";
 import { updateCommunityProfileSchema } from "@/schemas/community-profile";
 import { updateProfileSchema } from "@/schemas/profile";
 import { confirmAccountDeletion } from "@/services/account/confirm-account-deletion";
 import { requestAccountDeletion } from "@/services/account/request-account-deletion";
 import { requireUser } from "@/services/auth/current-user";
 import { logoutUser } from "@/services/auth/logout";
-import { updatePassword } from "@/services/auth/update-password";
+import { changePassword } from "@/services/auth/change-password";
 import { updateCommunityProfile } from "@/services/profile/update-community-profile";
 import { updateProfile } from "@/services/profile/update-profile";
 
@@ -44,20 +44,18 @@ export async function updateCommunityProfileAction(input: unknown) {
   return { error: null };
 }
 
-// No current-password check: the member is already authenticated by an
-// active session, same trust level as the recovery-link flow this reuses
-// updatePassword from (services/auth/update-password.ts) — that flow also
-// asks for nothing but the new password.
+// Requires the current password (services/auth/change-password.ts) — an
+// active session alone isn't enough to permanently take over an account
+// that holds a real wallet balance (security audit M6).
 export async function changePasswordAction(input: unknown) {
   await requireUser();
 
-  const parsed = resetPasswordSchema.safeParse(input);
+  const parsed = changePasswordSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
 
-  const { error } = await updatePassword(parsed.data);
-  return { error };
+  return changePassword(parsed.data);
 }
 
 export async function requestAccountDeletionAction() {

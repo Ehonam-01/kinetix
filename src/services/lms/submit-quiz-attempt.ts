@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { db } from "@/db/client";
 import { lessonProgress } from "@/db/schema/lesson-progress";
 import { quizAttempts } from "@/db/schema/quizzes";
@@ -9,6 +10,12 @@ import {
   hasCourseAccess,
 } from "@/repositories/courses";
 import { findQuizByLessonId, findQuizQuestions } from "@/repositories/quizzes";
+
+const quizAnswersSchema = z
+  .record(z.string().uuid(), z.string().uuid())
+  .refine((answers) => Object.keys(answers).length <= 200, {
+    message: "Trop de réponses.",
+  });
 
 export type QuestionResult = {
   questionId: string;
@@ -24,8 +31,13 @@ export type QuestionResult = {
 export async function submitQuizAttempt(
   userId: string,
   lessonId: string,
-  answers: Record<string, string>,
+  rawAnswers: Record<string, string>,
 ) {
+  // Stored as-is in quiz_attempts.answers — bounded to question/option ids
+  // only, so a hand-crafted call can't persist an arbitrarily large payload
+  // (security audit L5).
+  const answers = quizAnswersSchema.parse(rawAnswers);
+
   return db.transaction(async (tx) => {
     const lesson = await findLessonById(tx, lessonId);
     if (!lesson || !lesson.isActive || lesson.lessonType !== "TEXT") {

@@ -1,7 +1,8 @@
 import "server-only";
-import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { profiles } from "@/db/schema/profiles";
+import { subscriptionWalletRequests } from "@/db/schema/subscription-wallet-requests";
 import { subscriptions } from "@/db/schema/subscriptions";
 
 export type SubscriptionStatus = {
@@ -277,4 +278,42 @@ export async function listSubscriptionsForAmbassador(
     .orderBy(desc(subscriptions.createdAt));
 
   return rows;
+}
+
+export type PendingWalletPaymentRequest = {
+  id: string;
+  buyerUsername: string;
+  buyerFullName: string;
+  amount: number;
+  otpExpiresAt: Date;
+};
+
+// Subscription payments other members asked to charge to this wallet,
+// still awaiting the owner's own confirmation (dashboard/transfer) — only
+// the wallet owner can enter the code, see confirm-subscription-wallet.ts.
+// Excludes the owner's own self-payments, which are confirmed from the
+// subscription form itself.
+export function listPendingWalletPaymentRequestsForOwner(
+  executor: Executor,
+  walletUserId: string,
+): Promise<PendingWalletPaymentRequest[]> {
+  return executor
+    .select({
+      id: subscriptionWalletRequests.id,
+      buyerUsername: profiles.username,
+      buyerFullName: profiles.fullName,
+      amount: subscriptionWalletRequests.amount,
+      otpExpiresAt: subscriptionWalletRequests.otpExpiresAt,
+    })
+    .from(subscriptionWalletRequests)
+    .innerJoin(profiles, eq(profiles.id, subscriptionWalletRequests.buyerUserId))
+    .where(
+      and(
+        eq(subscriptionWalletRequests.walletUserId, walletUserId),
+        ne(subscriptionWalletRequests.buyerUserId, walletUserId),
+        eq(subscriptionWalletRequests.status, "PENDING_OTP"),
+        gt(subscriptionWalletRequests.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .orderBy(desc(subscriptionWalletRequests.createdAt));
 }

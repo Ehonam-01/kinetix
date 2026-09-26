@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { subscriptionWalletRequests } from "@/db/schema/subscription-wallet-requests";
 import { getBalance } from "@/repositories/financial-transactions";
@@ -16,6 +16,10 @@ import {
   OTP_TTL_MINUTES,
 } from "@/services/wallet/otp";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
+import { escapeHtml } from "@/lib/escape-html";
+
+const MAX_REQUESTS_PER_WALLET_PER_HOUR = 3;
+const THIRD_PARTY_OTP_TTL_MINUTES = 30;
 
 // The subscription's pendant of request-course-purchase-wallet.ts (retired
 // by this pivot) — the wallet being charged can be anyone's, named by
@@ -55,6 +59,22 @@ export async function requestSubscriptionWithWallet(input: {
     throw new Error("Ce membre ne peut pas payer pour le moment.");
   }
 
+  // Caps how often any one wallet can be targeted — each request emails its
+  // owner a fresh code, so without this a member could flood someone
+  // else's inbox (security audit H3).
+  const recentRequests = await db.$count(
+    subscriptionWalletRequests,
+    and(
+      eq(subscriptionWalletRequests.walletUserId, wallet.id),
+      gt(subscriptionWalletRequests.createdAt, sql`now() - interval '1 hour'`),
+    ),
+  );
+  if (recentRequests >= MAX_REQUESTS_PER_WALLET_PER_HOUR) {
+    throw new Error(
+      "Trop de demandes de paiement vers ce wallet. Réessayez dans une heure.",
+    );
+  }
+
   const balance = await getBalance(db, wallet.id);
   if (balance.availableBalance < amount) {
     throw new Error("Solde disponible insuffisant sur ce wallet.");
@@ -83,8 +103,14 @@ export async function requestSubscriptionWithWallet(input: {
       ),
     );
 
+  // Someone else's wallet: its owner has to log in to confirm (only they
+  // can enter the code, see confirm-subscription-wallet.ts), which takes
+  // longer than the usual 5 minutes — safe to allow since the buyer can no
+  // longer attempt the code at all.
+  const isSelf = wallet.id === input.buyerUserId;
+  const ttlMinutes = isSelf ? OTP_TTL_MINUTES : THIRD_PARTY_OTP_TTL_MINUTES;
   const code = generateOtpCode();
-  const otpExpiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60_000);
+  const otpExpiresAt = new Date(Date.now() + ttlMinutes * 60_000);
 
   const [request] = await db
     .insert(subscriptionWalletRequests)
@@ -99,18 +125,20 @@ export async function requestSubscriptionWithWallet(input: {
     })
     .returning();
 
-  const isSelf = wallet.id === input.buyerUserId;
   await resendEmailProvider.sendEmail({
     to: walletEmail,
     subject: "Code de confirmation d'abonnement",
-    html: `
-      <p>${
-        isSelf
-          ? "Vous avez demandé"
-          : `<strong>${buyer.username}</strong> a demandé`
-      } à payer l'abonnement annuel Kinetix Africa (${amount.toLocaleString("fr-FR")} F) depuis votre solde.</p>
+    html: isSelf
+      ? `
+      <p>Vous avez demandé à payer l'abonnement annuel Kinetix Africa (${amount.toLocaleString("fr-FR")} F) depuis votre solde.</p>
       <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>
-      <p>Ce code expire dans ${OTP_TTL_MINUTES} minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email — aucun montant ne sera débité.</p>
+      <p>Ce code expire dans ${ttlMinutes} minutes. Ne le communiquez à personne. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email — aucun montant ne sera débité.</p>
+    `
+      : `
+      <p><strong>${escapeHtml(buyer.username)}</strong> vous demande de payer son abonnement annuel Kinetix Africa (${amount.toLocaleString("fr-FR")} F) depuis votre solde.</p>
+      <p>Pour accepter, connectez-vous à votre espace membre, page « Transférer », et saisissez ce code dans la demande en attente :</p>
+      <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>
+      <p><strong>Ne communiquez jamais ce code, y compris à ${escapeHtml(buyer.username)}.</strong> Il expire dans ${ttlMinutes} minutes. Si vous ne souhaitez pas payer, ignorez simplement cet email — aucun montant ne sera débité.</p>
     `,
   });
 

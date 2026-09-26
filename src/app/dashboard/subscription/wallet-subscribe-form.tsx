@@ -17,7 +17,9 @@ export function WalletSubscribeForm({
   defaultUsername: string;
 }) {
   const [pending, startTransition] = useTransition();
-  const [step, setStep] = useState<"form" | "otp" | "done">("form");
+  const [step, setStep] = useState<
+    "form" | "otp" | "awaitingOwner" | "done"
+  >("form");
   const [walletUsername, setWalletUsername] = useState(defaultUsername);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -40,7 +42,7 @@ export function WalletSubscribeForm({
         return;
       }
       setRequestId(result.requestId);
-      setStep("otp");
+      setStep(result.ownerApproval ? "awaitingOwner" : "otp");
     });
   }
 
@@ -72,13 +74,29 @@ export function WalletSubscribeForm({
     );
   }
 
+  if (step === "awaitingOwner") {
+    return (
+      <div className="space-y-4">
+        <p className="text-muted-foreground text-sm">
+          Demande envoyée à « {walletUsername} ». Pour des raisons de
+          sécurité, c&apos;est ce membre qui la valide depuis son propre
+          espace (page « Transférer ») — vous n&apos;avez pas de code à saisir.
+          La demande expire dans 30 minutes ; rechargez cette page une fois
+          qu&apos;il l&apos;a acceptée.
+        </p>
+        <Button variant="outline" onClick={reset}>
+          Recommencer
+        </Button>
+      </div>
+    );
+  }
+
   if (step === "otp") {
     return (
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          Un code à 6 chiffres a été envoyé à l&apos;adresse email{" "}
-          {isSelf ? "de votre compte" : `du compte « ${walletUsername} »`}. Il
-          expire dans 10 minutes.
+          Un code à 6 chiffres a été envoyé à l&apos;adresse email de votre
+          compte. Il expire dans 5 minutes.
         </p>
         <div className="space-y-2">
           <Label htmlFor="subscription-otp">Code de confirmation</Label>
@@ -120,7 +138,7 @@ export function WalletSubscribeForm({
         <p className="text-muted-foreground text-xs">
           {isSelf
             ? "Votre propre solde."
-            : "Le solde d'un autre membre — il devra confirmer avec le code reçu par email."}
+            : "Le solde d'un autre membre — il devra accepter la demande depuis son propre espace."}
         </p>
       </div>
       {error && <p className="text-destructive text-sm">{error}</p>}

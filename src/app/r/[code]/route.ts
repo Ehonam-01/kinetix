@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import {
   recordReferralClick,
   REFERRAL_COOKIE_NAME,
 } from "@/services/attribution/resolve-referral";
+
+const courseIdSchema = z.string().uuid();
+// Looser than usernameSchema on length on purpose: a referral code is the
+// ambassador's pseudo, which can exceed 20 characters when
+// insertProfileIfMissing (repositories/profiles.ts) suffixed it to resolve
+// a signup collision.
+const referralCodeSchema = z.string().regex(/^[a-z0-9_]{1,64}$/);
 
 // A public referral link: https://.../r/{referralCode}, optionally
 // ?course={courseId} to land on one specific formation. Records the click
@@ -11,18 +19,29 @@ import {
 // itself, just a token pointing at the click row. An unknown/inactive code
 // still redirects (no dead link for a mistyped or since-suspended
 // ambassador's pseudo), it just sets no cookie.
+//
+// Both parameters are validated before anything touches the database
+// (security audit L3): a referral code is always a pseudo (join-program.ts),
+// and a non-UUID ?course= used to 500 on the referral_clicks insert. An
+// invalid course is dropped rather than rejecting the whole link.
 export async function GET(
   request: Request,
   ctx: RouteContext<"/r/[code]">,
 ) {
   const { code } = await ctx.params;
   const { searchParams, origin } = new URL(request.url);
-  const courseId = searchParams.get("course") ?? undefined;
+
+  const parsedCode = referralCodeSchema.safeParse(code);
+  if (!parsedCode.success) {
+    return NextResponse.redirect(origin);
+  }
+  const parsedCourseId = courseIdSchema.safeParse(searchParams.get("course"));
+  const courseId = parsedCourseId.success ? parsedCourseId.data : undefined;
 
   const click = await recordReferralClick({
-    referralCode: code,
+    referralCode: parsedCode.data,
     courseId,
-    landingPath: `/r/${code}`,
+    landingPath: `/r/${parsedCode.data}`,
   });
 
   const destination = courseId

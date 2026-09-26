@@ -1,6 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { headers } from "next/headers";
+import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
 import { createClient } from "@/lib/supabase/server";
@@ -54,7 +54,7 @@ export async function registerUser(input: RegisterInput) {
   }
 
   const supabase = await createClient();
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const origin = await getTrustedOrigin();
 
   const { error } = await supabase.auth.signUp({
     email,

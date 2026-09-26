@@ -64,7 +64,8 @@ async function monerooRequest<T>(path: string, init: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Moneroo ${path} a répondu ${response.status} : ${body}`);
+    console.error(`Moneroo ${path} a répondu ${response.status} :`, body);
+    throw new Error("Le service de paiement a refusé la requête. Veuillez réessayer.");
   }
 
   return response.json() as Promise<T>;

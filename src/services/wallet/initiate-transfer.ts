@@ -9,6 +9,7 @@ import {
   findProfileByUsername,
 } from "@/repositories/profiles";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
+import { escapeHtml } from "@/lib/escape-html";
 import { generateOtpCode, hashOtpCode, OTP_TTL_MINUTES } from "./otp";
 
 // Any member can be paid by pseudo (explicit product decision — not
@@ -85,7 +86,7 @@ export async function initiateTransfer(
     to: senderEmail,
     subject: "Code de confirmation de votre transfert",
     html: `
-      <p>Vous avez demandé à transférer <strong>${amount.toLocaleString("fr-FR")} F</strong> à <strong>${recipient.username}</strong>.</p>
+      <p>Vous avez demandé à transférer <strong>${amount.toLocaleString("fr-FR")} F</strong> à <strong>${escapeHtml(recipient.username)}</strong>.</p>
       <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>
       <p>Ce code expire dans ${OTP_TTL_MINUTES} minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
     `,

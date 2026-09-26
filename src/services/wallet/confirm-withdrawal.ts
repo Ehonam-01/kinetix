@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { financialTransactions } from "@/db/schema/financial-transactions";
 import { userBalances } from "@/db/schema/user-balances";
@@ -24,37 +24,49 @@ export async function confirmWithdrawal(
   requestId: string,
   code: string,
 ) {
-  const request = await db.query.withdrawalRequests.findFirst({
-    where: eq(withdrawalRequests.id, requestId),
-  });
-  if (!request || request.userId !== userId) {
-    throw new Error("Demande de retrait introuvable.");
-  }
-  if (request.status !== "PENDING_OTP") {
-    throw new Error("Cette demande a déjà été traitée ou a expiré.");
-  }
-  if (request.otpExpiresAt.getTime() < Date.now()) {
+  // Attempt consumed atomically before comparing the code — see
+  // confirmTransfer (security audit H2).
+  const [request] = await db
+    .update(withdrawalRequests)
+    .set({ otpAttempts: sql`${withdrawalRequests.otpAttempts} + 1` })
+    .where(
+      and(
+        eq(withdrawalRequests.id, requestId),
+        eq(withdrawalRequests.userId, userId),
+        eq(withdrawalRequests.status, "PENDING_OTP"),
+        lt(withdrawalRequests.otpAttempts, MAX_OTP_ATTEMPTS),
+        gt(withdrawalRequests.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .returning();
+
+  if (!request) {
+    const existing = await db.query.withdrawalRequests.findFirst({
+      where: eq(withdrawalRequests.id, requestId),
+    });
+    if (!existing || existing.userId !== userId) {
+      throw new Error("Demande de retrait introuvable.");
+    }
+    if (existing.status !== "PENDING_OTP") {
+      throw new Error("Cette demande a déjà été traitée ou a expiré.");
+    }
     await db
       .update(withdrawalRequests)
       .set({ status: "EXPIRED" })
-      .where(eq(withdrawalRequests.id, request.id));
-    throw new Error("Le code a expiré, veuillez demander un nouveau retrait.");
-  }
-  if (request.otpAttempts >= MAX_OTP_ATTEMPTS) {
-    await db
-      .update(withdrawalRequests)
-      .set({ status: "EXPIRED" })
-      .where(eq(withdrawalRequests.id, request.id));
+      .where(
+        and(
+          eq(withdrawalRequests.id, existing.id),
+          eq(withdrawalRequests.status, "PENDING_OTP"),
+        ),
+      );
     throw new Error(
-      "Trop de tentatives, veuillez demander un nouveau retrait.",
+      existing.otpAttempts >= MAX_OTP_ATTEMPTS
+        ? "Trop de tentatives, veuillez demander un nouveau retrait."
+        : "Le code a expiré, veuillez demander un nouveau retrait.",
     );
   }
 
   if (!verifyOtpCode(code, request.otpCodeHash)) {
-    await db
-      .update(withdrawalRequests)
-      .set({ otpAttempts: sql`${withdrawalRequests.otpAttempts} + 1` })
-      .where(eq(withdrawalRequests.id, request.id));
     throw new Error("Code incorrect.");
   }
 

@@ -490,13 +490,18 @@ export const paydunyaProvider: PaymentProvider = {
   async verifyPayment(providerReference: string): Promise<VerifiedPayment> {
     const result = await paydunyaRequest<{
       status: string;
-      invoice?: { total_amount?: number };
-    }>(`/checkout-invoice/confirm/${providerReference}`, { method: "GET" });
+      invoice?: { total_amount?: number | string };
+    }>(
+      `/checkout-invoice/confirm/${encodeURIComponent(providerReference)}`,
+      { method: "GET" },
+    );
 
+    // Number(): PayDunya's docs show total_amount both as a number and as a
+    // numeric string — callers compare it strictly against payments.amount.
     return {
       providerReference,
       status: toPaymentStatus(result.status),
-      amount: result.invoice?.total_amount ?? 0,
+      amount: Number(result.invoice?.total_amount ?? 0),
     };
   },
 
@@ -552,12 +557,17 @@ export const paydunyaProvider: PaymentProvider = {
     }
     void signature; // PayDunya carries its signature in the body (hash), not a header.
 
+    // The hash is a permanent secret (same value on every callback), so it
+    // must never be persisted — payment_events.raw_payload stores `raw`.
+    const safePayload: Record<string, unknown> = { ...payload };
+    delete safePayload.hash;
+
     return {
       providerReference: reference,
       status: toPaymentStatus(event.status),
       eventType: event.status,
       dedupeKey: `${reference}:${event.status}`,
-      raw: payload,
+      raw: safePayload,
     };
   },
 

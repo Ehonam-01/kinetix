@@ -43,3 +43,12 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8, "8 caractères minimum").max(72),
 });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+// Settings-page password change for an already-signed-in member — unlike
+// the recovery-link flow above, it requires the current password, so a
+// hijacked session or an unattended browser can't lock the owner out of an
+// account holding a real wallet balance (security audit M6).
+export const changePasswordSchema = resetPasswordSchema.extend({
+  currentPassword: z.string().min(1, "Mot de passe actuel requis"),
+});
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

@@ -379,6 +379,13 @@
       "when": 1790183197692,
       "tag": "0053_flawless_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790424017608,
+      "tag": "0054_enforce_rls_and_revoke",
+      "breakpoints": true
     }
   ]
 }

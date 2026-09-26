@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { adminRechargeRequests } from "@/db/schema/admin-recharge-requests";
 import { financialTransactions } from "@/db/schema/financial-transactions";
@@ -16,35 +16,49 @@ export async function confirmAdminRecharge(
   requestId: string,
   code: string,
 ) {
-  const request = await db.query.adminRechargeRequests.findFirst({
-    where: eq(adminRechargeRequests.id, requestId),
-  });
-  if (!request || request.requestedByAdminId !== adminUserId) {
-    throw new Error("Demande de recharge introuvable.");
-  }
-  if (request.status !== "PENDING_OTP") {
-    throw new Error("Cette demande a déjà été traitée ou a expiré.");
-  }
-  if (request.otpExpiresAt.getTime() < Date.now()) {
+  // Attempt consumed atomically before comparing the code — see
+  // confirmTransfer (security audit H2).
+  const [request] = await db
+    .update(adminRechargeRequests)
+    .set({ otpAttempts: sql`${adminRechargeRequests.otpAttempts} + 1` })
+    .where(
+      and(
+        eq(adminRechargeRequests.id, requestId),
+        eq(adminRechargeRequests.requestedByAdminId, adminUserId),
+        eq(adminRechargeRequests.status, "PENDING_OTP"),
+        lt(adminRechargeRequests.otpAttempts, MAX_OTP_ATTEMPTS),
+        gt(adminRechargeRequests.otpExpiresAt, sql`now()`),
+      ),
+    )
+    .returning();
+
+  if (!request) {
+    const existing = await db.query.adminRechargeRequests.findFirst({
+      where: eq(adminRechargeRequests.id, requestId),
+    });
+    if (!existing || existing.requestedByAdminId !== adminUserId) {
+      throw new Error("Demande de recharge introuvable.");
+    }
+    if (existing.status !== "PENDING_OTP") {
+      throw new Error("Cette demande a déjà été traitée ou a expiré.");
+    }
     await db
       .update(adminRechargeRequests)
       .set({ status: "EXPIRED" })
-      .where(eq(adminRechargeRequests.id, request.id));
-    throw new Error("Le code a expiré, veuillez recommencer.");
-  }
-  if (request.otpAttempts >= MAX_OTP_ATTEMPTS) {
-    await db
-      .update(adminRechargeRequests)
-      .set({ status: "EXPIRED" })
-      .where(eq(adminRechargeRequests.id, request.id));
-    throw new Error("Trop de tentatives, veuillez recommencer.");
+      .where(
+        and(
+          eq(adminRechargeRequests.id, existing.id),
+          eq(adminRechargeRequests.status, "PENDING_OTP"),
+        ),
+      );
+    throw new Error(
+      existing.otpAttempts >= MAX_OTP_ATTEMPTS
+        ? "Trop de tentatives, veuillez recommencer."
+        : "Le code a expiré, veuillez recommencer.",
+    );
   }
 
   if (!verifyOtpCode(code, request.otpCodeHash)) {
-    await db
-      .update(adminRechargeRequests)
-      .set({ otpAttempts: sql`${adminRechargeRequests.otpAttempts} + 1` })
-      .where(eq(adminRechargeRequests.id, request.id));
     throw new Error("Code incorrect.");
   }
 
