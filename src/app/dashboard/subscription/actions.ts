@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { findPaymentById } from "@/repositories/payments";
@@ -38,6 +39,15 @@ export async function subscribeAction(
   address?: string,
 ) {
   const { authUser, profile } = await requireUser();
+  // Each call pushes a USSD/SMS payment prompt to a phone number.
+  if (await isRateLimited("paymentStart", `user:${profile.id}`)) {
+    return {
+      error: RATE_LIMIT_MESSAGE,
+      confirmationMessage: null,
+      paymentId: null,
+      pendingWizallConfirmation: null,
+    };
+  }
   if (!authUser.email) {
     return {
       error: "Aucun email associé à ce compte.",
@@ -106,6 +116,9 @@ export async function confirmWizallPaymentAction(
   authorizationCode: string,
 ) {
   const { profile } = await requireUser();
+  if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
   const code = wizallCodeSchema.safeParse(authorizationCode);
   if (!code.success) {
     return { error: "Code d'autorisation invalide." };
@@ -241,6 +254,9 @@ export async function checkSubscriptionConfirmedAction(
 // of this 2-step flow the form needs to show inline, not exceptional bugs.
 export async function requestWalletSubscriptionAction(walletUsername: string) {
   const { profile } = await requireUser();
+  if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
+    return { requestId: null, ownerApproval: false, error: RATE_LIMIT_MESSAGE };
+  }
   const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
   try {
     const request = await requestSubscriptionWithWallet({
@@ -269,6 +285,9 @@ export async function confirmWalletSubscriptionAction(
   code: string,
 ) {
   const { profile } = await requireUser();
+  if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
   try {
     await confirmSubscriptionWithWallet(profile.id, requestId, code);
   } catch (err) {

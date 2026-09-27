@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { usernameSchema } from "@/schemas/auth";
 import { findActiveProfileByUsername } from "@/repositories/profiles";
 import { requireUser } from "@/services/auth/current-user";
@@ -13,12 +14,15 @@ import { initiateTransfer } from "@/services/wallet/initiate-transfer";
 // the registration one): this page is only reachable by an authenticated
 // member in the first place.
 export async function lookupRecipientAction(username: string) {
-  await requireUser();
+  const { profile } = await requireUser();
+  if (await isRateLimited("lookup", `user:${profile.id}`)) {
+    return { fullName: null };
+  }
   const parsed = usernameSchema.safeParse(username);
   if (!parsed.success) return { fullName: null };
 
-  const profile = await findActiveProfileByUsername(parsed.data);
-  return { fullName: profile?.fullName ?? null };
+  const recipient = await findActiveProfileByUsername(parsed.data);
+  return { fullName: recipient?.fullName ?? null };
 }
 
 // {error}-return convention (like login/register actions), not a bare
@@ -31,6 +35,9 @@ export async function initiateTransferAction(
   amount: number,
 ) {
   const { profile } = await requireUser();
+  if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
+    return { transferId: null, error: RATE_LIMIT_MESSAGE };
+  }
   try {
     const transfer = await initiateTransfer(
       profile.id,
@@ -48,6 +55,9 @@ export async function initiateTransferAction(
 
 export async function confirmTransferAction(transferId: string, code: string) {
   const { profile } = await requireUser();
+  if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
   try {
     await confirmTransfer(profile.id, transferId, code);
   } catch (err) {

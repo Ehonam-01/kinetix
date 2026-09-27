@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isIpRateLimited } from "@/lib/rate-limit";
 import {
   recordReferralClick,
   REFERRAL_COOKIE_NAME,
@@ -30,6 +31,13 @@ export async function GET(
 ) {
   const { code } = await ctx.params;
   const { searchParams, origin } = new URL(request.url);
+
+  // Each valid hit writes a referral_clicks row — capped per IP so the
+  // table can't be flooded from a script. 30/min is far beyond what a
+  // person clicking links ever does.
+  if (await isIpRateLimited("referralClick")) {
+    return new NextResponse("Trop de requêtes.", { status: 429 });
+  }
 
   const parsedCode = referralCodeSchema.safeParse(code);
   if (!parsedCode.success) {

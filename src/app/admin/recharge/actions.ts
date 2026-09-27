@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { usernameSchema } from "@/schemas/auth";
 import { findActiveProfileByUsername } from "@/repositories/profiles";
 import { requireAdmin } from "@/services/auth/current-user";
@@ -8,11 +9,14 @@ import { confirmAdminRecharge } from "@/services/admin/confirm-recharge";
 import { initiateAdminRecharge } from "@/services/admin/initiate-recharge";
 
 export async function lookupMemberAction(username: string) {
-  await requireAdmin();
+  const { profile } = await requireAdmin();
+  if (await isRateLimited("lookup", `user:${profile.id}`)) {
+    return { fullName: null };
+  }
   const parsed = usernameSchema.safeParse(username);
   if (!parsed.success) return { fullName: null };
-  const profile = await findActiveProfileByUsername(parsed.data);
-  return { fullName: profile?.fullName ?? null };
+  const member = await findActiveProfileByUsername(parsed.data);
+  return { fullName: member?.fullName ?? null };
 }
 
 export async function initiateRechargeAction(
@@ -21,6 +25,9 @@ export async function initiateRechargeAction(
   reason?: string,
 ) {
   const { profile } = await requireAdmin();
+  if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
+    return { requestId: null, error: RATE_LIMIT_MESSAGE };
+  }
   try {
     const request = await initiateAdminRecharge(
       profile.id,
@@ -39,6 +46,9 @@ export async function initiateRechargeAction(
 
 export async function confirmRechargeAction(requestId: string, code: string) {
   const { profile } = await requireAdmin();
+  if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
+    return { error: RATE_LIMIT_MESSAGE };
+  }
   try {
     await confirmAdminRecharge(profile.id, requestId, code);
   } catch (err) {

@@ -28,7 +28,9 @@
 | L3 | ✅ Corrigé (partiel) | Code et `course` validés avant tout accès à la base. Le rate limiting dépend de H6. |
 | L5 | ✅ Corrigé (partiel) | Réponses bornées (UUID, 200 maximum). L'affichage de la correction après un échec est conservé (choix pédagogique). |
 | L6 | ✅ Corrigé | Cookies de session forcés `HttpOnly`/`Secure`/`SameSite=Lax`. Client navigateur Supabase (inutilisé) supprimé. |
-| Autres | ⏳ À faire | H6 (nécessite Upstash), M2 (décision produit sur les retraits des membres gelés), L4 (dépend de H6), L7 (SQL Storage), L8 (Zod sur les actions admin). |
+| H6 | ✅ Corrigé | Upstash Redis (`src/lib/rate-limit.ts`, fenêtre glissante, fail-open). Connexion (IP 20 et email 5 par 15 min), inscription, mot de passe oublié, changement de mot de passe, demandes et confirmations d'OTP, démarrage de paiement, recherches de pseudo, liens `/r`. Vérifié contre le vrai Upstash : 429 à partir de la 31ᵉ requête sur `/r`. |
+| L4 | ✅ Corrigé | Aperçu du parrain limité à 30 par minute et par IP. |
+| Autres | ⏳ À faire | M2 (décision produit sur les retraits des membres gelés), L7 (SQL Storage), L8 (Zod sur les actions admin). |
 | L9 | ✅ Sans objet | `npm audit fix` a corrigé les sous-dépendances. `shadcn` reste en `dependencies` : `globals.css` l'importe au build, et le déplacer casserait un `npm ci --omit=dev`. |
 
 ---
