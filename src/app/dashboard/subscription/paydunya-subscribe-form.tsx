@@ -79,7 +79,16 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
             setPollOutcome("timeout");
           }
         })
-        .catch(() => clearInterval(interval));
+        .catch(() => {
+          // A transient error (network blip, a server hiccup) is just
+          // another unanswered attempt — it used to stop polling silently,
+          // leaving "cette page se mettra à jour automatiquement" on screen
+          // forever with nothing actually polling anymore.
+          if (attempts >= MAX_POLLS) {
+            clearInterval(interval);
+            setPollOutcome("timeout");
+          }
+        });
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [paymentId, confirmed, wizall, pollOutcome, router]);

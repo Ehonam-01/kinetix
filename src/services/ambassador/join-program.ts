@@ -1,8 +1,9 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import type { Executor } from "@/db/executor";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { binaryNodes } from "@/db/schema/binary-nodes";
 import { profiles } from "@/db/schema/profiles";
 import { sponsorships } from "@/db/schema/sponsorships";
 import { assignSponsor } from "@/services/genealogy/assign-sponsor";
@@ -132,6 +133,37 @@ export async function joinAmbassadorProgram(
   await unlockLevel(tx, userId, 1);
 
   return ambassador;
+}
+
+// Whether joinAmbassadorProgram would succeed for this member right now
+// with no sponsor pseudo given — the automatic join after a subscription
+// payment (confirm-subscription-payment.ts) checks this first instead of
+// letting a throw roll back the whole transaction: a real, already-taken
+// payment must always activate the subscription, even when the
+// "Devenir ambassadeur" opt-in can't be honored yet (no recorded sponsor,
+// or a sponsor who isn't an active ambassador). The member can still join
+// later from dashboard/become-ambassador. Mirrors joinAmbassadorProgram's
+// own sponsor rules; the ACTIVE-status requirement is left out since the
+// caller has just activated the account in the same transaction.
+export async function canJoinAmbassadorProgramAutomatically(
+  tx: Executor,
+  userId: string,
+): Promise<boolean> {
+  const sponsorship = await tx.query.sponsorships.findFirst({
+    where: eq(sponsorships.userId, userId),
+  });
+  if (sponsorship) {
+    const sponsorAmbassador = await tx.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, sponsorship.sponsorId),
+    });
+    return sponsorAmbassador?.status === "ACTIVE";
+  }
+  // No sponsor: only possible for the very first ambassador, who becomes
+  // the tree's root (createRootNode refuses once a root exists).
+  const root = await tx.query.binaryNodes.findFirst({
+    where: isNull(binaryNodes.binaryParentId),
+  });
+  return !root;
 }
 
 // Wraps the function above in its own transaction for the standalone caller

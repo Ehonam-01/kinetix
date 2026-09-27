@@ -537,6 +537,77 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     expect(mail?.html).not.toContain('<a href="https://phish.example">');
   });
 
+  it("sign-in without the confirmation link still records the sponsor", async () => {
+    const { ensureProfile } = await import("@/services/auth/ensure-profile");
+    const sponsor = await makeUser("sponsorlogin");
+    const id = randomUUID();
+    await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [id]);
+
+    // What getCurrentUser does on a plain password sign-in, with no
+    // /auth/callback involved at all.
+    await ensureProfile({
+      id,
+      user_metadata: {
+        username: `filleul_${id.slice(0, 6)}`,
+        full_name: "Filleule",
+        sponsor_id: sponsor.id,
+        wants_ambassador: true,
+      },
+    } as never);
+    const sponsorship = await localDb.query.sponsorships.findFirst({
+      where: eq(schema.sponsorships.userId, id),
+    });
+    expect(sponsorship?.sponsorId).toBe(sponsor.id);
+  });
+
+  it("a paid subscription is never rolled back by an ambassador opt-in that can't be honored", async () => {
+    const { checkSubscriptionConfirmedAction } = await import(
+      "@/app/dashboard/subscription/actions"
+    );
+    // A tree root already exists (earlier tests may have created one; make
+    // sure of it), and this member wants to be an ambassador but has no
+    // sponsorship on file — the exact production case.
+    const existingRoot = await localDb.query.binaryNodes.findFirst({
+      where: sql`${schema.binaryNodes.binaryParentId} IS NULL`,
+    });
+    if (!existingRoot) {
+      const { createRootNode } = await import(
+        "@/services/genealogy/place-member"
+      );
+      const rootUser = await makeUser("root");
+      await createRootNode(localDb, rootUser.id);
+    }
+    const member = await makeUser("nosponsor");
+    await localDb
+      .update(schema.profiles)
+      .set({ status: "PENDING_PAYMENT", wantsAmbassador: true })
+      .where(eq(schema.profiles.id, member.id));
+    currentUser = { profile: { id: member.id } };
+    const payment = await insertPendingPayment({
+      userId: member.id,
+      provider: "PAYDUNYA",
+      amount: 300,
+    });
+    fetchHandler = () => ({
+      status: 200,
+      body: { status: "completed", invoice: { total_amount: 300 } },
+    });
+
+    expect(await checkSubscriptionConfirmedAction(payment.id)).toBe("CONFIRMED");
+    const profile = await localDb.query.profiles.findFirst({
+      where: eq(schema.profiles.id, member.id),
+    });
+    expect(profile.status).toBe("ACTIVE");
+    const subscription = await localDb.query.subscriptions.findFirst({
+      where: eq(schema.subscriptions.userId, member.id),
+    });
+    expect(subscription).toBeTruthy();
+    const ambassador = await localDb.query.ambassadorProfiles.findFirst({
+      where: eq(schema.ambassadorProfiles.userId, member.id),
+    });
+    expect(ambassador).toBeUndefined();
+  });
+
   it("sanity — nothing in this suite reached a real network host", async () => {
     // Every provider URL above was answered by the stub; this just guards
     // against a future edit accidentally leaving a real call un-stubbed.

@@ -14,6 +14,7 @@ import { createCommissionEvent } from "@/services/mlm/commission";
 import { propagateSaleVolume } from "@/services/mlm/propagate-sale-volume";
 import {
   AMBASSADOR_TERMS_VERSION,
+  canJoinAmbassadorProgramAutomatically,
   joinAmbassadorProgram,
 } from "@/services/ambassador/join-program";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
@@ -136,11 +137,23 @@ export async function confirmSubscriptionPurchase(
   // joinAmbassadorProgram takes an Executor for exactly this call site.
   // Silently skipped if they're already an ambassador (e.g. a renewal, or
   // they joined manually from the dashboard before this payment landed).
+  //
+  // Never allowed to fail the payment itself: joined only when it can
+  // actually succeed (canJoinAmbassadorProgramAutomatically) — otherwise
+  // the subscription is still activated and the member can join later from
+  // dashboard/become-ambassador. A throw here used to roll back a real,
+  // already-taken payment and leave the member stuck on the frozen screen.
   if (buyerProfile?.wantsAmbassador) {
     const alreadyAmbassador = await tx.query.ambassadorProfiles.findFirst({
       where: eq(ambassadorProfiles.userId, payment.beneficiaryUserId),
     });
-    if (!alreadyAmbassador) {
+    if (
+      !alreadyAmbassador &&
+      (await canJoinAmbassadorProgramAutomatically(
+        tx,
+        payment.beneficiaryUserId,
+      ))
+    ) {
       await joinAmbassadorProgram(tx, payment.beneficiaryUserId, {
         termsVersion: AMBASSADOR_TERMS_VERSION,
       });
