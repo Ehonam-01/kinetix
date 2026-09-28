@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { SITE_NAME } from "@/config/site";
 import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminMfaState } from "@/services/auth/admin-mfa";
@@ -37,6 +38,9 @@ export async function startMfaEnrollmentAction() {
 
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: "totp",
+    // The name the authenticator app shows for this code — Supabase
+    // otherwise defaults to the project's Site URL setting.
+    issuer: SITE_NAME,
     friendlyName: `Kinetix Africa admin ${new Date().toISOString().slice(0, 10)}`,
   });
   if (error || !data) {
