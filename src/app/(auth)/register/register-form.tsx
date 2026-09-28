@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -174,6 +175,21 @@ export function RegisterForm({
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Inscription..." : "Nous rejoindre"}
       </Button>
+      <p className="text-muted-foreground text-center text-xs">
+        En créant un compte, vous acceptez nos{" "}
+        <Link
+          href="/conditions-utilisation"
+          className="underline"
+          target="_blank"
+        >
+          conditions d&apos;utilisation
+        </Link>{" "}
+        et notre{" "}
+        <Link href="/confidentialite" className="underline" target="_blank">
+          politique de confidentialité
+        </Link>
+        .
+      </p>
     </form>
   );
 }

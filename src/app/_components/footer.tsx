@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEGAL_ENTITY } from "@/config/legal";
 import { SITE_NAME, SITE_TAGLINE } from "@/config/site";
 import { Logo } from "./logo";
 
@@ -34,7 +35,7 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
       links: [
         { label: "Accueil", href: "/" },
         { label: "Notre vision" },
-        { label: "Contact" },
+        { label: "Contact", href: `mailto:${LEGAL_ENTITY.email}` },
       ],
     },
     {
@@ -65,10 +66,13 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
     {
       title: "Légal",
       links: [
-        { label: "Conditions générales" },
-        { label: "Politique de confidentialité" },
-        { label: "Politique de remboursement" },
-        { label: "Mentions légales" },
+        { label: "Conditions d'utilisation", href: "/conditions-utilisation" },
+        { label: "Politique de confidentialité", href: "/confidentialite" },
+        {
+          label: "Politique de remboursement",
+          href: "/conditions-utilisation#remboursement",
+        },
+        { label: "Mentions légales", href: "/mentions-legales" },
       ],
     },
   ];
