@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { commissionRules } from "@/db/schema/commission-rules";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "./audit-log";
+import { assertCommissionRate } from "./input-limits";
 
 // Admin-only. Versioned the same way create-direct-sale-rule.ts is, keyed
 // by (levelCode, generation) instead of (courseId, category) — a
@@ -25,6 +26,7 @@ export async function createGenerationCommissionRule(
   if (!Number.isInteger(input.rate) || input.rate < 0) {
     throw new Error("Le taux doit être un entier positif ou nul.");
   }
+  assertCommissionRate(input.commissionType, input.rate);
   if (input.cap != null && (!Number.isInteger(input.cap) || input.cap < 0)) {
     throw new Error("Le plafond doit être un entier positif ou nul.");
   }

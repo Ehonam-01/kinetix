@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { mentorProfiles } from "@/db/schema/mentor-profiles";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "./audit-log";
+import { assertMaxLength, LONG_TEXT_MAX } from "./input-limits";
 
 // Admin-only. Mirrors reject-withdrawal.ts's shape — a required reason,
 // stamped reviewedBy/reviewedAt. Leaves the row in place (REJECTED) rather
@@ -20,6 +21,7 @@ export async function rejectMentorRequest(
   if (!trimmedReason) {
     throw new Error("Un motif de refus est requis.");
   }
+  assertMaxLength(trimmedReason, LONG_TEXT_MAX, "Motif de refus");
 
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({

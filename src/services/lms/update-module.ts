@@ -4,12 +4,14 @@ import { db } from "@/db/client";
 import { modules } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
+import { assertMaxLength, SHORT_TEXT_MAX } from "@/services/admin/input-limits";
 
 export async function updateModule(
   adminUserId: string,
   moduleId: string,
   input: { title: string; isActive: boolean },
 ) {
+  assertMaxLength(input.title, SHORT_TEXT_MAX, "Titre du module");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),

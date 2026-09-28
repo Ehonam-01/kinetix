@@ -4,6 +4,11 @@ import { db } from "@/db/client";
 import { commissionRules } from "@/db/schema/commission-rules";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "./audit-log";
+import {
+  assertCommissionRate,
+  assertMaxLength,
+  SHORT_TEXT_MAX,
+} from "./input-limits";
 
 // Admin-only. Versioned the same way update-parameter.ts is (never updated
 // in place — closes whatever is currently effective for this exact scoping
@@ -24,6 +29,8 @@ export async function createDirectSaleCommissionRule(
   if (!Number.isInteger(input.rate) || input.rate < 0) {
     throw new Error("Le taux doit être un entier positif ou nul.");
   }
+  assertCommissionRate(input.commissionType, input.rate);
+  assertMaxLength(input.category, SHORT_TEXT_MAX, "Catégorie");
   if (input.cap != null && (!Number.isInteger(input.cap) || input.cap < 0)) {
     throw new Error("Le plafond doit être un entier positif ou nul.");
   }

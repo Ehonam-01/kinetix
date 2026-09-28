@@ -9,7 +9,16 @@ import {
 } from "@/repositories/profiles";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
 import { escapeHtml } from "@/lib/escape-html";
-import { generateOtpCode, hashOtpCode, OTP_TTL_MINUTES } from "@/services/wallet/otp";
+import {
+  generateOtpCode,
+  hashOtpCode,
+  OTP_TTL_MINUTES,
+} from "@/services/wallet/otp";
+import {
+  ADMIN_RECHARGE_MAX,
+  assertMaxLength,
+  LONG_TEXT_MAX,
+} from "./input-limits";
 
 // Mirrors initiateTransfer's shape exactly (services/wallet/initiate-
 // transfer.ts) — a member can be recharged by pseudo, one fresh request row
@@ -23,6 +32,12 @@ export async function initiateAdminRecharge(
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error("Le montant doit être un nombre entier positif.");
   }
+  if (amount > ADMIN_RECHARGE_MAX) {
+    throw new Error(
+      `Une recharge ne peut pas dépasser ${ADMIN_RECHARGE_MAX.toLocaleString("fr-FR")} F.`,
+    );
+  }
+  assertMaxLength(reason, LONG_TEXT_MAX, "Motif");
 
   const admin = await findProfileById(adminUserId);
   if (admin?.role !== "ADMIN") {

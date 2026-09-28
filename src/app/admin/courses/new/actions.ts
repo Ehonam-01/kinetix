@@ -12,7 +12,14 @@ export async function createCourseAction(input: {
   category?: string;
 }) {
   const { profile } = await requireAdmin();
-  const course = await createCourse(profile.id, input);
+  let course;
+  try {
+    course = await createCourse(profile.id, input);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
   revalidatePath("/admin/courses");
   redirect(`/admin/courses/${course.id}`);
 }

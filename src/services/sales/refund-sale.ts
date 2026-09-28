@@ -9,6 +9,7 @@ import { sales } from "@/db/schema/sales";
 import { creditBalance } from "@/services/mlm/credit-balance";
 import { propagateSaleVolume } from "@/services/mlm/propagate-sale-volume";
 import { logAdminAction } from "@/services/admin/audit-log";
+import { assertMaxLength, LONG_TEXT_MAX } from "@/services/admin/input-limits";
 
 // Admin-only (section 22 of the master prompt: refunds are a required
 // feature, always a reversal, never a deletion of the original sale/
@@ -35,6 +36,7 @@ export async function refundSale(
   saleId: string,
   input: { reason?: string; revokeAccess: boolean },
 ) {
+  assertMaxLength(input.reason, LONG_TEXT_MAX, "Motif du remboursement");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),

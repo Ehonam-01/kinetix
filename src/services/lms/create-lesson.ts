@@ -9,6 +9,12 @@ import {
 } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
+import {
+  assertMaxLength,
+  LESSON_CONTENT_MAX,
+  LONG_TEXT_MAX,
+  SHORT_TEXT_MAX,
+} from "@/services/admin/input-limits";
 
 type VideoProvider = (typeof videoProviderEnum.enumValues)[number];
 type LessonType = (typeof lessonTypeEnum.enumValues)[number];
@@ -25,6 +31,10 @@ export async function createLesson(
     content?: string;
   },
 ) {
+  assertMaxLength(input.title, SHORT_TEXT_MAX, "Titre de la leçon");
+  assertMaxLength(input.description, LONG_TEXT_MAX, "Description");
+  assertMaxLength(input.videoUrl, LONG_TEXT_MAX, "URL de la vidéo");
+  assertMaxLength(input.content, LESSON_CONTENT_MAX, "Contenu de la leçon");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),

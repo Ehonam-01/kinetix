@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { profiles } from "@/db/schema/profiles";
 import { rewards } from "@/db/schema/rewards";
 import { logAdminAction } from "./audit-log";
+import { assertMaxLength, LONG_TEXT_MAX, SHORT_TEXT_MAX } from "./input-limits";
 
 // One active reward per level 3-5, admin-configured from scratch (the
 // seeded phone/moto/car placeholders were cleared — migration 0040):
@@ -28,6 +29,8 @@ export async function upsertRewardCatalogEntry(
   if (!input.name.trim()) {
     throw new Error("Le nom de la récompense est requis.");
   }
+  assertMaxLength(input.name, SHORT_TEXT_MAX, "Nom de la récompense");
+  assertMaxLength(input.description, LONG_TEXT_MAX, "Description");
   if (!Number.isInteger(input.value) || input.value < 0) {
     throw new Error("La valeur doit être un entier positif ou nul.");
   }

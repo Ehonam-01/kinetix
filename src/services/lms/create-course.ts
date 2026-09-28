@@ -5,6 +5,11 @@ import { courses } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { slugify } from "@/lib/utils";
 import { logAdminAction } from "@/services/admin/audit-log";
+import {
+  assertMaxLength,
+  LONG_TEXT_MAX,
+  SHORT_TEXT_MAX,
+} from "@/services/admin/input-limits";
 
 // Admin-only, role re-checked inside the transaction (defense in depth, same
 // convention as grantAdminCredit/updateRewardDeliveryStatus).
@@ -29,6 +34,9 @@ export async function createCourse(
     category?: string;
   },
 ) {
+  assertMaxLength(input.title, SHORT_TEXT_MAX, "Titre");
+  assertMaxLength(input.description, LONG_TEXT_MAX, "Description");
+  assertMaxLength(input.category, SHORT_TEXT_MAX, "Catégorie");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),

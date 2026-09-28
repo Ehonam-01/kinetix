@@ -5,6 +5,11 @@ import { lessons } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { quizQuestions, quizzes, type QuizOption } from "@/db/schema/quizzes";
 import { logAdminAction } from "@/services/admin/audit-log";
+import {
+  assertMaxLength,
+  LONG_TEXT_MAX,
+  SHORT_TEXT_MAX,
+} from "@/services/admin/input-limits";
 
 export type QuizQuestionInput = {
   question: string;
@@ -42,6 +47,10 @@ export async function saveQuiz(
       throw new Error("Le seuil de réussite doit être entre 1 et 100.");
     }
     for (const q of input.questions) {
+      assertMaxLength(q.question, LONG_TEXT_MAX, "Question");
+      for (const o of q.options) {
+        assertMaxLength(o.text, SHORT_TEXT_MAX, "Réponse");
+      }
       if (q.options.length < 2) {
         throw new Error(`« ${q.question} » a besoin d'au moins 2 options.`);
       }

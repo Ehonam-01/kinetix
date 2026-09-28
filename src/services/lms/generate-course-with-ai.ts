@@ -9,6 +9,12 @@ import { quizQuestions, quizzes, type QuizOption } from "@/db/schema/quizzes";
 import { getAnthropicEnv } from "@/config/env.anthropic";
 import { slugify } from "@/lib/utils";
 import { logAdminAction } from "@/services/admin/audit-log";
+import {
+  assertMaxLength,
+  LESSON_CONTENT_MAX,
+  LONG_TEXT_MAX,
+  SHORT_TEXT_MAX,
+} from "@/services/admin/input-limits";
 
 // Sonnet, not Opus — a course outline (structured text + article prose) is
 // squarely in "well-balanced default" territory, not the kind of task that
@@ -16,13 +22,13 @@ import { logAdminAction } from "@/services/admin/audit-log";
 const MODEL = "claude-sonnet-5";
 
 const optionSchema = z.object({
-  text: z.string().min(1),
+  text: z.string().min(1).max(SHORT_TEXT_MAX),
   isCorrect: z.boolean(),
 });
 
 const questionSchema = z
   .object({
-    question: z.string().min(1),
+    question: z.string().min(1).max(LONG_TEXT_MAX),
     options: z.array(optionSchema).min(2),
   })
   .refine((q) => q.options.filter((o) => o.isCorrect).length === 1, {
@@ -36,10 +42,10 @@ const quizSchema = z.object({
 
 const lessonSchema = z
   .object({
-    title: z.string().min(1),
-    description: z.string().optional(),
+    title: z.string().min(1).max(SHORT_TEXT_MAX),
+    description: z.string().max(LONG_TEXT_MAX).optional(),
     lessonType: z.enum(["VIDEO", "TEXT"]),
-    content: z.string().optional(),
+    content: z.string().max(LESSON_CONTENT_MAX).optional(),
     quiz: quizSchema.optional(),
   })
   .refine((l) => l.lessonType !== "TEXT" || !!l.content?.trim(), {
@@ -47,14 +53,16 @@ const lessonSchema = z
   });
 
 const moduleSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).max(SHORT_TEXT_MAX),
   lessons: z.array(lessonSchema).min(1),
 });
 
+// Bounded like the admin forms (services/admin/input-limits.ts): this
+// output is inserted directly, not through createCourse/createLesson.
 const generatedCourseSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  category: z.string().min(1),
+  title: z.string().min(1).max(SHORT_TEXT_MAX),
+  description: z.string().min(1).max(LONG_TEXT_MAX),
+  category: z.string().min(1).max(SHORT_TEXT_MAX),
   modules: z.array(moduleSchema).min(1),
 });
 
@@ -295,6 +303,10 @@ export async function generateCourseWithAI(
   adminUserId: string,
   input: GenerateCourseInput,
 ) {
+  // Checked before the (paid) Anthropic call — the generated output is
+  // bounded separately, by generatedCourseSchema above.
+  assertMaxLength(input.topic, LONG_TEXT_MAX, "Sujet");
+  assertMaxLength(input.level, SHORT_TEXT_MAX, "Niveau");
   const generated = await callClaudeForCourseOutline(input);
   return persistGeneratedCourse(adminUserId, generated);
 }

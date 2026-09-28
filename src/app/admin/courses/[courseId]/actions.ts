@@ -19,8 +19,15 @@ type CourseStatus = (typeof courseStatusEnum.enumValues)[number];
 
 export async function createModuleAction(courseId: string, title: string) {
   const { profile } = await requireAdmin();
-  await createModule(profile.id, { courseId, title });
+  try {
+    await createModule(profile.id, { courseId, title });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
   revalidatePath(`/admin/courses/${courseId}`);
+  return { error: null };
 }
 
 export async function createLessonAction(
@@ -36,8 +43,15 @@ export async function createLessonAction(
   },
 ) {
   const { profile } = await requireAdmin();
-  await createLesson(profile.id, input);
+  try {
+    await createLesson(profile.id, input);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
   revalidatePath(`/admin/courses/${courseId}`);
+  return { error: null };
 }
 
 export async function updateModuleAction(

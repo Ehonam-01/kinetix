@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { parameterVersions } from "@/db/schema/parameter-versions";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "./audit-log";
+import { SUBSCRIPTION_PRICE_MAX, SUBSCRIPTION_PRICE_MIN } from "./input-limits";
 
 // Never updates a parameter_versions row in place (section 29/43,
 // non-rétroactivité — see MLM_RULES.md): closes whatever row is currently
@@ -18,6 +19,14 @@ export async function updateParameter(
 ) {
   if (!Number.isInteger(value) || value < 0) {
     throw new Error("La valeur doit être un entier positif ou nul.");
+  }
+  if (
+    parameterKey === "subscription.price_in_cfa" &&
+    (value < SUBSCRIPTION_PRICE_MIN || value > SUBSCRIPTION_PRICE_MAX)
+  ) {
+    throw new Error(
+      `Le prix de l'abonnement doit être compris entre ${SUBSCRIPTION_PRICE_MIN.toLocaleString("fr-FR")} et ${SUBSCRIPTION_PRICE_MAX.toLocaleString("fr-FR")} F.`,
+    );
   }
 
   return db.transaction(async (tx) => {

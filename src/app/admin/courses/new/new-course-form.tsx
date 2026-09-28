@@ -11,6 +11,7 @@ export function NewCourseForm() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -52,17 +53,21 @@ export function NewCourseForm() {
           />
         </div>
       </div>
+      {error && <p className="text-destructive text-sm">{error}</p>}
       <Button
         disabled={pending || title.trim() === ""}
         onClick={() =>
-          startTransition(() =>
-            createCourseAction({
+          startTransition(async () => {
+            setError(null);
+            // Only returns on failure — success redirects to the new course.
+            const result = await createCourseAction({
               title,
               description: description || undefined,
               price: price.trim() ? Number(price.trim()) : undefined,
               category: category.trim() || undefined,
-            }),
-          )
+            });
+            if (result?.error) setError(result.error);
+          })
         }
       >
         {pending ? "Création..." : "Créer le cours"}

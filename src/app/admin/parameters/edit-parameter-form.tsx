@@ -13,6 +13,7 @@ export function EditParameterForm({
   currentValue: number;
 }) {
   const [value, setValue] = useState(String(currentValue));
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const parsed = Number(value);
@@ -23,25 +24,32 @@ export function EditParameterForm({
     parsed !== currentValue;
 
   return (
-    <div className="flex items-center gap-2">
-      <Input
-        type="number"
-        min={0}
-        step={1}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="w-32"
-      />
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={pending || !canSubmit}
-        onClick={() =>
-          startTransition(() => updateParameterAction(parameterKey, parsed))
-        }
-      >
-        {pending ? "..." : "Mettre à jour"}
-      </Button>
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min={0}
+          step={1}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-32"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={pending || !canSubmit}
+          onClick={() =>
+            startTransition(async () => {
+              setError(null);
+              const result = await updateParameterAction(parameterKey, parsed);
+              if (result.error) setError(result.error);
+            })
+          }
+        >
+          {pending ? "..." : "Mettre à jour"}
+        </Button>
+      </div>
+      {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
   );
 }

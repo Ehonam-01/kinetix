@@ -26,6 +26,7 @@ export function AddLessonForm({
   const [videoProvider, setVideoProvider] =
     useState<(typeof PROVIDERS)[number]>("YOUTUBE");
   const [content, setContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const canSubmit =
@@ -89,7 +90,8 @@ export function AddLessonForm({
           disabled={pending || !canSubmit}
           onClick={() =>
             startTransition(async () => {
-              await createLessonAction(courseId, {
+              setError(null);
+              const result = await createLessonAction(courseId, {
                 moduleId,
                 title,
                 lessonType,
@@ -98,6 +100,10 @@ export function AddLessonForm({
                 videoUrl: lessonType === "VIDEO" ? videoUrl : undefined,
                 content: lessonType === "TEXT" ? content : undefined,
               });
+              if (result.error) {
+                setError(result.error);
+                return;
+              }
               setTitle("");
               setVideoUrl("");
               setContent("");
@@ -107,6 +113,7 @@ export function AddLessonForm({
           {pending ? "..." : "Ajouter une leçon"}
         </Button>
       </div>
+      {error && <p className="text-destructive text-xs">{error}</p>}
       {lessonType === "TEXT" && (
         <p className="text-muted-foreground text-xs">
           Le contenu complet et le quiz se modifient ensuite depuis la page de

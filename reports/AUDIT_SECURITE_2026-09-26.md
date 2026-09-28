@@ -31,7 +31,9 @@
 | H6 | ✅ Corrigé | Upstash Redis (`src/lib/rate-limit.ts`, fenêtre glissante, fail-open). Connexion (IP 20 et email 5 par 15 min), inscription, mot de passe oublié, changement de mot de passe, demandes et confirmations d'OTP, démarrage de paiement, recherches de pseudo, liens `/r`. Vérifié contre le vrai Upstash : 429 à partir de la 31ᵉ requête sur `/r`. |
 | L4 | ✅ Corrigé | Aperçu du parrain limité à 30 par minute et par IP. |
 | M2 | ✅ Corrigé | Règle produit : 7 jours d'accès après l'échéance (grâce, bandeau d'alerte, renouvellement autonome), puis désactivation et réactivation par un admin uniquement. Appliquée côté serveur par `requireActiveMember()` sur toutes les actions de membre (transferts, retraits, ambassadeur, mentorat, récompenses, cours, profil) et par `isAccountDeactivated()` sur les paiements. Mot de passe, suppression de compte et déconnexion restent accessibles. |
-| Autres | ⏳ À faire | L7 (SQL Storage), L8 (Zod sur les actions admin). |
+| L7 | ✅ Corrigé | Buckets `course-thumbnails` et `reward-images` limités à 5 Mo et JPEG/PNG/WebP (appliqué par SQL, vérifié en base). |
+| L8 | ✅ Corrigé | Bornes métier dans les services admin (`src/services/admin/input-limits.ts`) : taux en pourcentage ≤ 100 %, prix de l'abonnement entre 100 et 1 000 000 F, recharge ≤ 1 000 000 F, titres ≤ 200 caractères, descriptions et motifs ≤ 2 000, contenu d'une leçon ≤ 50 000. Réponse de l'IA bornée de la même façon. Les formulaires admin affichent désormais l'erreur au lieu d'une page d'erreur générique. |
+| Autres | — | L5 conservé volontairement (choix pédagogique). |
 | L9 | ✅ Sans objet | `npm audit fix` a corrigé les sous-dépendances. `shadcn` reste en `dependencies` : `globals.css` l'importe au build, et le déplacer casserait un `npm ci --omit=dev`. |
 
 ---

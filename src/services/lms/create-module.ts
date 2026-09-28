@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { courses, modules } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
+import { assertMaxLength, SHORT_TEXT_MAX } from "@/services/admin/input-limits";
 
 // Position is assigned as (existing module count + 1) — fine at
 // admin-authored, low-write volumes; no gap-safe sequencing needed.
@@ -11,6 +12,7 @@ export async function createModule(
   adminUserId: string,
   input: { courseId: string; title: string },
 ) {
+  assertMaxLength(input.title, SHORT_TEXT_MAX, "Titre du module");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),

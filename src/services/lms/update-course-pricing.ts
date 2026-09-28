@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { courses } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
+import { assertMaxLength, SHORT_TEXT_MAX } from "@/services/admin/input-limits";
 
 // Display-only fields — see create-course.ts's comment for why price is no
 // longer a real charge. null clears the field (the form sends null for an
@@ -14,6 +15,7 @@ export async function updateCoursePricing(
   courseId: string,
   input: { price: number | null; category: string | null },
 ) {
+  assertMaxLength(input.category, SHORT_TEXT_MAX, "Catégorie");
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),
