@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { getSiteEnv } from "@/config/env.site";
 import {
   filterCurrentSubscriptions,
+  GRACE_PERIOD_DAYS,
   findUnremindedSubscriptionsExpiringBetween,
   getLatestExpiryByUserId,
   markReminderSent,
@@ -39,12 +40,12 @@ function emailBody(
   return {
     html: `
       <p>${phrase}</p>
-      <p>Passé cette date, l'accès à toutes les formations sera coupé immédiatement, sans période de grâce.</p>
+      <p>Passé cette date, vous disposerez de ${GRACE_PERIOD_DAYS} jours pour renouveler : au-delà, votre compte sera désactivé et seul le support pourra le réactiver.</p>
       <p><a href="${renewUrl}">Renouveler maintenant</a></p>
     `,
     text: [
       phrase,
-      "Passé cette date, l'accès à toutes les formations sera coupé immédiatement, sans période de grâce.",
+      `Passé cette date, vous disposerez de ${GRACE_PERIOD_DAYS} jours pour renouveler : au-delà, votre compte sera désactivé et seul le support pourra le réactiver.`,
       `Renouveler maintenant : ${renewUrl}`,
     ].join("\n\n"),
   };

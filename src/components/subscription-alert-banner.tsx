@@ -1,45 +1,65 @@
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
-import type { SubscriptionStatus } from "@/repositories/subscriptions";
+import {
+  GRACE_PERIOD_DAYS,
+  type SubscriptionStatus,
+} from "@/repositories/subscriptions";
 
 // Matches the email reminder window (services/subscriptions/send-expiry-reminders.ts)
 // so the in-app banner and the email start warning at the same moment.
 const ALERT_WINDOW_DAYS = 7;
 
+function formatDate(date: Date) {
+  return date.toLocaleDateString("fr-FR", { dateStyle: "long" });
+}
+
 // Shown on the dashboard overview and the subscription page themselves —
 // the visual half of the expiry-alert system, the other half being the
-// scheduled email (send-expiry-reminders.ts). Renders nothing outside the
-// window: never subscribed, already expired (the "no active subscription"
-// states elsewhere already cover that), or comfortably far from expiry.
-// daysLeft comes pre-computed from getSubscriptionStatus (repositories/
-// subscriptions.ts) — a component's render must stay pure, so "now" is read
-// once at data-fetch time, never with Date.now() in here.
+// scheduled email (send-expiry-reminders.ts). Two states: the last
+// ALERT_WINDOW_DAYS before expiry, and the grace period right after it
+// (access still on, account deactivated once it ends). Renders nothing
+// otherwise: never subscribed, comfortably far from expiry, or already
+// deactivated (dashboard/layout.tsx shows the blocked screen instead).
+// All dates/day counts come pre-computed from getSubscriptionStatus — a
+// component's render must stay pure, so "now" is read once at data-fetch
+// time, never with Date.now() in here.
 export function SubscriptionAlertBanner({
   status,
 }: {
   status: SubscriptionStatus;
 }) {
-  if (!status.active || !status.expiresAt || status.daysLeft == null) {
-    return null;
+  let message: string | null = null;
+
+  if (
+    status.inGracePeriod &&
+    status.expiresAt &&
+    status.graceEndsAt &&
+    status.graceDaysLeft != null
+  ) {
+    const days = status.graceDaysLeft;
+    message = `Votre abonnement a expiré le ${formatDate(status.expiresAt)}. ${
+      days <= 1 ? "Il vous reste moins d'un jour" : `Il vous reste ${days} jours`
+    } pour le renouveler : passé le ${formatDate(status.graceEndsAt)}, votre compte sera désactivé et seul le support pourra le réactiver.`;
+  } else if (
+    status.active &&
+    status.expiresAt &&
+    status.daysLeft != null &&
+    status.daysLeft <= ALERT_WINDOW_DAYS
+  ) {
+    message = `${
+      status.daysLeft <= 1
+        ? "Votre abonnement expire aujourd'hui"
+        : `Votre abonnement expire dans ${status.daysLeft} jours`
+    } (${formatDate(status.expiresAt)}). Vous disposerez ensuite de ${GRACE_PERIOD_DAYS} jours pour le renouveler avant la désactivation de votre compte.`;
   }
-  const daysLeft = status.daysLeft;
-  if (daysLeft > ALERT_WINDOW_DAYS) return null;
+
+  if (!message) return null;
 
   return (
     <div className="flex flex-col items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-2.5">
         <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
-        <p className="text-amber-900 dark:text-amber-200">
-          {daysLeft <= 1
-            ? "Votre abonnement expire aujourd'hui."
-            : `Votre abonnement expire dans ${daysLeft} jours`}{" "}
-          (
-          {status.expiresAt.toLocaleDateString("fr-FR", {
-            dateStyle: "long",
-          })}
-          ). L&apos;accès aux formations sera coupé immédiatement, sans période
-          de grâce.
-        </p>
+        <p className="text-amber-900 dark:text-amber-200">{message}</p>
       </div>
       <Link
         href="/dashboard/subscription"

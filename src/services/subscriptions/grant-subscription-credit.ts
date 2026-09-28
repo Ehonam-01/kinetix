@@ -11,7 +11,8 @@ import { confirmSubscriptionPurchase } from "./confirm-subscription-payment";
 // Admin-only, mirrors services/payments/admin-credit.ts's grantAdminCredit.
 // The one way to lift a permanently-frozen account (dashboard/layout.tsx,
 // SubscriptionStatus.permanentlyFrozen — self-service payment no longer
-// works past 3 months of non-renewal, explicit user decision): grants a
+// works once the 7-day grace period after expiry has passed, explicit user
+// decision): grants a
 // full year, free, exactly as if the member had paid, going through the
 // real confirmSubscriptionPurchase — so it counts toward the ambassador's
 // first-subscription commission the same way a real payment would (same

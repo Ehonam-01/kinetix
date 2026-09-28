@@ -146,10 +146,10 @@ export default async function AdminMemberDetailPage(
             <CardDescription>
               {subscription.active
                 ? `Actif jusqu'au ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
-                : subscription.permanentlyFrozen
-                  ? `Compte gelé (paiement libre-service désactivé depuis plus de 3 mois). Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                : subscription.inGracePeriod
+                  ? `Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })} — période de grâce : accès maintenu jusqu'au ${subscription.graceEndsAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}, le membre peut encore renouveler lui-même.`
                   : subscription.frozen
-                    ? `Compte gelé, en attente de renouvellement. Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                    ? `Compte désactivé (période de grâce terminée, seul un admin peut le réactiver). Expiré le ${subscription.expiresAt!.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
                     : "Jamais souscrit."}
             </CardDescription>
           </div>

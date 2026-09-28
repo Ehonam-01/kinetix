@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import { submitQuizAttempt } from "@/services/lms/submit-quiz-attempt";
 
 export async function submitQuizAttemptAction(
@@ -9,7 +9,7 @@ export async function submitQuizAttemptAction(
   lessonId: string,
   answers: Record<string, string>,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   const result = await submitQuizAttempt(profile.id, lessonId, answers);
   if (result.passed) {
     revalidatePath(`/dashboard/courses/${courseId}`);

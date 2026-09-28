@@ -2,14 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import {
   AMBASSADOR_TERMS_VERSION,
   joinAmbassadorProgramInNewTransaction,
 } from "@/services/ambassador/join-program";
 
 export async function joinAmbassadorProgramAction(sponsorUsername: string) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   try {
     await joinAmbassadorProgramInNewTransaction(profile.id, {
       sponsorUsername: sponsorUsername || undefined,

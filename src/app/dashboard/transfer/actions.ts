@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { usernameSchema } from "@/schemas/auth";
 import { findActiveProfileByUsername } from "@/repositories/profiles";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import { confirmTransfer } from "@/services/wallet/confirm-transfer";
 import { initiateTransfer } from "@/services/wallet/initiate-transfer";
 
@@ -14,7 +14,7 @@ import { initiateTransfer } from "@/services/wallet/initiate-transfer";
 // the registration one): this page is only reachable by an authenticated
 // member in the first place.
 export async function lookupRecipientAction(username: string) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   if (await isRateLimited("lookup", `user:${profile.id}`)) {
     return { fullName: null };
   }
@@ -34,7 +34,7 @@ export async function initiateTransferAction(
   recipientUsername: string,
   amount: number,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
     return { transferId: null, error: RATE_LIMIT_MESSAGE };
   }
@@ -54,7 +54,7 @@ export async function initiateTransferAction(
 }
 
 export async function confirmTransferAction(transferId: string, code: string) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
     return { error: RATE_LIMIT_MESSAGE };
   }

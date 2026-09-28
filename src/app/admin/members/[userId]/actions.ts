@@ -19,8 +19,8 @@ export async function setMemberStatusAction(
 }
 
 // The one way to lift a permanently-frozen account (repositories/subscriptions.ts's
-// permanentlyFrozen — self-service payment stops working 3 months after a
-// lapsed renewal, explicit user decision). Grants a real, free year, exactly
+// permanentlyFrozen — self-service payment stops working once the 7-day
+// grace period after expiry has passed, explicit user decision). Grants a real, free year, exactly
 // as if the member had paid.
 export async function grantSubscriptionCreditAction(userId: string) {
   const { profile } = await requireAdmin();

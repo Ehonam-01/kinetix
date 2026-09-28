@@ -1,6 +1,8 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { db } from "@/db/client";
 import { createClient } from "@/lib/supabase/server";
+import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { ensureProfile } from "./ensure-profile";
 
 export async function getCurrentUser() {
@@ -29,6 +31,39 @@ export async function requireUser() {
   // server action) is covered from this one place, so a deleted account
   // can never act as though it still exists in that window.
   if (current.profile.status === "DELETED") redirect("/login");
+  return current;
+}
+
+export const DEACTIVATED_ACCOUNT_MESSAGE =
+  "Votre compte est désactivé. Contactez le support pour le réactiver.";
+
+// Past the grace period after a lapsed subscription (repositories/
+// subscriptions.ts's GRACE_PERIOD_DAYS): the account is deactivated and
+// nothing on the platform is allowed anymore — self-service payment
+// included — until an admin grants a new subscription. Admins are exempt,
+// same convention as every other gate.
+export async function isAccountDeactivated(profile: {
+  id: string;
+  role: string;
+}): Promise<boolean> {
+  if (profile.role === "ADMIN") return false;
+  return (await getSubscriptionStatus(db, profile.id)).frozen;
+}
+
+// For every member action (transfers, withdrawals, ambassador/mentor
+// programs, rewards, courses, profile edits): an ACTIVE account whose
+// subscription is still paid or within its grace period. dashboard/
+// layout.tsx's blocked screen is only what the member sees — a layout
+// doesn't stop Server Actions from being called directly (security audit
+// M2), so the rule is enforced here, on the server, for each action.
+// Deliberately NOT used for password change, account deletion or logout:
+// a deactivated member keeps control over their own account's security
+// and personal data.
+export async function requireActiveMember() {
+  const current = await requireUser();
+  if (current.profile.role === "ADMIN") return current;
+  if (current.profile.status !== "ACTIVE") redirect("/dashboard");
+  if (await isAccountDeactivated(current.profile)) redirect("/dashboard");
   return current;
 }
 

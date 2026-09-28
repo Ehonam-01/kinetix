@@ -10,9 +10,10 @@ import { referralClicks } from "./referral-clicks";
 // philosophy as sales: pricePaid/businessVolume are the values actually paid
 // at that moment, never recalculated if subscription.price_in_cfa changes
 // later. Access is a pure function of "does the user have any row here with
-// expiresAt > now()" (see repositories/subscriptions.ts) — no status column
-// and no background job for ACCESS itself, so expiry cuts access off
-// immediately by construction (explicit user decision: no grace period).
+// expiresAt still within the grace period" (see repositories/subscriptions.ts
+// GRACE_PERIOD_DAYS) — no status column and no background job for ACCESS
+// itself, so expiry, the grace period and deactivation all follow the
+// clock by construction.
 // reminder7dSentAt/reminder1dSentAt track expiry-reminder emails
 // (services/subscriptions/send-expiry-reminders.ts, run by a Vercel Cron
 // job) — per-row, not per-user, so a renewal's fresh row is naturally

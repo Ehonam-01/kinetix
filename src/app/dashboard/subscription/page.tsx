@@ -54,6 +54,11 @@ export default async function SubscriptionPage() {
                 <CheckCircle2 className="size-5 text-green-600" />
                 Abonnement actif
               </>
+            ) : status.inGracePeriod ? (
+              <>
+                <XCircle className="size-5 text-amber-600" />
+                Abonnement expiré — période de grâce
+              </>
             ) : (
               <>
                 <XCircle className="text-muted-foreground size-5" />
@@ -64,9 +69,11 @@ export default async function SubscriptionPage() {
           <CardDescription>
             {status.active && status.expiresAt
               ? `Valide jusqu'au ${status.expiresAt.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
-              : status.expiresAt
-                ? `Expiré le ${status.expiresAt.toLocaleDateString("fr-FR", { dateStyle: "long" })} — l'accès aux formations est coupé.`
-                : "Souscrivez pour débloquer l'accès à toutes les formations."}
+              : status.inGracePeriod && status.expiresAt && status.graceEndsAt
+                ? `Expiré le ${status.expiresAt.toLocaleDateString("fr-FR", { dateStyle: "long" })}. Votre accès est maintenu jusqu'au ${status.graceEndsAt.toLocaleDateString("fr-FR", { dateStyle: "long" })} : renouvelez avant cette date pour éviter la désactivation de votre compte.`
+                : status.expiresAt
+                  ? `Expiré le ${status.expiresAt.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
+                  : "Souscrivez pour débloquer l'accès à toutes les formations."}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -74,12 +81,16 @@ export default async function SubscriptionPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {status.active ? "Renouveler l'abonnement" : "Souscrire"}
+            {status.active || status.inGracePeriod
+              ? "Renouveler l'abonnement"
+              : "Souscrire"}
           </CardTitle>
           <CardDescription>
             {price.toLocaleString("fr-FR")} F CFA / an.
             {status.active &&
               " Un renouvellement anticipé prolonge l'abonnement à partir de sa date d'expiration actuelle, sans perte de jours payés."}
+            {status.inGracePeriod &&
+              " La nouvelle année démarre à la date d'expiration de votre abonnement précédent."}
           </CardDescription>
         </CardHeader>
         <CardContent>

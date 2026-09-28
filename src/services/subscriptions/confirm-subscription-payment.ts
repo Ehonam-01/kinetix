@@ -10,6 +10,7 @@ import {
   getEffectiveSubscriptionRule,
 } from "@/repositories/commission-rules";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import { graceEndsAtFor } from "@/repositories/subscriptions";
 import { createCommissionEvent } from "@/services/mlm/commission";
 import { propagateSaleVolume } from "@/services/mlm/propagate-sale-volume";
 import {
@@ -43,9 +44,10 @@ function addOneYear(date: Date): Date {
 // subscription row for the same payment.
 //
 // Renewal semantics: if the buyer's most recent subscription is still
-// active, the new period starts from its expiry (early renewal never loses
-// paid days); otherwise (first-ever subscription, or renewing after
-// expiring) it starts from now. Either way expiresAt is exactly one year
+// active or within its grace period, the new period starts from its expiry
+// (early renewal never loses paid days, late renewal doesn't gain the
+// grace days); otherwise (first-ever subscription, or an admin reactivating
+// a deactivated account) it starts from now. Either way expiresAt is exactly one year
 // later, so it always strictly grows — what lets getSubscriptionStatus just
 // check the single most-recent row (repositories/subscriptions.ts).
 //
@@ -92,9 +94,15 @@ export async function confirmSubscriptionPurchase(
   });
   const isFirstSubscription = !priorSubscription;
 
+  // Still active or inside the grace period: the new year continues from
+  // the previous expiry, so early renewal never loses paid days and the
+  // grace days (access kept after expiry) aren't handed out on top of a
+  // full year. Past the grace period (an admin reactivating a deactivated
+  // account), the year starts now.
   const now = new Date();
   const base =
-    priorSubscription && priorSubscription.expiresAt.getTime() > now.getTime()
+    priorSubscription &&
+    graceEndsAtFor(priorSubscription.expiresAt).getTime() > now.getTime()
       ? priorSubscription.expiresAt
       : now;
   const expiresAt = addOneYear(base);

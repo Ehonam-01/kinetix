@@ -87,13 +87,19 @@ export default async function DashboardPage() {
           <StatCard
             icon={CalendarClock}
             label="Abonnement"
-            value={subscription.active ? "Actif" : "Inactif"}
+            value={
+              subscription.active
+                ? "Actif"
+                : subscription.inGracePeriod
+                  ? "Expiré (grâce)"
+                  : "Inactif"
+            }
             href="/dashboard/subscription"
             color="blue"
           />
         </div>
 
-        {!subscription.active && (
+        {!subscription.active && !subscription.inGracePeriod && (
           <Card className="from-primary to-primary/70 text-primary-foreground overflow-hidden border-none bg-linear-to-br">
             <CardHeader>
               <CardTitle className="text-primary-foreground flex items-center gap-2">

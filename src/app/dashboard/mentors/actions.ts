@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import { requestMentorship } from "@/services/mentorship/request-mentorship";
 import { submitMentorReview } from "@/services/mentorship/submit-mentor-review";
 import { submitMentorReviewSchema } from "@/schemas/mentor-review";
 
 export async function requestMentorshipAction(mentorUserId: string) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   try {
     await requestMentorship(profile.id, mentorUserId);
     revalidatePath("/dashboard/mentors");
@@ -25,7 +25,7 @@ export async function submitMentorReviewAction(input: {
   rating: number;
   comment?: string;
 }) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   const parsed = submitMentorReviewSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Entrée invalide." };

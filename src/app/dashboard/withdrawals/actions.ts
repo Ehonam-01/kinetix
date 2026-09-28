@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import { confirmWithdrawal } from "@/services/wallet/confirm-withdrawal";
 import { requestWithdrawal } from "@/services/wallet/request-withdrawal";
 
@@ -16,7 +16,7 @@ export async function requestWithdrawalAction(
   operator: string,
   country: string,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
     return { requestId: null, error: RATE_LIMIT_MESSAGE };
   }
@@ -38,7 +38,7 @@ export async function requestWithdrawalAction(
 }
 
 export async function confirmWithdrawalAction(requestId: string, code: string) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
     return { error: RATE_LIMIT_MESSAGE };
   }

@@ -16,8 +16,8 @@ import { LogoutButton } from "./logout-button";
 // became mandatory before dashboard access at all (explicit product
 // decision), for a member who has simply never paid yet (neverSubscribed) —
 // so there is no route left to reach anything else from (explicit user
-// decision: "impossible d'y accéder"). A permanently-frozen account (past 3
-// months unrenewed) sees a deliberately generic message with no purchase
+// decision: "impossible d'y accéder"). A deactivated account (past the 7-day
+// grace period after expiry, repositories/subscriptions.ts) sees a deliberately generic message with no purchase
 // panel — self-service payment no longer works past that point, only an
 // admin can grant a fresh subscription
 // (services/subscriptions/grant-subscription-credit.ts); neverSubscribed

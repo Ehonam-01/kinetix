@@ -5,7 +5,15 @@ import { profiles } from "@/db/schema/profiles";
 import { subscriptionWalletRequests } from "@/db/schema/subscription-wallet-requests";
 import { subscriptions } from "@/db/schema/subscriptions";
 
+// Explicit product decision: once a subscription expires, the member keeps
+// full access for this many days (with an alert banner) and can still
+// renew on their own. Past it, the account is deactivated — no action at
+// all on the platform, no self-service payment either — until an admin
+// grants a new subscription (services/subscriptions/grant-subscription-credit.ts).
+export const GRACE_PERIOD_DAYS = 7;
+
 export type SubscriptionStatus = {
+  // Inside the paid period (expiresAt still in the future).
   active: boolean;
   expiresAt: Date | null;
   pricePaid: number | null;
@@ -16,42 +24,39 @@ export type SubscriptionStatus = {
   // calling Date.now() during a component's render, so "now" has to be read
   // once, at data-fetch time, same as `active` itself already was.
   daysLeft: number | null;
-  // Had a real subscription at some point (expiresAt !== null) and it's not
-  // currently active — a brand new member who never subscribed at all is
-  // NOT frozen (expiresAt is null for them): only a lapsed *renewal* blocks
-  // the account (explicit user decision — "si un compte n'est pas
-  // renouvelé"), never a first-timer who hasn't started yet.
+  // Expired, but still within GRACE_PERIOD_DAYS: full access continues and
+  // the member can renew on their own.
+  inGracePeriod: boolean;
+  // When the grace period ends (expiresAt + GRACE_PERIOD_DAYS) and the
+  // ceil'd days left until then — only meaningful while inGracePeriod.
+  graceEndsAt: Date | null;
+  graceDaysLeft: number | null;
+  // Past the grace period with no renewal: the account is deactivated
+  // (dashboard/layout.tsx's blocked screen, requireActiveMember in every
+  // member action) and only an admin can lift it. A brand new member who
+  // never subscribed is NOT frozen (expiresAt is null for them) — only a
+  // lapsed *renewal* deactivates an account, never a first-timer who hasn't
+  // started yet (they're gated by profiles.status = PENDING_PAYMENT instead).
   frozen: boolean;
-  // Past PERMANENT_FREEZE_MONTHS since expiry with no renewal — self-service
-  // payment no longer lifts this (services/subscriptions/confirm-subscription-payment.ts
-  // still accepts the payment, but dashboard/layout.tsx's gate keeps blocking
-  // a permanently-frozen account regardless): only an admin-granted credit
-  // (services/subscriptions/grant-subscription-credit.ts) does. Deliberately
-  // never surfaced to the member (explicit user decision: "pas une
-  // information publique") — the UI shows the same generic blocked screen
-  // either way, see dashboard/layout.tsx.
+  // Kept for the blocked screen and the admin page: under the grace-period
+  // rule a frozen account can only ever be reactivated by an admin, so this
+  // always equals `frozen`. Deliberately never explained to the member
+  // (explicit user decision: "pas une information publique").
   permanentlyFrozen: boolean;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const PERMANENT_FREEZE_MONTHS = 3;
 
-// Calendar-month arithmetic, not a fixed-duration offset — same reasoning as
-// confirm-subscription-payment.ts's addOneYear (a fixed 30-day/month offset
-// drifts against real calendar months).
-function addMonths(date: Date, months: number): Date {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + months);
-  return result;
+export function graceEndsAtFor(expiresAt: Date): Date {
+  return new Date(expiresAt.getTime() + GRACE_PERIOD_DAYS * DAY_MS);
 }
 
 // The most recently-expiring subscription row for a user tells the whole
 // story: expiresAt strictly grows with every renewal (see
 // services/subscriptions/confirm-subscription-payment.ts), so it's always
-// the one to check — no separate "current" flag needed. active is a pure
-// function of the clock, never a stored status: this is what makes
-// expiration cut access off immediately, with no grace period and no
-// background job (explicit user decision).
+// the one to check — no separate "current" flag needed. Every flag is a
+// pure function of the clock, never a stored status: expiry, the grace
+// period and deactivation all take effect with no background job.
 export async function getSubscriptionStatus(
   executor: Executor,
   userId: string,
@@ -66,26 +71,37 @@ export async function getSubscriptionStatus(
       expiresAt: null,
       pricePaid: null,
       daysLeft: null,
+      inGracePeriod: false,
+      graceEndsAt: null,
+      graceDaysLeft: null,
       frozen: false,
       permanentlyFrozen: false,
     };
   }
   const now = Date.now();
   const active = latest.expiresAt.getTime() > now;
+  const graceEndsAt = graceEndsAtFor(latest.expiresAt);
+  const inGracePeriod = !active && graceEndsAt.getTime() > now;
+  const frozen = !active && !inGracePeriod;
   return {
     active,
     expiresAt: latest.expiresAt,
     pricePaid: latest.pricePaid,
     daysLeft: Math.ceil((latest.expiresAt.getTime() - now) / DAY_MS),
-    frozen: !active,
-    permanentlyFrozen:
-      !active &&
-      now > addMonths(latest.expiresAt, PERMANENT_FREEZE_MONTHS).getTime(),
+    inGracePeriod,
+    graceEndsAt,
+    graceDaysLeft: inGracePeriod
+      ? Math.ceil((graceEndsAt.getTime() - now) / DAY_MS)
+      : null,
+    frozen,
+    permanentlyFrozen: frozen,
   };
 }
 
 // Cheaper existence check for the access gate (repositories/courses.ts's
 // hasCourseAccess) — a single indexed lookup instead of fetching the row.
+// True during the paid period AND the grace period after it: access only
+// stops once the account is deactivated (GRACE_PERIOD_DAYS past expiry).
 export async function hasActiveSubscription(
   executor: Executor,
   userId: string,
@@ -93,7 +109,7 @@ export async function hasActiveSubscription(
   const row = await executor.query.subscriptions.findFirst({
     where: and(
       eq(subscriptions.userId, userId),
-      sql`${subscriptions.expiresAt} > now()`,
+      sql`${subscriptions.expiresAt} > now() - make_interval(days => ${GRACE_PERIOD_DAYS})`,
     ),
   });
   return !!row;

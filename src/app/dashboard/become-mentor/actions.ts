@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/services/auth/current-user";
+import { requireActiveMember } from "@/services/auth/current-user";
 import { requestMentorStatus } from "@/services/mentorship/request-mentor-status";
 import { respondToMentorshipRequest } from "@/services/mentorship/respond-to-mentorship-request";
 import { requestMentorStatusSchema } from "@/schemas/mentor";
@@ -10,7 +10,7 @@ export async function requestMentorStatusAction(input: {
   category: string;
   pitch?: string;
 }) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   const parsed = requestMentorStatusSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Entrée invalide." };
@@ -32,7 +32,7 @@ export async function respondToMentorshipRequestAction(
   mentorshipId: string,
   accept: boolean,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireActiveMember();
   try {
     await respondToMentorshipRequest(profile.id, mentorshipId, accept);
     revalidatePath("/dashboard/become-mentor");

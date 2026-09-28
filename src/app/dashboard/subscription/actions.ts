@@ -8,7 +8,11 @@ import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { findPaymentById } from "@/repositories/payments";
-import { requireUser } from "@/services/auth/current-user";
+import {
+  DEACTIVATED_ACCOUNT_MESSAGE,
+  isAccountDeactivated,
+  requireUser,
+} from "@/services/auth/current-user";
 import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
 import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
 import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
@@ -39,6 +43,16 @@ export async function subscribeAction(
   address?: string,
 ) {
   const { authUser, profile } = await requireUser();
+  // Past the grace period only an admin can reactivate the account —
+  // self-service payment is refused (explicit product decision).
+  if (await isAccountDeactivated(profile)) {
+    return {
+      error: DEACTIVATED_ACCOUNT_MESSAGE,
+      confirmationMessage: null,
+      paymentId: null,
+      pendingWizallConfirmation: null,
+    };
+  }
   // Each call pushes a USSD/SMS payment prompt to a phone number.
   if (await isRateLimited("paymentStart", `user:${profile.id}`)) {
     return {
@@ -254,6 +268,13 @@ export async function checkSubscriptionConfirmedAction(
 // of this 2-step flow the form needs to show inline, not exceptional bugs.
 export async function requestWalletSubscriptionAction(walletUsername: string) {
   const { profile } = await requireUser();
+  if (await isAccountDeactivated(profile)) {
+    return {
+      requestId: null,
+      ownerApproval: false,
+      error: DEACTIVATED_ACCOUNT_MESSAGE,
+    };
+  }
   if (await isRateLimited("otpRequest", `user:${profile.id}`)) {
     return { requestId: null, ownerApproval: false, error: RATE_LIMIT_MESSAGE };
   }
@@ -285,6 +306,11 @@ export async function confirmWalletSubscriptionAction(
   code: string,
 ) {
   const { profile } = await requireUser();
+  // The caller is the wallet owner spending their own balance — a
+  // deactivated account can't do that, for itself or anyone else.
+  if (await isAccountDeactivated(profile)) {
+    return { error: DEACTIVATED_ACCOUNT_MESSAGE };
+  }
   if (await isRateLimited("otpConfirm", `user:${profile.id}`)) {
     return { error: RATE_LIMIT_MESSAGE };
   }

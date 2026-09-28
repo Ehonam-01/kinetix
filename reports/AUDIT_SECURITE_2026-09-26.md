@@ -30,7 +30,8 @@
 | L6 | ✅ Corrigé | Cookies de session forcés `HttpOnly`/`Secure`/`SameSite=Lax`. Client navigateur Supabase (inutilisé) supprimé. |
 | H6 | ✅ Corrigé | Upstash Redis (`src/lib/rate-limit.ts`, fenêtre glissante, fail-open). Connexion (IP 20 et email 5 par 15 min), inscription, mot de passe oublié, changement de mot de passe, demandes et confirmations d'OTP, démarrage de paiement, recherches de pseudo, liens `/r`. Vérifié contre le vrai Upstash : 429 à partir de la 31ᵉ requête sur `/r`. |
 | L4 | ✅ Corrigé | Aperçu du parrain limité à 30 par minute et par IP. |
-| Autres | ⏳ À faire | M2 (décision produit sur les retraits des membres gelés), L7 (SQL Storage), L8 (Zod sur les actions admin). |
+| M2 | ✅ Corrigé | Règle produit : 7 jours d'accès après l'échéance (grâce, bandeau d'alerte, renouvellement autonome), puis désactivation et réactivation par un admin uniquement. Appliquée côté serveur par `requireActiveMember()` sur toutes les actions de membre (transferts, retraits, ambassadeur, mentorat, récompenses, cours, profil) et par `isAccountDeactivated()` sur les paiements. Mot de passe, suppression de compte et déconnexion restent accessibles. |
+| Autres | ⏳ À faire | L7 (SQL Storage), L8 (Zod sur les actions admin). |
 | L9 | ✅ Sans objet | `npm audit fix` a corrigé les sous-dépendances. `shadcn` reste en `dependencies` : `globals.css` l'importe au build, et le déplacer casserait un `npm ci --omit=dev`. |
 
 ---
