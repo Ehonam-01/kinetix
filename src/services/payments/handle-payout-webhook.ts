@@ -72,7 +72,7 @@ export async function processPayoutWebhookEvent(
       .update(withdrawalRequests)
       .set({
         status: "PENDING_REVIEW",
-        payoutFailureReason: `Le virement Bictorys a échoué (référence ${event.providerReference}).`,
+        payoutFailureReason: `Le virement a échoué chez l'opérateur (référence ${event.providerReference}). Vous pouvez le relancer.`,
       })
       .where(
         and(

@@ -294,18 +294,61 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       });
     }
 
-    function payoutCallCount() {
-      return fetchCalls.filter((c) => c.url.includes("/pay/v1/payouts")).length;
+    async function balanceRow(requestId: string) {
+      const row = await withdrawalRow(requestId);
+      return localDb.query.userBalances.findFirst({
+        where: eq(schema.userBalances.userId, row.userId),
+      });
     }
 
-    it("a double click triggers exactly one real payout", async () => {
+    type Step =
+      | { status?: number; body: unknown; delayMs?: number }
+      | "network";
+
+    // Answers PayDunya's three disbursement endpoints; "network" simulates
+    // a connection failure on that step.
+    function paydunyaDisburse(steps: {
+      invoice: Step;
+      submit?: Step;
+      check?: Step;
+    }) {
+      fetchHandler = (url) => {
+        const step = url.endsWith("/get-invoice")
+          ? steps.invoice
+          : url.endsWith("/submit-invoice")
+            ? steps.submit
+            : url.endsWith("/check-status")
+              ? steps.check
+              : undefined;
+        if (!step) throw new Error(`Appel inattendu : ${url}`);
+        if (step === "network") throw new Error("réseau indisponible");
+        return { ...step, status: step.status ?? 200 };
+      };
+    }
+
+    const invoiceOk = (token: string): Step => ({
+      body: { response_code: "00", disburse_token: token },
+    });
+    const statusIs = (status: string): Step => ({
+      body: { response_code: "00", status },
+    });
+
+    function submitCallCount() {
+      return fetchCalls.filter((c) => c.url.endsWith("/submit-invoice")).length;
+    }
+
+    it("a double click sends exactly one PayDunya disbursement", async () => {
       const { approveWithdrawal } = await import(
         "@/services/admin/approve-withdrawal"
       );
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw1");
-      fetchHandler = () => ({ status: 201, body: { id: "payout-1" }, delayMs: 50 });
-      const before = payoutCallCount();
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-1"),
+        submit: { body: { response_code: "00" }, delayMs: 50 },
+        check: statusIs("pending"),
+      });
+      const before = submitCallCount();
 
       const results = await Promise.allSettled([
         approveWithdrawal(admin.id, requestId),
@@ -313,46 +356,175 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       ]);
 
       expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-      expect(payoutCallCount() - before).toBe(1);
+      expect(submitCallCount() - before).toBe(1);
       const row = await withdrawalRow(requestId);
       expect(row.status).toBe("PROCESSING");
-      expect(row.payoutProviderReference).toBe("payout-1");
+      expect(row.payoutProviderReference).toBe("tok-1");
+      // Our own reference for the attempt is sent, so PayDunya itself
+      // refuses to process it twice.
+      const submit = fetchCalls
+        .filter((c) => c.url.endsWith("/submit-invoice"))
+        .at(-1);
+      expect(submit?.body).toMatchObject({
+        disburse_invoice: "tok-1",
+        disburse_id: expect.stringContaining(requestId),
+      });
     });
 
-    it("an explicit Bictorys refusal (4xx) puts the request back in the queue", async () => {
+    it("an insufficient PayDunya balance puts the request back in the queue, with a clear reason", async () => {
       const { approveWithdrawal } = await import(
         "@/services/admin/approve-withdrawal"
       );
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw2");
-      fetchHandler = () => ({ status: 400, body: { message: "Numéro invalide" } });
+      paydunyaDisburse({
+        invoice: {
+          body: { response_code: "4002", response_text: "Insufficient funds" },
+        },
+      });
+      const before = submitCallCount();
 
       await expect(approveWithdrawal(admin.id, requestId)).rejects.toThrow();
       const row = await withdrawalRow(requestId);
       expect(row.status).toBe("PENDING_REVIEW");
-      expect(row.payoutFailureReason).toContain("400");
+      expect(row.payoutFailureReason).toContain("Solde PayDunya insuffisant");
+      expect(submitCallCount() - before).toBe(0);
+      expect((await balanceRow(requestId))?.pendingBalance).toBe(5000);
     });
 
-    it("an ambiguous failure (5xx) stays PROCESSING and can't be re-approved", async () => {
+    it("an uncertain outcome stays PROCESSING, can't be re-sent, and is settled by checking the status", async () => {
       const { approveWithdrawal } = await import(
         "@/services/admin/approve-withdrawal"
       );
+      const { syncPaydunyaPayout } = await import(
+        "@/services/payments/sync-paydunya-payout"
+      );
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw3");
-      fetchHandler = () => ({ status: 503, body: { message: "Indisponible" } });
-      const before = payoutCallCount();
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-3"),
+        submit: "network",
+        check: "network",
+      });
+      const before = submitCallCount();
 
       await expect(approveWithdrawal(admin.id, requestId)).rejects.toThrow(
         "incertain",
       );
-      const row = await withdrawalRow(requestId);
+      let row = await withdrawalRow(requestId);
       expect(row.status).toBe("PROCESSING");
+      expect(row.payoutProviderReference).toBe("tok-3");
       expect(row.payoutFailureReason).toContain("incertain");
 
       await expect(approveWithdrawal(admin.id, requestId)).rejects.toThrow(
         "n'est plus en attente",
       );
-      expect(payoutCallCount() - before).toBe(1);
+      expect(submitCallCount() - before).toBe(1);
+
+      // "Vérifier le statut": PayDunya now reports success -> PAID.
+      paydunyaDisburse({ invoice: "network", check: statusIs("success") });
+      expect(await syncPaydunyaPayout("tok-3")).toBe("success");
+      row = await withdrawalRow(requestId);
+      expect(row.status).toBe("PAID");
+      const balance = await balanceRow(requestId);
+      expect(balance?.pendingBalance).toBe(0);
+      expect(balance?.withdrawnBalance).toBe(5000);
+    });
+
+    it("a disbursement PayDunya reports successful right away is marked paid immediately", async () => {
+      const { approveWithdrawal } = await import(
+        "@/services/admin/approve-withdrawal"
+      );
+      const admin = await makeUser("admin", { role: "ADMIN" });
+      const requestId = await confirmedWithdrawal("withdraw4");
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-4"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("success"),
+      });
+
+      await approveWithdrawal(admin.id, requestId);
+      expect((await withdrawalRow(requestId)).status).toBe("PAID");
+    });
+
+    it("a transfer the operator refuses goes back to the queue and can be retried", async () => {
+      const { approveWithdrawal } = await import(
+        "@/services/admin/approve-withdrawal"
+      );
+      const admin = await makeUser("admin", { role: "ADMIN" });
+      const requestId = await confirmedWithdrawal("withdraw5");
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-5"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("failed"),
+      });
+
+      await expect(approveWithdrawal(admin.id, requestId)).rejects.toThrow();
+      let row = await withdrawalRow(requestId);
+      expect(row.status).toBe("PENDING_REVIEW");
+      expect(row.payoutFailureReason).toContain("refusé par l'opérateur");
+
+      // Retry with a fresh attempt.
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-5b"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("pending"),
+      });
+      await approveWithdrawal(admin.id, requestId);
+      row = await withdrawalRow(requestId);
+      expect(row.status).toBe("PROCESSING");
+      expect(row.payoutProviderReference).toBe("tok-5b");
+    });
+
+    it("PayDunya's callback is only a signal: a forged one is refused, a real one is re-checked", async () => {
+      const { approveWithdrawal } = await import(
+        "@/services/admin/approve-withdrawal"
+      );
+      const { POST } = await import(
+        "@/app/api/webhooks/providers/paydunya-payout/route"
+      );
+      const admin = await makeUser("admin", { role: "ADMIN" });
+      const requestId = await confirmedWithdrawal("withdraw6");
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-6"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("pending"),
+      });
+      await approveWithdrawal(admin.id, requestId);
+
+      const callback = (hash: string, status: string) =>
+        POST(
+          new Request(
+            "http://localhost/api/webhooks/providers/paydunya-payout",
+            {
+              method: "POST",
+              body: JSON.stringify({ hash, status, token: "tok-6" }),
+            },
+          ),
+        );
+
+      expect((await callback("faux", "success")).status).toBe(400);
+      expect((await withdrawalRow(requestId)).status).toBe("PROCESSING");
+
+      // A genuine callback claiming success while PayDunya's API still says
+      // pending: nothing is applied.
+      paydunyaDisburse({ invoice: "network", check: statusIs("pending") });
+      expect((await callback(PAYDUNYA_HASH, "success")).status).toBe(200);
+      expect((await withdrawalRow(requestId)).status).toBe("PROCESSING");
+
+      paydunyaDisburse({ invoice: "network", check: statusIs("success") });
+      await callback(PAYDUNYA_HASH, "success");
+      expect((await withdrawalRow(requestId)).status).toBe("PAID");
+    });
+
+    it("an operator PayDunya can't pay out to is refused when the withdrawal is requested", async () => {
+      const { requestWithdrawal } = await import(
+        "@/services/wallet/request-withdrawal"
+      );
+      const member = await makeUser("mobicash", { balance: 10000 });
+      await expect(
+        requestWithdrawal(member.id, 5000, "+22890000000", "MOBICASH", "TG"),
+      ).rejects.toThrow("pas disponible pour les retraits");
     });
   });
 

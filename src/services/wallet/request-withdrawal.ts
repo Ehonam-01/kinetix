@@ -10,6 +10,7 @@ import { findAuthEmailByUserId } from "@/repositories/auth-users";
 import { getBalance } from "@/repositories/financial-transactions";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { findProfileById } from "@/repositories/profiles";
+import { getPaydunyaWithdrawMode } from "@/config/paydunya-payout-operators";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
 import { generateOtpCode, hashOtpCode, OTP_TTL_MINUTES } from "./otp";
 
@@ -49,6 +50,14 @@ export async function requestWithdrawal(
     throw new Error("Pays invalide.");
   }
   const validCountry = country as (typeof bictorysCountryEnum.enumValues)[number];
+  // Withdrawals are paid through PayDunya's disbursement API, which
+  // doesn't cover every operator in every country (config/
+  // paydunya-payout-operators.ts) — refused here rather than at payout time.
+  if (!getPaydunyaWithdrawMode(validCountry, validOperator)) {
+    throw new Error(
+      "Cet opérateur n'est pas disponible pour les retraits dans ce pays.",
+    );
+  }
 
   const user = await findProfileById(userId);
   if (!user || user.status !== "ACTIVE") {

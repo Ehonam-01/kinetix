@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getBictorysEnv, getBictorysPayoutSecretCode } from "@/config/env.bictorys";
 import type { mobileMoneyOperatorEnum } from "@/db/schema/withdrawals";
 import { OPERATOR_TO_BICTORYS_PAYMENT_TYPE } from "./bictorys-operators";
+import { PayoutRejectedError } from "./payout-errors";
 
 // https://docs.bictorys.com/reference/createpayout — single (non-batch)
 // payout, distinct from PaymentProvider (services/payments/provider.ts,
@@ -31,11 +32,9 @@ export type CreatePayoutInput = {
 
 export type PayoutResult = { payoutProviderReference: string };
 
-// Thrown only when Bictorys (or our own pre-check) explicitly refused the
-// payout — no money can have left. Any other error (network failure,
-// timeout, 5xx, unparseable 2xx body) is ambiguous: the transfer may have
-// gone through, and approveWithdrawal must not make it retryable blindly.
-export class PayoutRejectedError extends Error {}
+// Shared with paydunya-payout.ts — see payout-errors.ts. Re-exported so
+// existing imports keep working.
+export { PayoutRejectedError };
 
 // Returns once Bictorys has *accepted* the payout request (201) — this is
 // not confirmation the money arrived. approveWithdrawal stores

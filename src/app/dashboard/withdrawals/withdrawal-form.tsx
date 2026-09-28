@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
-import { OPERATORS_BY_COUNTRY } from "@/config/bictorys-country-operators";
+import { PAYDUNYA_PAYOUT_OPERATORS_BY_COUNTRY } from "@/config/paydunya-payout-operators";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
 
@@ -22,7 +22,7 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
 
   const availableOperators = country
     ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
-        (OPERATORS_BY_COUNTRY[country] ?? []).includes(o.value),
+        (PAYDUNYA_PAYOUT_OPERATORS_BY_COUNTRY[country] ?? []).includes(o.value),
       )
     : MOBILE_MONEY_OPERATOR_OPTIONS;
 

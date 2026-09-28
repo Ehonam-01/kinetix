@@ -45,7 +45,7 @@ const COUNTRY_CALLING_CODES: Record<string, string> = {
   CM: "237",
 };
 
-function toLocalPhoneNumber(phone: string, country: string): string {
+export function toLocalPhoneNumber(phone: string, country: string): string {
   const digits = phone.replace(/\D/g, "");
   const callingCode = COUNTRY_CALLING_CODES[country];
   if (callingCode && digits.startsWith(callingCode)) {

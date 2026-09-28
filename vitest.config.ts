@@ -35,6 +35,7 @@ export default defineConfig({
       PAYDUNYA_MASTER_KEY: "test_unit_test_fake_master_key",
       PAYDUNYA_PRIVATE_KEY: "test_unit_test_fake_private_key",
       PAYDUNYA_TOKEN: "test_unit_test_fake_token",
+      SITE_URL: "https://www.kinetix-test.example",
     },
   },
 });

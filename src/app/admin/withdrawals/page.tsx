@@ -3,6 +3,7 @@ import {
   listPendingWithdrawalRequestsForAdmin,
   listProcessingWithdrawalRequestsForAdmin,
 } from "@/repositories/withdrawals";
+import { CheckPayoutButton } from "./check-payout-button";
 import { ReviewActions } from "./review-actions";
 
 export default async function AdminWithdrawalsPage() {
@@ -16,9 +17,9 @@ export default async function AdminWithdrawalsPage() {
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">
           {requests.length} demande(s) en attente de validation. « Déclencher
-          le virement » lance un virement Bictorys réel vers le numéro mobile
-          money indiqué — la demande passe automatiquement à « Payé » une fois
-          le virement confirmé.
+          le virement » envoie un virement PayDunya réel vers le numéro mobile
+          money indiqué, depuis le solde de votre compte PayDunya — la demande
+          passe automatiquement à « Payé » une fois le virement confirmé.
         </p>
 
         {requests.length === 0 ? (
@@ -64,7 +65,8 @@ export default async function AdminWithdrawalsPage() {
         <div className="space-y-4">
           <p className="text-muted-foreground text-sm">
             {processing.length} virement(s) en cours — en attente de
-            confirmation Bictorys, aucune action requise.
+            confirmation de l&apos;opérateur. « Vérifier le statut » interroge
+            PayDunya sans jamais renvoyer de virement.
           </p>
           <div className="space-y-3">
             {processing.map((r) => (
@@ -85,6 +87,7 @@ export default async function AdminWithdrawalsPage() {
                     {r.payoutFailureReason}
                   </p>
                 )}
+                <CheckPayoutButton requestId={r.id} />
               </div>
             ))}
           </div>
