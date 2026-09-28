@@ -83,6 +83,17 @@ export async function approveWithdrawal(
     throw new Error("Cette demande n'est plus en attente de validation.");
   }
 
+  const callbackUrl = `${new URL(getSiteEnv().SITE_URL).origin}/api/webhooks/providers/paydunya-payout`;
+  // PayDunya probes callbackUrl while creating the disbursement and refuses
+  // it (4002 "the callback is not accessible") if the answer is slow — a
+  // serverless cold start was enough, caught live. Waking the route first
+  // makes that probe land on a warm instance. Best-effort only.
+  await fetch(callbackUrl, {
+    method: "GET",
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  }).catch(() => {});
+
   // Real money movement — deliberately outside any DB transaction, so a
   // slow/failed call never holds a transaction open.
   let payout;
@@ -93,7 +104,7 @@ export async function approveWithdrawal(
       operator,
       country,
       disburseId: `${requestId}-${Date.now()}`,
-      callbackUrl: `${new URL(getSiteEnv().SITE_URL).origin}/api/webhooks/providers/paydunya-payout`,
+      callbackUrl,
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : "Erreur inconnue.";

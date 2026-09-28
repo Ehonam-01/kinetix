@@ -52,7 +52,11 @@ async function disburseRequest(
 export function explainDisburseError(response: DisburseResponse): string {
   switch (String(response.response_code)) {
     case "4002":
-      return "Solde PayDunya insuffisant pour ce virement (ou URL de confirmation injoignable). Approvisionnez votre compte PayDunya puis réessayez.";
+      // PayDunya uses 4002 for two different problems — its response_text
+      // tells them apart ("the callback is not accessible", caught live).
+      return /callback/i.test(response.response_text ?? "")
+        ? "PayDunya n'a pas pu joindre l'URL de confirmation du site. Réessayez dans un instant ; si le problème persiste, vérifiez la variable SITE_URL."
+        : "Solde PayDunya insuffisant pour ce virement. Approvisionnez votre compte PayDunya puis réessayez.";
     case "401":
       return "Déboursement non autorisé : activez l'API de déboursement (PER) dans votre tableau de bord PayDunya.";
     case "1001":

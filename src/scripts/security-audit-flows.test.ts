@@ -392,6 +392,28 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       expect((await balanceRow(requestId))?.pendingBalance).toBe(5000);
     });
 
+    it("an unreachable callback URL is reported as such, not as a balance problem", async () => {
+      const { approveWithdrawal } = await import(
+        "@/services/admin/approve-withdrawal"
+      );
+      const admin = await makeUser("admin", { role: "ADMIN" });
+      const requestId = await confirmedWithdrawal("withdraw2b");
+      paydunyaDisburse({
+        invoice: {
+          body: {
+            response_code: "4002",
+            response_text: "the callback is not accessible",
+          },
+        },
+      });
+
+      await expect(approveWithdrawal(admin.id, requestId)).rejects.toThrow();
+      const row = await withdrawalRow(requestId);
+      expect(row.status).toBe("PENDING_REVIEW");
+      expect(row.payoutFailureReason).toContain("URL de confirmation");
+      expect(row.payoutFailureReason).not.toContain("Solde");
+    });
+
     it("an uncertain outcome stays PROCESSING, can't be re-sent, and is settled by checking the status", async () => {
       const { approveWithdrawal } = await import(
         "@/services/admin/approve-withdrawal"
@@ -476,13 +498,16 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       expect(row.payoutProviderReference).toBe("tok-5b");
     });
 
-    it("PayDunya's callback is only a signal: a forged one is refused, a real one is re-checked", async () => {
+    it("PayDunya's callback is only a signal: a forged one is ignored, a real one is re-checked", async () => {
       const { approveWithdrawal } = await import(
         "@/services/admin/approve-withdrawal"
       );
-      const { POST } = await import(
+      const { GET, POST } = await import(
         "@/app/api/webhooks/providers/paydunya-payout/route"
       );
+      // PayDunya's reachability probe must get a success, or it refuses to
+      // create the disbursement (4002 "the callback is not accessible").
+      expect((await GET()).status).toBe(200);
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw6");
       paydunyaDisburse({
@@ -503,7 +528,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
           ),
         );
 
-      expect((await callback("faux", "success")).status).toBe(400);
+      // Answered 200 (probe-friendly) but never acted on.
+      expect((await callback("faux", "success")).status).toBe(200);
       expect((await withdrawalRow(requestId)).status).toBe("PROCESSING");
 
       // A genuine callback claiming success while PayDunya's API still says
