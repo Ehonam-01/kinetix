@@ -1,4 +1,5 @@
 import "server-only";
+import { isPasswordPwned, PWNED_PASSWORD_MESSAGE } from "@/lib/pwned-password";
 import { createClient } from "@/lib/supabase/server";
 import {
   changePasswordSchema,
@@ -10,6 +11,7 @@ import {
 // the inbox is its own re-authentication.
 export async function changePassword(input: ChangePasswordInput) {
   const { currentPassword, password } = changePasswordSchema.parse(input);
+  if (await isPasswordPwned(password)) return { error: PWNED_PASSWORD_MESSAGE };
   const supabase = await createClient();
 
   const {

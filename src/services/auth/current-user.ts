@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
+import { getAdminMfaState } from "./admin-mfa";
 import { ensureProfile } from "./ensure-profile";
 
 export async function getCurrentUser() {
@@ -67,8 +68,13 @@ export async function requireActiveMember() {
   return current;
 }
 
+// Every admin page and admin action goes through here: role check, then the
+// second factor (services/auth/admin-mfa.ts) — an admin session that hasn't
+// entered its TOTP code is sent to /mfa, whatever it was trying to reach.
 export async function requireAdmin() {
   const current = await requireUser();
   if (current.profile.role !== "ADMIN") redirect("/dashboard");
+  const mfa = await getAdminMfaState();
+  if (mfa.status !== "verified") redirect("/mfa");
   return current;
 }

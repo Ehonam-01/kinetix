@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { isPasswordPwned, PWNED_PASSWORD_MESSAGE } from "@/lib/pwned-password";
 import { createClient } from "@/lib/supabase/server";
 import {
   findActiveProfileByUsername,
@@ -51,6 +52,10 @@ export async function registerUser(input: RegisterInput) {
   // slips through this window, see repositories/profiles.ts.
   if (await findProfileByUsername(username)) {
     return { error: "Ce pseudo est déjà pris." };
+  }
+
+  if (await isPasswordPwned(password)) {
+    return { error: PWNED_PASSWORD_MESSAGE };
   }
 
   const supabase = await createClient();
