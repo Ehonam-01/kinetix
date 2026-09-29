@@ -105,25 +105,25 @@ export function HeroSection() {
         className="bg-brand-accent/15 absolute right-0 bottom-0 size-96 rounded-full blur-3xl"
       />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pt-16 pb-12 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:gap-8 lg:px-8 lg:pt-24 lg:pb-16">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-10 sm:gap-12 sm:px-6 sm:pt-16 sm:pb-12 lg:grid-cols-[1.15fr_1fr] lg:gap-8 lg:px-8 lg:pt-24 lg:pb-16">
         <Reveal>
           <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
             <span className="bg-brand-accent size-1.5 rounded-full" />
             Formations · Mentorat · Communauté
           </p>
-          <h1 className="mt-6 text-4xl leading-[1.08] font-semibold tracking-tight text-white sm:text-5xl lg:text-[2.6rem] xl:text-[2.9rem]">
+          <h1 className="mt-5 text-[2.1rem] leading-[1.1] font-semibold tracking-tight text-white sm:mt-6 sm:text-5xl sm:leading-[1.08] lg:text-[2.6rem] xl:text-[2.9rem]">
             <span className="block">Les bonnes compétences.</span>
             <span className="block">Les bonnes personnes.</span>
             <span className="text-brand-accent block">
               Les bonnes opportunités.
             </span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-pretty text-white/75">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/75 sm:mt-6 sm:text-lg">
             Kinetix t&apos;aide à développer les compétences qui comptent,
             rencontrer les bonnes personnes et transformer ton potentiel en
             projets et opportunités.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
             <a
               href="/register"
               className={cn(
@@ -145,7 +145,10 @@ export function HeroSection() {
           </div>
         </Reveal>
 
-        <Reveal delayMs={150} className="relative mx-auto w-full max-w-md">
+        <Reveal
+          delayMs={150}
+          className="relative mx-auto w-full max-w-76 sm:max-w-md"
+        >
           <div className="relative aspect-square">
             {/* Accent ring behind the portrait. */}
             <div
@@ -168,12 +171,13 @@ export function HeroSection() {
               />
             </div>
 
-            {/* Floating cards — hidden on the narrowest screens, where they
-                would cover the portrait. */}
-            <div className="absolute top-4 -left-4 hidden sm:block lg:-left-10">
+            {/* Floating cards. On phones: two of them, shrunk (scale) and
+                anchored inside the portrait's box so nothing overflows the
+                screen; the mentoring card only shows from sm up. */}
+            <div className="absolute -top-2 -left-2 origin-top-left scale-[0.72] sm:top-4 sm:-left-4 sm:scale-100 lg:-left-10">
               <ProgressCard />
             </div>
-            <div className="absolute top-1/2 -right-4 hidden sm:block xl:-right-8">
+            <div className="absolute right-0 -bottom-3 origin-bottom-right scale-[0.72] sm:top-1/2 sm:-right-4 sm:bottom-auto sm:origin-center sm:scale-100 xl:-right-8">
               <LessonCard />
             </div>
             <div className="absolute bottom-2 left-2 hidden sm:block lg:-left-6">
@@ -186,13 +190,15 @@ export function HeroSection() {
       {/* Pillars strip — the reference design's partner-logo row, filled
           with what Kinetix actually offers rather than invented logos. */}
       <div className="relative border-t border-white/10">
-        <ul className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4 py-6 sm:px-6 lg:justify-between lg:px-8">
+        {/* Phones: a 2-column grid of chips (the odd last one spans both
+            columns); from sm up, a single row of plain labels. */}
+        <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 py-5 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-10 sm:gap-y-4 sm:px-6 sm:py-6 lg:justify-between lg:px-8">
           {PILLARS.map(({ icon: Icon, label }) => (
             <li
               key={label}
-              className="flex items-center gap-2 text-sm font-medium text-white/70"
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left text-xs leading-snug font-medium text-white/75 last:col-span-2 last:justify-center sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:text-sm sm:text-white/70"
             >
-              <Icon className="text-brand-accent size-4" />
+              <Icon className="text-brand-accent size-4 shrink-0" />
               {label}
             </li>
           ))}
