@@ -15,18 +15,27 @@ import type { WebhookEvent } from "./provider";
 // the WHERE-guarded UPDATE (status = 'PROCESSING') already makes every
 // transition idempotent — a replayed webhook simply finds no row to update
 // and no-ops, same TOCTOU-safe pattern as approveWithdrawal/rejectWithdrawal.
+//
+// outcome says what this call actually changed ("PAID" only on the one
+// call that moved the request to PAID), so the caller can email the member
+// once the transaction has committed (services/notifications/
+// withdrawal-emails.ts) — never from inside it.
 export async function processPayoutWebhookEvent(
   tx: Executor,
   event: WebhookEvent,
-) {
+): Promise<
+  | { processed: false }
+  | { processed: true; outcome: "PAID" | "FAILED" | null; requestId: string }
+> {
   const request = await findWithdrawalRequestByPayoutReference(
     tx,
     event.providerReference,
   );
   if (!request) {
-    return { processed: false as const };
+    return { processed: false };
   }
 
+  let outcome: "PAID" | "FAILED" | null = null;
   if (event.status === "CONFIRMED") {
     const [updated] = await tx
       .update(withdrawalRequests)
@@ -39,7 +48,7 @@ export async function processPayoutWebhookEvent(
       )
       .returning();
     if (!updated) {
-      return { processed: false as const };
+      return { processed: false };
     }
 
     await tx
@@ -67,6 +76,7 @@ export async function processPayoutWebhookEvent(
         metadata: { userId: request.userId, amount: request.amount },
       });
     }
+    outcome = "PAID";
   } else if (event.status === "FAILED") {
     const [updated] = await tx
       .update(withdrawalRequests)
@@ -82,7 +92,7 @@ export async function processPayoutWebhookEvent(
       )
       .returning();
     if (!updated) {
-      return { processed: false as const };
+      return { processed: false };
     }
 
     if (request.reviewedBy) {
@@ -94,7 +104,8 @@ export async function processPayoutWebhookEvent(
         metadata: { userId: request.userId, amount: request.amount },
       });
     }
+    outcome = "FAILED";
   }
 
-  return { processed: true as const };
+  return { processed: true, outcome, requestId: request.id };
 }

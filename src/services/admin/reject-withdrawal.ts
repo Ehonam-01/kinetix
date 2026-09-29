@@ -7,6 +7,7 @@ import { userBalances } from "@/db/schema/user-balances";
 import { withdrawalRequests } from "@/db/schema/withdrawals";
 import { logAdminAction } from "./audit-log";
 import { assertMaxLength, LONG_TEXT_MAX } from "./input-limits";
+import { notifyWithdrawal } from "@/services/notifications/withdrawal-emails";
 
 // Admin-only. Returns the amount from pending_balance to available_balance
 // and flips the linked ledger row PENDING -> REVERSED — never a new
@@ -25,7 +26,7 @@ export async function rejectWithdrawal(
   }
   assertMaxLength(trimmedReason, LONG_TEXT_MAX, "Motif de refus");
 
-  return db.transaction(async (tx) => {
+  const rejected = await db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),
     });
@@ -89,4 +90,7 @@ export async function rejectWithdrawal(
 
     return updated;
   });
+
+  await notifyWithdrawal(rejected.id, "REJECTED");
+  return rejected;
 }

@@ -11,6 +11,7 @@ import {
   PayoutUncertainError,
 } from "@/services/payments/payout-errors";
 import { logAdminAction } from "./audit-log";
+import { notifyWithdrawal } from "@/services/notifications/withdrawal-emails";
 
 // Thrown once a failed attempt's reason has already been saved on the
 // request (payoutFailureReason) — the admin page shows it from there, so
@@ -144,7 +145,7 @@ export async function approveWithdrawal(
     throw new PayoutAttemptFailedError(detail);
   }
 
-  return db.transaction(async (tx) => {
+  const { updated, paid } = await db.transaction(async (tx) => {
     const [updated] = await tx
       .update(withdrawalRequests)
       .set({ payoutProviderReference: payout.payoutProviderReference })
@@ -164,16 +165,21 @@ export async function approveWithdrawal(
       },
     });
 
+    let paid = false;
     if (payout.status === "success") {
-      await processPayoutWebhookEvent(tx, {
+      const result = await processPayoutWebhookEvent(tx, {
         providerReference: payout.payoutProviderReference,
         status: "CONFIRMED",
         eventType: "paydunya-payout:success",
         dedupeKey: `paydunya-payout:${payout.payoutProviderReference}:success`,
         raw: { status: payout.status },
       });
+      paid = result.processed && result.outcome === "PAID";
     }
 
-    return updated;
+    return { updated, paid };
   });
+
+  if (paid) await notifyWithdrawal(requestId, "PAID");
+  return updated;
 }
