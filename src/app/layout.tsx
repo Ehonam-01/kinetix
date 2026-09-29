@@ -25,6 +25,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for every page's canonical/Open Graph URLs (link
+  // previews on WhatsApp/Facebook, search engines) — the production
+  // address, not whichever deployment URL served the page.
+  metadataBase: process.env.SITE_URL
+    ? new URL(process.env.SITE_URL)
+    : undefined,
   title: SITE_NAME,
   description: "Formations, mentorat et communauté pour la jeunesse de demain.",
 };

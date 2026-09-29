@@ -6,7 +6,7 @@ import { listCoursesForUser, type CourseSummary } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { CourseCover } from "./_components/course-cover";
+import { CourseCover } from "@/components/course/course-cover";
 import { ProgressBar } from "./_components/progress-bar";
 
 function percentOf(course: CourseSummary) {

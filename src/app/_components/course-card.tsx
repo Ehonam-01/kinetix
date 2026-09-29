@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { BookOpen, Clock, GraduationCap } from "lucide-react";
+import { formatDuration } from "@/lib/utils";
 import type { MarketingCourseSummary } from "@/repositories/courses";
-
-function formatDuration(minutes: number) {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  return `${hours} h`;
-}
 
 export function CourseCard({ course }: { course: MarketingCourseSummary }) {
   return (
     <Link
-      href={`/dashboard/courses/${course.id}`}
+      href={`/formations/${course.slug ?? course.id}`}
       className="group border-border bg-card hover:border-brand-accent/40 flex flex-col overflow-hidden rounded-3xl border shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="from-brand-accent/15 to-accent relative flex aspect-video items-center justify-center overflow-hidden bg-linear-to-br">
@@ -47,7 +42,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
             <BookOpen className="size-3.5" />
             {course.moduleCount} module{course.moduleCount > 1 ? "s" : ""}
           </span>
-          {course.durationMinutes && (
+          {!!course.durationMinutes && (
             <span className="flex items-center gap-1">
               <Clock className="size-3.5" />
               {formatDuration(course.durationMinutes)}
@@ -55,7 +50,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
           )}
         </div>
 
-        <div className="border-border mt-4 flex items-center justify-between border-t pt-4">
+        <div className="border-border mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t pt-4">
           <span className="text-xs font-medium">
             {course.price ? (
               <>
@@ -72,7 +67,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
               </span>
             )}
           </span>
-          <span className="text-brand-accent text-sm font-medium">
+          <span className="text-brand-accent shrink-0 text-sm font-medium">
             Voir la formation →
           </span>
         </div>

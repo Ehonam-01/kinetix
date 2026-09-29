@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, or } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { courses, lessons, modules } from "@/db/schema/courses";
 import { lessonProgress } from "@/db/schema/lesson-progress";
@@ -7,6 +7,7 @@ import { profiles } from "@/db/schema/profiles";
 import { quizAttempts, quizzes } from "@/db/schema/quizzes";
 import { refunds } from "@/db/schema/refunds";
 import { sales } from "@/db/schema/sales";
+import { slugify } from "@/lib/utils";
 import { hasActiveSubscription } from "./subscriptions";
 
 // A single annual subscription unlocks every course (explicit user decision,
@@ -420,7 +421,7 @@ export type MarketingCourseSummary = {
 // db/schema/subscriptions.ts). Most recent first.
 export async function listPublishedCoursesForMarketing(
   executor: Executor,
-  limit = 6,
+  limit?: number,
 ): Promise<MarketingCourseSummary[]> {
   const rows = await executor.query.courses.findMany({
     where: and(eq(courses.status, "PUBLISHED"), eq(courses.isActive, true)),
@@ -593,4 +594,40 @@ export async function getCourseStats(
       };
     }),
   };
+}
+
+// A slug for a new course that no other course uses yet — two courses with
+// the same title used to collide on courses_slug_unique and fail to be
+// created. The second one gets "-2", the third "-3", and so on.
+export async function findAvailableSlug(executor: Executor, title: string) {
+  const base = slugify(title) || "formation";
+  const taken = new Set(
+    (
+      await executor.query.courses.findMany({
+        where: or(eq(courses.slug, base), like(courses.slug, `${base}-%`)),
+        columns: { slug: true },
+      })
+    ).map((c) => c.slug),
+  );
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n += 1;
+  return `${base}-${n}`;
+}
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// The public page of a formation (/formations/[slug]) — by slug, or by id
+// for a course without one and for referral links (/r/...?course=<id>).
+// Drafts and deactivated courses don't exist for visitors. The content
+// comes without any learner's progress: only titles are shown publicly.
+export async function getPublicCourse(executor: Executor, slugOrId: string) {
+  const course = await executor.query.courses.findFirst({
+    where: UUID_PATTERN.test(slugOrId)
+      ? eq(courses.id, slugOrId)
+      : eq(courses.slug, slugOrId),
+  });
+  if (!isCourseVisible(course)) return null;
+  return getCourseContent(executor, course!.id);
 }

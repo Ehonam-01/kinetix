@@ -19,7 +19,7 @@ import {
 } from "@/lib/course-navigation";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { buttonVariants } from "@/components/ui/button";
-import { CourseOutline } from "../../../_components/course-outline";
+import { CourseOutline } from "@/components/course/course-outline";
 import { LessonContent } from "@/components/lesson-content";
 import { ProgressBar } from "../../../_components/progress-bar";
 import { MarkCompleteButton } from "../../mark-complete-button";

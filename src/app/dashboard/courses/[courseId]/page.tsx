@@ -8,23 +8,16 @@ import {
   isCourseVisible,
 } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import {
   flattenLessons,
   getProgress,
   getResumeLesson,
 } from "@/lib/course-navigation";
 import { buttonVariants } from "@/components/ui/button";
-import { CourseCover } from "../_components/course-cover";
-import { CourseOutline } from "../_components/course-outline";
+import { CourseCover } from "@/components/course/course-cover";
+import { CourseOutline } from "@/components/course/course-outline";
 import { ProgressBar } from "../_components/progress-bar";
-
-function formatDuration(minutes: number) {
-  if (minutes < 60) return `${minutes} min`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
-}
 
 export default async function CourseDetailPage(
   props: PageProps<"/dashboard/courses/[courseId]">,

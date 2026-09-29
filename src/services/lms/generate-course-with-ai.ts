@@ -7,7 +7,7 @@ import { courses, lessons, modules } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { quizQuestions, quizzes, type QuizOption } from "@/db/schema/quizzes";
 import { getAnthropicEnv } from "@/config/env.anthropic";
-import { slugify } from "@/lib/utils";
+import { findAvailableSlug } from "@/repositories/courses";
 import { logAdminAction } from "@/services/admin/audit-log";
 import {
   assertMaxLength,
@@ -261,7 +261,7 @@ export async function persistGeneratedCourse(
       .insert(courses)
       .values({
         title: generated.title,
-        slug: slugify(generated.title),
+        slug: await findAvailableSlug(tx, generated.title),
         description: generated.description,
         category: generated.category,
         // Sum of the lessons' estimates, when Claude gave them.

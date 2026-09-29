@@ -54,13 +54,13 @@ export function FeaturedCourses({
               ))}
             </div>
             <div className="mt-10 text-center">
-              <a
-                href="#formations"
+              <Link
+                href="/formations"
                 className="text-brand-accent inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
               >
                 Voir toutes les formations
                 <ArrowRight className="size-4" />
-              </a>
+              </Link>
             </div>
           </>
         )}

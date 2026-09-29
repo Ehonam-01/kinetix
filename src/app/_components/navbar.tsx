@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "./logo";
 
 const NAV_LINKS = [
-  { href: "/#formations", label: "Formations" },
+  { href: "/formations", label: "Formations" },
   { href: "/#ia", label: "IA" },
   { href: "/#communaute", label: "Communauté" },
   { href: "/#comment-ca-marche", label: "Comment ça marche" },
