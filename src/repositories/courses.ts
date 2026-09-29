@@ -19,6 +19,13 @@ import { hasActiveSubscription } from "./subscriptions";
 // in the schema unused rather than dropped, same conserve-then-remove-later
 // discipline as the rest of this project's migrations. Admins bypass gating
 // entirely, for content review.
+// Whether members may see a course at all (admins see everything).
+export function isCourseVisible(
+  course: { status: string; isActive: boolean } | null | undefined,
+) {
+  return !!course && course.isActive && course.status === "PUBLISHED";
+}
+
 export async function hasCourseAccess(
   executor: Executor,
   userId: string,
@@ -28,6 +35,14 @@ export async function hasCourseAccess(
     where: eq(profiles.id, userId),
   });
   if (profile?.role === "ADMIN") return true;
+
+  // A draft or deactivated course is invisible to members, whatever they
+  // paid — this also closes the lesson actions (mark complete, quiz), which
+  // all go through this check.
+  const course = await executor.query.courses.findFirst({
+    where: eq(courses.id, courseId),
+  });
+  if (!isCourseVisible(course)) return false;
 
   if (await hasActiveSubscription(executor, userId)) return true;
 
@@ -209,6 +224,8 @@ export type CourseSummary = {
   id: string;
   title: string;
   description: string | null;
+  category: string | null;
+  thumbnailUrl: string | null;
   accessible: boolean;
   totalLessons: number;
   completedLessons: number;
@@ -228,8 +245,12 @@ export async function listCoursesForUser(
   const isAdmin = profile?.role === "ADMIN";
   const subscribed = await hasActiveSubscription(executor, userId);
 
+  // Only what's published: a draft or archived course never shows up in a
+  // member's catalog (it used to — only isActive was checked here, unlike
+  // the homepage's listPublishedCoursesForMarketing).
   const activeCourses = await executor.query.courses.findMany({
-    where: eq(courses.isActive, true),
+    where: and(eq(courses.isActive, true), eq(courses.status, "PUBLISHED")),
+    orderBy: desc(courses.createdAt),
   });
   if (activeCourses.length === 0) return [];
 
@@ -241,6 +262,8 @@ export async function listCoursesForUser(
       id: course.id,
       title: course.title,
       description: course.description,
+      category: course.category,
+      thumbnailUrl: course.thumbnailUrl,
       accessible: true,
       ...progressList[i],
     }));
@@ -289,6 +312,8 @@ export async function listCoursesForUser(
     id: course.id,
     title: course.title,
     description: course.description,
+    category: course.category,
+    thumbnailUrl: course.thumbnailUrl,
     accessible: purchasedCourseIds.has(course.id),
     ...progressList[i],
   }));

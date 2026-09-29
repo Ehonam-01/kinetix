@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { submitQuizAttemptAction } from "./actions";
 
 type QuizQuestionView = {
@@ -23,10 +24,14 @@ export function QuizForm({
   courseId,
   lessonId,
   questions,
+  next,
 }: {
   courseId: string;
   lessonId: string;
   questions: QuizQuestionView[];
+  // Where to go once passed — the next lesson (unlocked by this pass) or
+  // back to the course page after the last one.
+  next?: { href: string; label: string };
 }) {
   const [pending, startTransition] = useTransition();
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -67,6 +72,12 @@ export function QuizForm({
         <p className="text-muted-foreground text-sm">
           Cette leçon est marquée comme terminée.
         </p>
+        {next && (
+          <Link href={next.href} className={cn(buttonVariants(), "mt-2")}>
+            {next.label}
+            <ArrowRight className="size-4" />
+          </Link>
+        )}
       </div>
     );
   }

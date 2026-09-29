@@ -12,8 +12,9 @@ export async function submitQuizAttemptAction(
   const { profile } = await requireActiveMember();
   const result = await submitQuizAttempt(profile.id, lessonId, answers);
   if (result.passed) {
-    revalidatePath(`/dashboard/courses/${courseId}`);
-    revalidatePath(`/dashboard/courses/${courseId}/lessons/${lessonId}`);
+    // "layout" also refreshes every lesson page under this course — the
+    // next lesson may just have been unlocked.
+    revalidatePath(`/dashboard/courses/${courseId}`, "layout");
     revalidatePath("/dashboard/courses");
   }
   return result;
