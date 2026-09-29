@@ -7,6 +7,7 @@ import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { MobileSidebarProvider } from "@/components/mobile-sidebar-context";
+import { InstallAppBanner } from "@/components/pwa/install-app-banner";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardTopBar } from "./dashboard-topbar";
 import { FrozenAccountScreen } from "./frozen-account-screen";
@@ -102,7 +103,10 @@ export default async function DashboardLayout({
           />
           <div className="flex flex-1 flex-col overflow-y-auto">
             <DashboardTopBar memberName={profile.fullName} />
-            <main className="flex-1 px-4 py-6 sm:px-8">{children}</main>
+            <main className="flex-1 px-4 py-6 sm:px-8">
+              <InstallAppBanner />
+              {children}
+            </main>
           </div>
         </div>
       </div>
