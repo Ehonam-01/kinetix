@@ -3,7 +3,7 @@
 // placeholder to fill in — the legal pages render them highlighted so a
 // missing one can't go unnoticed in production.
 export const LEGAL_ENTITY = {
-  companyName: "NAMATECH",
+  companyName: "EXCELLENCIA GROUP LTD",
   legalForm: "[FORME JURIDIQUE — ex. SARL]",
   shareCapital: "[CAPITAL SOCIAL] F CFA",
   rccm: "[NUMÉRO RCCM]",
