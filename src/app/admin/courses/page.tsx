@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db/client";
 import { listAllCoursesForAdmin } from "@/repositories/courses";
+import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireAdmin } from "@/services/auth/current-user";
+
+const STATUS_LABEL = {
+  DRAFT: "Brouillon",
+  PUBLISHED: "Publié",
+  ARCHIVED: "Archivé",
+} as const;
 
 export default async function AdminCoursesPage() {
   // Re-checked here, not only in admin/layout.tsx: a layout isn't
@@ -57,9 +64,22 @@ export default async function AdminCoursesPage() {
                 </div>
                 <div className="flex-1">
                   <CardHeader className="px-0">
-                    <CardTitle>
+                    <CardTitle className="flex flex-wrap items-center gap-2">
                       {course.title}
                       {!course.isActive && " (inactif)"}
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-xs font-medium",
+                          course.status === "PUBLISHED" &&
+                            "bg-green-600/10 text-green-600",
+                          course.status === "DRAFT" &&
+                            "bg-muted text-muted-foreground",
+                          course.status === "ARCHIVED" &&
+                            "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {STATUS_LABEL[course.status]}
+                      </span>
                     </CardTitle>
                     {course.description && (
                       <CardDescription>{course.description}</CardDescription>

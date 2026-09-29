@@ -93,10 +93,13 @@ export function findLessonById(executor: Executor, lessonId: string) {
 // this specific member has completed it (used by the course detail page);
 // omitted, every lesson comes back with completed: false (used by
 // getCourseProgress below, which computes completion counts separately).
+// includeInactive is for the admin editor only: a hidden module or lesson
+// must stay listed there, or it could never be switched back on.
 export async function getCourseContent(
   executor: Executor,
   courseId: string,
   userId?: string,
+  { includeInactive = false }: { includeInactive?: boolean } = {},
 ) {
   const course = await executor.query.courses.findFirst({
     where: eq(courses.id, courseId),
@@ -104,17 +107,21 @@ export async function getCourseContent(
   if (!course) return null;
 
   const courseModules = await executor.query.modules.findMany({
-    where: and(eq(modules.courseId, courseId), eq(modules.isActive, true)),
+    where: includeInactive
+      ? eq(modules.courseId, courseId)
+      : and(eq(modules.courseId, courseId), eq(modules.isActive, true)),
     orderBy: asc(modules.position),
   });
 
   const moduleIds = courseModules.map((m) => m.id);
   const moduleLessons = moduleIds.length
     ? await executor.query.lessons.findMany({
-        where: and(
-          inArray(lessons.moduleId, moduleIds),
-          eq(lessons.isActive, true),
-        ),
+        where: includeInactive
+          ? inArray(lessons.moduleId, moduleIds)
+          : and(
+              inArray(lessons.moduleId, moduleIds),
+              eq(lessons.isActive, true),
+            ),
         orderBy: asc(lessons.position),
       })
     : [];
@@ -144,8 +151,16 @@ export async function getCourseContent(
         where: inArray(quizzes.lessonId, lessonIds),
       })
     : [];
+  // Only a text lesson can be passed through its quiz (submit-quiz-
+  // attempt.ts) — a quiz left behind on a lesson switched to video would
+  // otherwise lock the rest of the course for good.
+  const textLessonIds = new Set(
+    moduleLessons.filter((l) => l.lessonType === "TEXT").map((l) => l.id),
+  );
   const quizIdByLessonId = new Map(
-    lessonQuizzes.map((q) => [q.lessonId, q.id]),
+    lessonQuizzes
+      .filter((q) => textLessonIds.has(q.lessonId))
+      .map((q) => [q.lessonId, q.id]),
   );
 
   const quizIds = lessonQuizzes.map((q) => q.id);
@@ -325,6 +340,7 @@ export type AdminCourseSummary = {
   description: string | null;
   thumbnailUrl: string | null;
   isActive: boolean;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   moduleCount: number;
   lessonCount: number;
 };
@@ -378,6 +394,7 @@ export async function listAllCoursesForAdmin(
     description: course.description,
     thumbnailUrl: course.thumbnailUrl,
     isActive: course.isActive,
+    status: course.status,
     moduleCount: moduleCountByCourse.get(course.id) ?? 0,
     lessonCount: lessonCountByCourse.get(course.id) ?? 0,
   }));
@@ -462,4 +479,118 @@ export async function listPublishedCoursesForMarketing(
     moduleCount: moduleCountByCourse.get(course.id) ?? 0,
     lessonCount: lessonCountByCourse.get(course.id) ?? 0,
   }));
+}
+
+export type CourseStats = {
+  totalLessons: number;
+  // Members with at least one completed lesson (admins left out — their
+  // preview clicks would skew every number).
+  learners: number;
+  finished: number;
+  averagePercent: number;
+  lessons: {
+    id: string;
+    title: string;
+    moduleTitle: string;
+    completions: number;
+    quiz: { attempts: number; passRate: number; learnersPassed: number } | null;
+  }[];
+};
+
+// Per-course numbers for the admin editor: how many started, how many
+// finished, and — lesson by lesson, in course order — how many got through
+// it, which is where a drop-off shows up.
+export async function getCourseStats(
+  executor: Executor,
+  courseId: string,
+): Promise<CourseStats | null> {
+  const content = await getCourseContent(executor, courseId);
+  if (!content) return null;
+
+  const ordered = content.modules.flatMap((m) =>
+    m.lessons.map((l) => ({ ...l, moduleTitle: m.title })),
+  );
+  const lessonIds = ordered.map((l) => l.id);
+  const quizIds = ordered.flatMap((l) => (l.quizId ? [l.quizId] : []));
+
+  const admins = await executor.query.profiles.findMany({
+    where: eq(profiles.role, "ADMIN"),
+    columns: { id: true },
+  });
+  const adminIds = new Set(admins.map((a) => a.id));
+
+  const progressRows = lessonIds.length
+    ? (
+        await executor.query.lessonProgress.findMany({
+          where: inArray(lessonProgress.lessonId, lessonIds),
+          columns: { userId: true, lessonId: true },
+        })
+      ).filter((p) => !adminIds.has(p.userId))
+    : [];
+  const attemptRows = quizIds.length
+    ? (
+        await executor.query.quizAttempts.findMany({
+          where: inArray(quizAttempts.quizId, quizIds),
+          columns: { userId: true, quizId: true, passed: true },
+        })
+      ).filter((a) => !adminIds.has(a.userId))
+    : [];
+
+  const completedByUser = new Map<string, number>();
+  const completionsByLesson = new Map<string, number>();
+  for (const p of progressRows) {
+    completedByUser.set(p.userId, (completedByUser.get(p.userId) ?? 0) + 1);
+    completionsByLesson.set(
+      p.lessonId,
+      (completionsByLesson.get(p.lessonId) ?? 0) + 1,
+    );
+  }
+
+  const total = lessonIds.length;
+  const learners = completedByUser.size;
+  const finished = [...completedByUser.values()].filter(
+    (n) => total > 0 && n >= total,
+  ).length;
+  const averagePercent =
+    learners === 0 || total === 0
+      ? 0
+      : Math.round(
+          ([...completedByUser.values()].reduce((a, n) => a + n, 0) /
+            (learners * total)) *
+            100,
+        );
+
+  return {
+    totalLessons: total,
+    learners,
+    finished,
+    averagePercent,
+    lessons: ordered.map((l) => {
+      const attempts = l.quizId
+        ? attemptRows.filter((a) => a.quizId === l.quizId)
+        : [];
+      return {
+        id: l.id,
+        title: l.title,
+        moduleTitle: l.moduleTitle,
+        completions: completionsByLesson.get(l.id) ?? 0,
+        quiz: l.quizId
+          ? {
+              attempts: attempts.length,
+              passRate:
+                attempts.length === 0
+                  ? 0
+                  : Math.round(
+                      (attempts.filter((a) => a.passed).length /
+                        attempts.length) *
+                        100,
+                    ),
+              learnersPassed: new Set(
+                attempts.filter((a) => a.passed).map((a) => a.userId),
+              ).size,
+            }
+          : null,
+      };
+    }),
+  };
 }
