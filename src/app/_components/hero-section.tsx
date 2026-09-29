@@ -106,7 +106,9 @@ export function HeroSection() {
       />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-10 sm:gap-12 sm:px-6 sm:pt-16 sm:pb-12 lg:grid-cols-[1.15fr_1fr] lg:gap-8 lg:px-8 lg:pt-24 lg:pb-16">
-        <Reveal>
+        {/* Centered while copy and portrait are stacked (phones, tablets),
+            left-aligned once they sit side by side (lg). */}
+        <Reveal className="text-center lg:text-left">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
             <span className="bg-brand-accent size-1.5 rounded-full" />
             Formations · Mentorat · Communauté
@@ -118,12 +120,12 @@ export function HeroSection() {
               Les bonnes opportunités.
             </span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/75 sm:mt-6 sm:text-lg">
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-white/75 sm:mt-6 sm:text-lg lg:mx-0">
             Kinetix t&apos;aide à développer les compétences qui comptent,
             rencontrer les bonnes personnes et transformer ton potentiel en
             projets et opportunités.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:justify-center lg:justify-start">
             <a
               href="/register"
               className={cn(
@@ -190,13 +192,14 @@ export function HeroSection() {
       {/* Pillars strip — the reference design's partner-logo row, filled
           with what Kinetix actually offers rather than invented logos. */}
       <div className="relative border-t border-white/10">
-        {/* Phones: a 2-column grid of chips (the odd last one spans both
-            columns); from sm up, a single row of plain labels. */}
+        {/* Phones: a 2-column grid of centered chips, icon above label (the
+            odd last one spans both columns); from sm up, a single row of
+            plain icon + label items. */}
         <ul className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 py-5 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-10 sm:gap-y-4 sm:px-6 sm:py-6 lg:justify-between lg:px-8">
           {PILLARS.map(({ icon: Icon, label }) => (
             <li
               key={label}
-              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left text-xs leading-snug font-medium text-white/75 last:col-span-2 last:justify-center sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:text-sm sm:text-white/70"
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-center text-xs leading-snug font-medium text-white/75 last:col-span-2 sm:flex-row sm:gap-2 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:text-left sm:text-sm sm:text-white/70"
             >
               <Icon className="text-brand-accent size-4 shrink-0" />
               {label}
