@@ -9,10 +9,7 @@ export type ComingSoonCard = {
   icon: LucideIcon;
   title: string;
   description: string;
-  // When set, the card links to a real, live feature instead of showing
-  // the "Bientôt" badge — lets this shared shell host a mix of shipped and
-  // not-yet-shipped cards (e.g. Communauté is live, Mentorat isn't) without
-  // ever showing "coming soon" on something that already exists.
+  // When set, the whole card links to the live feature.
   href?: string;
   // Reserves real photo space above the card (MediaSlot — placeholder
   // until the file exists in /public, see media-slot.tsx). Optional: a
@@ -20,13 +17,11 @@ export type ComingSoonCard = {
   image?: { src: string; alt: string; brief: string };
 };
 
-// Shared shell for the two "vision" sections that don't have a real
-// product behind them yet (Communauté/Mentorat, Projets/Opportunités) —
-// explicit user decision: never fake member cards, testimonials or
-// activity to sell something that doesn't exist. "Bientôt disponible" is
-// the whole honesty budget here: describe the intent, mark it clearly as
-// not live, and point back to the one real action (joining) instead of a
-// dead end.
+// Shared shell for the two "vision" sections (Communauté/Mentorat,
+// Projets/Opportunités) — explicit user decision: never fake member cards,
+// testimonials or activity. No availability badge on the cards either
+// (explicit user decision: the community is live, on Discord); the
+// section points back to the one real action, joining.
 //
 // Cards are large and few (max 2 today) on purpose — a tight 2-up grid
 // with generous padding and big type reads as an editorial statement, not
@@ -79,21 +74,6 @@ export function ComingSoonSection({
                       className="-m-8 mb-6 aspect-video w-[calc(100%+4rem)] rounded-t-3xl rounded-b-none"
                     />
                   )}
-                  <span
-                    className={cn(
-                      "absolute top-6 right-6 rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase",
-                      card.image && "backdrop-blur-sm",
-                      card.href
-                        ? card.image
-                          ? "bg-green-600/90 text-white"
-                          : "bg-green-600/10 text-green-600"
-                        : card.image
-                          ? "bg-black/50 text-white"
-                          : "bg-muted-foreground/10 text-muted-foreground",
-                    )}
-                  >
-                    {card.href ? "Disponible" : "Bientôt"}
-                  </span>
                   <div className="bg-brand-accent/10 text-brand-accent flex size-12 items-center justify-center rounded-2xl">
                     <card.icon className="size-6" />
                   </div>
@@ -130,8 +110,7 @@ export function ComingSoonSection({
               Rejoindre Kinetix maintenant
             </Link>
             <p className="text-muted-foreground mt-3 text-xs">
-              Rejoins la communauté dès aujourd&apos;hui pour en profiter dès le
-              lancement.
+              Rejoins la communauté dès aujourd&apos;hui.
             </p>
           </div>
         </Reveal>
