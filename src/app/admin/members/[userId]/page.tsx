@@ -22,6 +22,7 @@ import {
 import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
 import { StatusActionButton } from "./status-action-button";
+import { requireAdmin } from "@/services/auth/current-user";
 
 // See admin/members/page.tsx's comment — same relabel, same reason.
 const STATUS_LABEL: Record<string, string> = {
@@ -41,6 +42,10 @@ const REWARD_STATUS_LABEL: Record<string, string> = {
 export default async function AdminMemberDetailPage(
   props: PageProps<"/admin/members/[userId]">,
 ) {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const { userId } = await props.params;
   const member = await findProfileById(userId);
   if (!member) notFound();

@@ -10,8 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RewardEditor } from "./reward-editor";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminLevelsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [stats, rewardCatalog] = await Promise.all([
     getLevelStats(db),
     listRewardCatalog(db),

@@ -1,6 +1,11 @@
 import { GenerateCourseForm } from "./generate-course-form";
+import { requireAdmin } from "@/services/auth/current-user";
 
-export default function GenerateCoursePage() {
+export default async function GenerateCoursePage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   return (
     <div className="space-y-6">
       <div>

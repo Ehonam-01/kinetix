@@ -15,10 +15,15 @@ import { CourseStatusForm } from "./course-status-form";
 import { EditModuleForm } from "./edit-module-form";
 import { EditPricingForm } from "./edit-pricing-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminCourseDetailPage(
   props: PageProps<"/admin/courses/[courseId]">,
 ) {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const { courseId } = await props.params;
   const content = await getCourseContent(db, courseId);
   if (!content) notFound();

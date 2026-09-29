@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/db/client";
 import { listMembers } from "@/repositories/admin-members";
 import { cn } from "@/lib/utils";
+import { requireAdmin } from "@/services/auth/current-user";
 
 // PENDING_PAYMENT's label was "En attente de paiement" pre-Phase-11 — the
 // enum value is unchanged (renaming it is a bigger, separate decision, not
@@ -31,6 +32,10 @@ function avatarColor(seed: string) {
 export default async function AdminMembersPage(
   props: PageProps<"/admin/members">,
 ) {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const { q } = await props.searchParams;
   const query = typeof q === "string" ? q.trim().toLowerCase() : "";
 

@@ -9,8 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminCoursesPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const courses = await listAllCoursesForAdmin(db);
 
   return (

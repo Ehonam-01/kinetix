@@ -7,10 +7,15 @@ import { findQuizByLessonId, findQuizQuestions } from "@/repositories/quizzes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditLessonForm } from "./edit-lesson-form";
 import { QuizEditor } from "./quiz-editor";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminLessonDetailPage(
   props: PageProps<"/admin/courses/[courseId]/lessons/[lessonId]">,
 ) {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const { courseId, lessonId } = await props.params;
   const lesson = await findLessonById(db, lessonId);
   if (!lesson) notFound();

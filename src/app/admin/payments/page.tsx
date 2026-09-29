@@ -4,6 +4,7 @@ import { getActiveProviderKey } from "@/repositories/payment-settings";
 import { cn } from "@/lib/utils";
 import { ProviderToggle } from "./provider-toggle";
 import { ReconcilePaymentButton } from "./reconcile-payment-button";
+import { requireAdmin } from "@/services/auth/current-user";
 
 const METHOD_LABEL: Record<string, string> = {
   MOBILE_MONEY: "Mobile money",
@@ -20,6 +21,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminPaymentsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [payments, activeProvider] = await Promise.all([
     listPayments(db),
     getActiveProviderKey(db),

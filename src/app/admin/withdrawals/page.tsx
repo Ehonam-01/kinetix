@@ -5,8 +5,13 @@ import {
 } from "@/repositories/withdrawals";
 import { CheckPayoutButton } from "./check-payout-button";
 import { ReviewActions } from "./review-actions";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminWithdrawalsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [requests, processing] = await Promise.all([
     listPendingWithdrawalRequestsForAdmin(db),
     listProcessingWithdrawalRequestsForAdmin(db),

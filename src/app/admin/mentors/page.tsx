@@ -1,8 +1,13 @@
 import { db } from "@/db/client";
 import { listApprovedMentors, listPendingMentorRequestsForAdmin } from "@/repositories/mentors";
 import { ReviewActions } from "./review-actions";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminMentorsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [requests, approved] = await Promise.all([
     listPendingMentorRequestsForAdmin(db),
     listApprovedMentors(db),

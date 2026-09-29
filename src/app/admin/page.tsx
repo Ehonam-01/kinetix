@@ -18,6 +18,7 @@ import { AdminRevenueChart } from "@/components/admin-revenue-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { AUDIT_ACTION_LABEL } from "./audit-action-labels";
+import { requireAdmin } from "@/services/auth/current-user";
 
 // Live financial data (chiffre d'affaires, commissions versées) must never
 // be frozen at build time — force-dynamic also sidesteps the build-time
@@ -27,6 +28,10 @@ import { AUDIT_ACTION_LABEL } from "./audit-action-labels";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [members, courses, rewards, recentActivity, stats, revenueHistory] =
     await Promise.all([
       listMembers(db),

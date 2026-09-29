@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EditParameterForm } from "./edit-parameter-form";
+import { requireAdmin } from "@/services/auth/current-user";
 
 const PARAMETER_LABEL: Record<string, string> = {
   "commission.level_1_bonus": "Bonus fin de niveau 1",
@@ -17,6 +18,10 @@ const PARAMETER_LABEL: Record<string, string> = {
 };
 
 export default async function AdminParametersPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const parameters = await listCurrentParameters(db);
 
   return (

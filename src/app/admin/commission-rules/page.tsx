@@ -14,6 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { NewGenerationRuleForm } from "./new-generation-rule-form";
 import { NewRuleForm } from "./new-rule-form";
+import { requireAdmin } from "@/services/auth/current-user";
 
 function describeDirectSaleRule(
   rule: Awaited<ReturnType<typeof listEffectiveDirectSaleRules>>[number],
@@ -46,6 +47,10 @@ function describeGenerationRule(
 }
 
 export default async function AdminCommissionRulesPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const [directSaleRules, generationRules, courses] = await Promise.all([
     listEffectiveDirectSaleRules(db),
     listEffectiveGenerationRules(db),

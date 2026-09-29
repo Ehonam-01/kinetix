@@ -2,8 +2,13 @@ import { db } from "@/db/client";
 import { listSubscriptionsForAdmin } from "@/repositories/subscriptions";
 import { cn } from "@/lib/utils";
 import { DeleteTestSubscriptionButton } from "./delete-test-subscription-button";
+import { requireAdmin } from "@/services/auth/current-user";
 
 export default async function AdminSubscriptionsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const subscriptions = await listSubscriptionsForAdmin(db);
 
   return (
