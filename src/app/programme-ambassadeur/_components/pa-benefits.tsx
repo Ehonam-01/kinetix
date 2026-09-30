@@ -7,10 +7,16 @@ const BENEFITS = [
   "Des commissions de génération sur le volume de ton équipe",
   "Un tableau de bord pour suivre tes souscriptions et commissions",
   "Des retraits vers mobile money",
-  "Un parcours de progression, du niveau Bronze à Diamant",
 ];
 
-export function PaBenefits() {
+export function PaBenefits({ levelNames }: { levelNames: string[] }) {
+  const benefits =
+    levelNames.length > 1
+      ? [
+          ...BENEFITS,
+          `Un parcours de progression, du niveau ${levelNames[0]} à ${levelNames.at(-1)}`,
+        ]
+      : BENEFITS;
   return (
     <section className="py-16 sm:py-24">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -22,7 +28,7 @@ export function PaBenefits() {
 
         <Reveal delayMs={100}>
           <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {BENEFITS.map((benefit) => (
+            {benefits.map((benefit) => (
               <div
                 key={benefit}
                 className="border-border bg-card flex items-center gap-3 rounded-xl border p-4"

@@ -1,7 +1,5 @@
 import { Reveal } from "@/app/_components/reveal";
 
-const LEVELS = ["Bronze", "Argent", "Or", "Platine", "Diamant"];
-
 const MARKERS = [
   "Compétences développées",
   "Activité réelle",
@@ -10,7 +8,7 @@ const MARKERS = [
   "Contribution à la communauté",
 ];
 
-export function PaProgression() {
+export function PaProgression({ levelNames }: { levelNames: string[] }) {
   return (
     <section className="bg-muted/40 py-16 sm:py-24">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
@@ -29,12 +27,12 @@ export function PaProgression() {
 
         <Reveal delayMs={100}>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {LEVELS.map((level, i) => (
+            {levelNames.map((level, i) => (
               <div key={level} className="flex items-center gap-2 sm:gap-3">
                 <span className="border-border bg-card rounded-full border px-4 py-2 text-sm font-semibold sm:px-5 sm:text-base">
                   {level}
                 </span>
-                {i < LEVELS.length - 1 && (
+                {i < levelNames.length - 1 && (
                   <span className="text-muted-foreground/50" aria-hidden="true">
                     →
                   </span>
