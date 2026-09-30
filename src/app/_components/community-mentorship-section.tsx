@@ -11,9 +11,10 @@ export function CommunityMentorshipSection() {
       cards={[
         {
           icon: Users2,
-          title: "Communauté",
+          title: "Communauté privée",
           description:
-            "Découvre qui apprend à tes côtés, quels objectifs ils poursuivent et quelles compétences ils développent.",
+            "Un Discord réservé aux membres : un salon par formation pour échanger avec ceux qui suivent la même, des ressources partagées et l'entraide au quotidien.",
+          href: "/dashboard/community",
           image: {
             src: "/community-photo.png",
             alt: "Membres de la communauté Kinetix qui échangent",

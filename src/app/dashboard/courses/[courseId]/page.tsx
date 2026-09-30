@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowRight, Clock, Layers, PartyPopper, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Clock,
+  Layers,
+  MessagesSquare,
+  PartyPopper,
+  Sparkles,
+} from "lucide-react";
 import { db } from "@/db/client";
 import {
   getCourseContent,
@@ -189,6 +196,26 @@ export default async function CourseDetailPage(
           />
         )}
       </section>
+
+      {access && (
+        <Link
+          href="/dashboard/community"
+          className="border-border bg-card hover:bg-muted/50 flex items-center gap-3 rounded-2xl border p-4 text-sm transition-colors"
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/10 text-[#5865F2]">
+            <MessagesSquare className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">
+              Échangez avec ceux qui suivent cette formation
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Son salon dédié vous attend sur le Discord des membres.
+            </p>
+          </div>
+          <ArrowRight className="text-muted-foreground size-4 shrink-0" />
+        </Link>
+      )}
     </div>
   );
 }

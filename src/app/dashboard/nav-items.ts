@@ -7,6 +7,7 @@ import {
   Gift,
   Landmark,
   LayoutGrid,
+  MessagesSquare,
   Layers,
   Settings,
   Share2,
@@ -60,6 +61,11 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   },
   { href: "/dashboard/courses", label: "Cours", icon: BookOpen },
   { href: "/dashboard/mentors", label: "Mentorat", icon: GraduationCap },
+  {
+    href: "/dashboard/community",
+    label: "Communauté",
+    icon: MessagesSquare,
+  },
   {
     href: "/dashboard/subscription",
     label: "Mon abonnement",
