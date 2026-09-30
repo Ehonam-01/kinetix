@@ -102,7 +102,10 @@ export default function MentionsLegalesPage() {
       </Section>
 
       <Section title="Droit applicable">
-        <p>Les présentes mentions légales sont régies par le droit togolais.</p>
+        <p>
+          Les présentes mentions légales sont régies par le droit anglais
+          (droit de l&apos;Angleterre et du pays de Galles).
+        </p>
       </Section>
     </LegalDocument>
   );

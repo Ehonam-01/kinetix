@@ -14,8 +14,9 @@ export const LEGAL_ENTITY = {
   phone: "+228 79 80 03 61",
   email: "contact@kinetix-africa.com",
   publicationDirector: "[NOM DU DIRECTEUR DE LA PUBLICATION]",
-  // Courts named in the terms of use for disputes.
-  jurisdiction: "Lomé",
+  // Governing law and courts named in the terms of use — the publisher's
+  // own jurisdiction.
+  jurisdiction: "d'Angleterre et du pays de Galles",
 } as const;
 
 export const LEGAL_LAST_UPDATED = "30 septembre 2026";

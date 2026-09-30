@@ -321,14 +321,18 @@ export default function ConditionsUtilisationPage() {
 
       <Section title="13. Droit applicable et litiges">
         <p>
-          Les présentes conditions sont régies par le droit togolais. En cas de
+          Les présentes conditions sont régies par le droit anglais (droit de
+          l&apos;Angleterre et du pays de Galles). En cas de
           différend, les parties recherchent d&apos;abord une solution amiable
           en écrivant à{" "}
           <a href={`mailto:${e.email}`} className="underline">
             {e.email}
           </a>
-          . À défaut d&apos;accord, les tribunaux compétents de {e.jurisdiction}{" "}
-          seront seuls compétents.
+          . À défaut d&apos;accord, le litige relève des tribunaux{" "}
+          {e.jurisdiction}. Ces choix ne privent pas le Membre qui agit en
+          tant que consommateur de la protection que lui accordent les règles
+          impératives de son pays de résidence, ni de la possibilité de saisir
+          les tribunaux de ce pays lorsque la loi le lui permet.
         </p>
       </Section>
     </LegalDocument>
