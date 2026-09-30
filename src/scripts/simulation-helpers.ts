@@ -60,8 +60,13 @@ async function runMigrations(client: PGlite) {
     )
       continue; // Supabase Storage, not app schema
     const sqlText = fs.readFileSync(path.join(dir, file), "utf8");
+    // Split on drizzle-kit's own separator too: generated migrations chain
+    // statements with ";--> statement-breakpoint", and a chunk holding
+    // several of them would be skipped as a whole by the filter below if
+    // just one mentions ROW LEVEL SECURITY (it once swallowed the indexes
+    // created next to one).
     const statements = sqlText
-      .split(/;\s*\n/)
+      .split(/--> statement-breakpoint|;\s*\n/)
       .map((s) => s.trim())
       .filter(Boolean);
     for (const stmt of statements) {

@@ -34,6 +34,8 @@ const LIMITS = {
   // Pseudo -> name previews (registration sponsor, transfer recipient).
   lookup: { tokens: 30, window: "1 m" },
   referralClick: { tokens: 30, window: "1 m" },
+  // Questions and answers under lessons, per member.
+  lessonPost: { tokens: 5, window: "1 m" },
 } as const satisfies Record<
   string,
   { tokens: number; window: `${number} ${"s" | "m" | "h"}` }

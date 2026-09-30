@@ -9,6 +9,7 @@ import {
   Landmark,
   LayoutGrid,
   Layers,
+  MessagesSquare,
   Percent,
   ReceiptText,
   ScrollText,
@@ -47,6 +48,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin/rewards", label: "Récompenses", icon: Gift },
   { href: "/admin/mentors", label: "Mentorat", icon: GraduationCap },
   { href: "/admin/courses", label: "Cours", icon: BookOpen },
+  { href: "/admin/discussions", label: "Discussions", icon: MessagesSquare },
   { href: "/admin/parameters", label: "Paramètres", icon: SlidersHorizontal },
   { href: "/admin/audit-logs", label: "Journal d'audit", icon: ScrollText },
 ];

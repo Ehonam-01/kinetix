@@ -23,6 +23,7 @@ import { CourseOutline } from "@/components/course/course-outline";
 import { LessonContent } from "@/components/lesson-content";
 import { ProgressBar } from "../../../_components/progress-bar";
 import { MarkCompleteButton } from "../../mark-complete-button";
+import { LessonDiscussion } from "./lesson-discussion";
 import { QuizForm } from "./quiz-form";
 
 // The single lesson player, for video and text lessons alike: the lesson
@@ -199,7 +200,9 @@ export default async function LessonDetailPage(
               href={lessonHref(previous.id)}
               className="hover:bg-muted flex min-w-0 flex-1 flex-col rounded-xl border p-3 text-sm"
             >
-              <span className="text-muted-foreground text-xs">← Précédente</span>
+              <span className="text-muted-foreground text-xs">
+                ← Précédente
+              </span>
               <span className="truncate font-medium">{previous.title}</span>
             </Link>
           ) : (
@@ -225,6 +228,12 @@ export default async function LessonDetailPage(
             <span className="flex-1" />
           )}
         </nav>
+
+        <LessonDiscussion
+          courseId={courseId}
+          lessonId={lessonId}
+          viewerId={profile.id}
+        />
       </div>
 
       <aside className="hidden lg:block">

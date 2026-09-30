@@ -128,6 +128,12 @@ export default function ConfidentialitePage() {
             domaine, présentation, avis) est visible des Membres.
           </li>
           <li>
+            <strong>Les Membres qui suivent la même formation</strong> voient
+            les questions et réponses que vous publiez sous ses leçons, avec
+            votre pseudo. Vous pouvez supprimer vos messages à tout moment ;
+            l&apos;équipe peut masquer un message contraire aux règles.
+          </li>
+          <li>
             <strong>L&apos;équipe {SITE_NAME}</strong>, pour le support, la
             validation des retraits et la gestion des comptes.
           </li>
