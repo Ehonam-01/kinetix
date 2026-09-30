@@ -5,6 +5,7 @@ import { financialTransactions } from "@/db/schema/financial-transactions";
 import { userBalances } from "@/db/schema/user-balances";
 import { withdrawalRequests } from "@/db/schema/withdrawals";
 import { MAX_OTP_ATTEMPTS, verifyOtpCode } from "./otp";
+import { notifyWithdrawal } from "@/services/notifications/withdrawal-emails";
 
 // Mirrors confirmTransfer (services/wallet/confirm-transfer.ts) — same
 // two-phase shape (validate the OTP outside any transaction so a wrong
@@ -70,7 +71,7 @@ export async function confirmWithdrawal(
     throw new Error("Code incorrect.");
   }
 
-  return db.transaction(async (tx) => {
+  const confirmed = await db.transaction(async (tx) => {
     const [locked] = await tx
       .update(withdrawalRequests)
       .set({ status: "PENDING_REVIEW", confirmedAt: sql`now()` })
@@ -125,4 +126,8 @@ export async function confirmWithdrawal(
 
     return updated;
   });
+
+  // After the commit, never inside it — and it never throws.
+  await notifyWithdrawal(confirmed.id, "RECEIVED");
+  return confirmed;
 }

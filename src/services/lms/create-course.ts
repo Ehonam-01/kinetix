@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
-import { slugify } from "@/lib/utils";
+import { findAvailableSlug } from "@/repositories/courses";
 import { logAdminAction } from "@/services/admin/audit-log";
 import {
   assertMaxLength,
@@ -49,7 +49,7 @@ export async function createCourse(
       .insert(courses)
       .values({
         title: input.title,
-        slug: slugify(input.title),
+        slug: await findAvailableSlug(tx, input.title),
         description: input.description,
         price: input.price,
         category: input.category,

@@ -41,7 +41,7 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
     {
       title: "Apprendre",
       links: [
-        { label: "Toutes les formations", href: "/#formations" },
+        { label: "Toutes les formations", href: "/formations" },
         { label: "Intelligence artificielle", href: "/#ia" },
         { label: "Comment ça marche", href: "/#comment-ca-marche" },
       ],

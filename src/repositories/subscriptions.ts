@@ -1,16 +1,29 @@
 import "server-only";
-import { and, desc, eq, gt, gte, inArray, isNull, lte, ne, sql } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  sql,
+} from "drizzle-orm";
 import type { Executor } from "@/db/executor";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { profiles } from "@/db/schema/profiles";
 import { subscriptionWalletRequests } from "@/db/schema/subscription-wallet-requests";
 import { subscriptions } from "@/db/schema/subscriptions";
+import { listAuthEmails } from "./auth-users";
 
 // Explicit product decision: once a subscription expires, the member keeps
 // full access for this many days (with an alert banner) and can still
 // renew on their own. Past it, the account is deactivated — no action at
 // all on the platform, no self-service payment either — until an admin
 // grants a new subscription (services/subscriptions/grant-subscription-credit.ts).
-export const GRACE_PERIOD_DAYS = 7;
+export const GRACE_PERIOD_DAYS = 14;
 
 export type SubscriptionStatus = {
   // Inside the paid period (expiresAt still in the future).
@@ -322,7 +335,10 @@ export function listPendingWalletPaymentRequestsForOwner(
       otpExpiresAt: subscriptionWalletRequests.otpExpiresAt,
     })
     .from(subscriptionWalletRequests)
-    .innerJoin(profiles, eq(profiles.id, subscriptionWalletRequests.buyerUserId))
+    .innerJoin(
+      profiles,
+      eq(profiles.id, subscriptionWalletRequests.buyerUserId),
+    )
     .where(
       and(
         eq(subscriptionWalletRequests.walletUserId, walletUserId),
@@ -332,4 +348,86 @@ export function listPendingWalletPaymentRequestsForOwner(
       ),
     )
     .orderBy(desc(subscriptionWalletRequests.createdAt));
+}
+
+export const GRACE_REMINDER_ACTION = "GRACE_REMINDER_SENT";
+
+export type GracePeriodMember = {
+  userId: string;
+  username: string;
+  fullName: string;
+  email: string | null;
+  expiresAt: Date;
+  graceEndsAt: Date;
+  graceDaysLeft: number;
+  lastReminderAt: Date | null;
+};
+
+// Members whose latest subscription has expired but who are still inside
+// the grace period — the accounts an admin should chase before they're
+// deactivated. Most urgent first. "Latest" matters: a member who already
+// renewed has a newer row and isn't listed.
+export async function listMembersInGracePeriod(
+  executor: Executor,
+): Promise<GracePeriodMember[]> {
+  const latest = await executor
+    .select({
+      userId: subscriptions.userId,
+      expiresAt: sql<Date>`max(${subscriptions.expiresAt})`,
+    })
+    .from(subscriptions)
+    .groupBy(subscriptions.userId)
+    .having(
+      sql`max(${subscriptions.expiresAt}) <= now() and max(${subscriptions.expiresAt}) > now() - make_interval(days => ${GRACE_PERIOD_DAYS})`,
+    );
+  if (latest.length === 0) return [];
+
+  const userIds = latest.map((r) => r.userId);
+  const [profileRows, emails, reminders] = await Promise.all([
+    executor.query.profiles.findMany({
+      where: inArray(profiles.id, userIds),
+      columns: { id: true, username: true, fullName: true, status: true },
+    }),
+    listAuthEmails(executor, userIds),
+    executor
+      .select({
+        userId: auditLogs.targetId,
+        lastAt: sql<Date>`max(${auditLogs.createdAt})`,
+      })
+      .from(auditLogs)
+      .where(
+        and(
+          eq(auditLogs.action, GRACE_REMINDER_ACTION),
+          inArray(auditLogs.targetId, userIds),
+        ),
+      )
+      .groupBy(auditLogs.targetId),
+  ]);
+  const profileById = new Map(profileRows.map((p) => [p.id, p]));
+  const emailById = new Map(emails.map((e) => [e.id, e.email]));
+  const reminderById = new Map(
+    reminders.map((r) => [r.userId, new Date(r.lastAt)]),
+  );
+
+  const now = Date.now();
+  return latest
+    .flatMap((row) => {
+      const profile = profileById.get(row.userId);
+      if (!profile || profile.status === "DELETED") return [];
+      const expiresAt = new Date(row.expiresAt);
+      const graceEndsAt = graceEndsAtFor(expiresAt);
+      return [
+        {
+          userId: row.userId,
+          username: profile.username,
+          fullName: profile.fullName,
+          email: emailById.get(row.userId) ?? null,
+          expiresAt,
+          graceEndsAt,
+          graceDaysLeft: Math.ceil((graceEndsAt.getTime() - now) / DAY_MS),
+          lastReminderAt: reminderById.get(row.userId) ?? null,
+        },
+      ];
+    })
+    .sort((a, b) => a.graceEndsAt.getTime() - b.graceEndsAt.getTime());
 }

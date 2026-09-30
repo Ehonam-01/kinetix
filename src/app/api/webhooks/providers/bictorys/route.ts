@@ -5,6 +5,7 @@ import { findWithdrawalRequestByPayoutReference } from "@/repositories/withdrawa
 import { bictorysProvider } from "@/services/payments/bictorys";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 import { processPayoutWebhookEvent } from "@/services/payments/handle-payout-webhook";
+import { notifyWithdrawal } from "@/services/notifications/withdrawal-emails";
 
 // URL path fixed to /api/webhooks/providers/bictorys deliberately — it must
 // match the "New webhook" URL entered in the Bictorys dashboard exactly
@@ -37,24 +38,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   }
 
-  await db.transaction(async (tx) => {
+  const payout = await db.transaction(async (tx) => {
     const payment = await findPaymentByProviderReference(
       tx,
       event.providerReference,
     );
     if (payment) {
       await processWebhookEvent(tx, event);
-      return;
+      return null;
     }
 
     const payoutRequest = await findWithdrawalRequestByPayoutReference(
       tx,
       event.providerReference,
     );
-    if (payoutRequest) {
-      await processPayoutWebhookEvent(tx, event);
-    }
+    return payoutRequest ? processPayoutWebhookEvent(tx, event) : null;
   });
+  if (payout?.processed && payout.outcome === "PAID") {
+    await notifyWithdrawal(payout.requestId, "PAID");
+  }
 
   return NextResponse.json({ received: true });
 }

@@ -78,7 +78,7 @@ export function AddLessonForm({
           </>
         ) : (
           <Input
-            placeholder="Contenu de l'article (optionnel pour l'instant)"
+            placeholder="Contenu (se rédige ensuite dans l'éditeur)"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="max-w-64"

@@ -7,6 +7,11 @@ import { createLesson } from "@/services/lms/create-lesson";
 import { updateModule } from "@/services/lms/update-module";
 import { updateCourseStatus } from "@/services/lms/update-course-status";
 import { updateCoursePricing } from "@/services/lms/update-course-pricing";
+import {
+  moveLesson,
+  moveModule,
+  type MoveDirection,
+} from "@/services/lms/reorder-course-items";
 import type {
   courseStatusEnum,
   lessonTypeEnum,
@@ -96,5 +101,26 @@ export async function updateCoursePricingAction(
   }
   revalidatePath(`/admin/courses/${courseId}`);
   revalidatePath("/");
+  return { error: null };
+}
+
+export async function moveCourseItemAction(
+  courseId: string,
+  kind: "module" | "lesson",
+  id: string,
+  direction: MoveDirection,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    if (kind === "module") await moveModule(profile.id, id, direction);
+    else await moveLesson(profile.id, id, direction);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  // "layout" also refreshes the learner pages under this course.
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePath(`/dashboard/courses/${courseId}`, "layout");
   return { error: null };
 }

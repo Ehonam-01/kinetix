@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import { updateLessonAction } from "./actions";
 
 const PROVIDERS = ["YOUTUBE", "VIMEO", "OTHER"] as const;
@@ -63,43 +64,45 @@ export function EditLessonForm({
   }
 
   return (
-    <div className="max-w-xl space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="lesson-title">Titre</Label>
-        <Input
-          id="lesson-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="lesson-description">Description</Label>
-        <Input
-          id="lesson-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="lesson-type">Type</Label>
-        <select
-          id="lesson-type"
-          value={lessonType}
-          onChange={(e) =>
-            setLessonType(e.target.value as (typeof LESSON_TYPES)[number])
-          }
-          className="border-input h-8 w-full rounded-lg border bg-transparent px-2.5 text-sm"
-        >
-          {LESSON_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {LESSON_TYPE_LABEL[t]}
-            </option>
-          ))}
-        </select>
+    <div className="space-y-4">
+      <div className="max-w-xl space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="lesson-title">Titre</Label>
+          <Input
+            id="lesson-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lesson-description">Description</Label>
+          <Input
+            id="lesson-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lesson-type">Type</Label>
+          <select
+            id="lesson-type"
+            value={lessonType}
+            onChange={(e) =>
+              setLessonType(e.target.value as (typeof LESSON_TYPES)[number])
+            }
+            className="border-input h-8 w-full rounded-lg border bg-transparent px-2.5 text-sm"
+          >
+            {LESSON_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {LESSON_TYPE_LABEL[t]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {lessonType === "VIDEO" ? (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid max-w-xl grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="lesson-provider">Fournisseur</Label>
             <select
@@ -129,12 +132,10 @@ export function EditLessonForm({
       ) : (
         <div className="space-y-2">
           <Label htmlFor="lesson-content">Contenu de l&apos;article</Label>
-          <textarea
+          <MarkdownEditor
             id="lesson-content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={10}
-            className="border-input w-full rounded-lg border bg-transparent p-2.5 text-sm"
+            onChange={setContent}
           />
         </div>
       )}

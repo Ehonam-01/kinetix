@@ -5,6 +5,7 @@ import { lessonProgress } from "@/db/schema/lesson-progress";
 import {
   findLessonById,
   findModuleById,
+  getCourseContent,
   hasCourseAccess,
 } from "@/repositories/courses";
 
@@ -27,6 +28,20 @@ export async function markLessonComplete(userId: string, lessonId: string) {
     const access = await hasCourseAccess(tx, userId, lessonModule.courseId);
     if (!access) {
       throw new Error("Vous n'avez pas accès à ce cours.");
+    }
+
+    // Same gate as submit-quiz-attempt.ts: a locked lesson can't be
+    // completed out of order, and a lesson with a quiz is only completed by
+    // passing it — never by a direct call to this action.
+    const content = await getCourseContent(tx, lessonModule.courseId, userId);
+    const lessonView = content?.modules
+      .flatMap((m) => m.lessons)
+      .find((l) => l.id === lessonId);
+    if (!lessonView || lessonView.locked) {
+      throw new Error("Cette leçon est verrouillée.");
+    }
+    if (lessonView.hasQuiz && lesson.lessonType === "TEXT") {
+      throw new Error("Réussis le quiz pour valider cette leçon.");
     }
 
     await tx

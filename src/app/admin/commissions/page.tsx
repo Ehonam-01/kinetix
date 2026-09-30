@@ -1,5 +1,6 @@
 import { db } from "@/db/client";
 import { listCommissionEvents } from "@/repositories/commission-events";
+import { requireAdmin } from "@/services/auth/current-user";
 
 const TYPE_LABEL: Record<string, string> = {
   DIRECT: "Commission directe",
@@ -8,6 +9,10 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default async function AdminCommissionsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const events = await listCommissionEvents(db);
 
   return (

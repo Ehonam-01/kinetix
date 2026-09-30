@@ -7,7 +7,7 @@ import { courses, lessons, modules } from "@/db/schema/courses";
 import { profiles } from "@/db/schema/profiles";
 import { quizQuestions, quizzes, type QuizOption } from "@/db/schema/quizzes";
 import { getAnthropicEnv } from "@/config/env.anthropic";
-import { slugify } from "@/lib/utils";
+import { findAvailableSlug } from "@/repositories/courses";
 import { logAdminAction } from "@/services/admin/audit-log";
 import {
   assertMaxLength,
@@ -46,6 +46,7 @@ const lessonSchema = z
     description: z.string().max(LONG_TEXT_MAX).optional(),
     lessonType: z.enum(["VIDEO", "TEXT"]),
     content: z.string().max(LESSON_CONTENT_MAX).optional(),
+    estimatedMinutes: z.number().int().min(1).max(240).optional(),
     quiz: quizSchema.optional(),
   })
   .refine((l) => l.lessonType !== "TEXT" || !!l.content?.trim(), {
@@ -101,7 +102,14 @@ const COURSE_TOOL = {
                   content: {
                     type: "string",
                     description:
-                      "Contenu complet de l'article en français, plusieurs paragraphes, pédagogique et concret — uniquement si lessonType=TEXT.",
+                      "Uniquement si lessonType=TEXT : l'article complet en Markdown (voir les consignes de rédaction).",
+                  },
+                  estimatedMinutes: {
+                    type: "integer",
+                    minimum: 1,
+                    maximum: 240,
+                    description:
+                      "Durée estimée de la leçon en minutes (lecture + quiz, ou durée de vidéo visée).",
                   },
                   quiz: {
                     type: "object",
@@ -161,6 +169,24 @@ export type GenerateCourseInput = {
   level?: string;
 };
 
+// How a TEXT lesson must be written — rendered by components/lesson-
+// content.tsx (react-markdown + GFM), so every element listed here has a
+// matching style on the learner side.
+const WRITING_GUIDE = `Consignes de rédaction des articles (leçons TEXT) :
+- Écris en Markdown : sections avec des titres "## ", sous-parties "### " si besoin, jamais de titre "# ".
+- Commence par 1 à 2 phrases d'introduction qui disent ce que l'apprenant saura faire à la fin.
+- Paragraphes courts (2 à 4 phrases), listes à puces ou numérotées pour les étapes, **gras** pour les notions clés.
+- Au moins un exemple concret, ancré dans le contexte d'Afrique francophone (prix en FCFA, mobile money, WhatsApp, marchés locaux) quand c'est pertinent.
+- Un encadré "> **Astuce :** …" ou "> **Attention :** …" pour le conseil le plus important.
+- Un tableau Markdown seulement s'il compare vraiment plusieurs options.
+- Termine par une section "## À retenir" de 3 à 5 puces.
+- Environ 500 à 900 mots par article. Pas de HTML, pas d'images, pas de liens inventés.
+- N'invente jamais de chiffres, de statistiques ou de témoignages présentés comme réels.`;
+
+// Room for a full course of articles. Streamed (below): a non-streamed call
+// this large is refused by the SDK, and streaming keeps the connection alive.
+const MAX_TOKENS = 20_000;
+
 // Only this function touches the network — persistGeneratedCourse below
 // takes a plain GeneratedCourse object, so the DB-writing half is fully
 // testable with a hand-built payload, without a real API key.
@@ -176,20 +202,30 @@ export async function callClaudeForCourseOutline(
         ? "Toutes les leçons doivent être de type TEXT, avec un contenu d'article complet et un quiz de compréhension de 2 à 4 questions."
         : "Mélange les leçons VIDEO et TEXT selon ce qui est le plus adapté à chaque sujet — les leçons TEXT ont un contenu d'article complet et un quiz de compréhension de 2 à 4 questions ; les leçons VIDEO n'ont ni contenu ni quiz.";
 
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 8000,
-    system:
-      "Tu conçois des plans de formation professionnels en français, pour une plateforme de cours en ligne. Contenu concret et pratique, sans promesses irréalistes (jamais de promesse de revenu ou d'enrichissement).",
-    messages: [
-      {
-        role: "user",
-        content: `Crée le plan complet d'un cours sur : "${input.topic}"${input.level ? ` (niveau : ${input.level})` : ""}. Le cours doit avoir environ ${input.moduleCount} modules. ${contentTypeInstruction}`,
-      },
-    ],
-    tools: [COURSE_TOOL],
-    tool_choice: { type: "tool", name: "create_course_outline" },
-  });
+  const message = await client.messages
+    .stream({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system: `Tu conçois des formations professionnelles en français, pour une plateforme de cours en ligne destinée à un public d'Afrique francophone. Contenu concret et pratique, sans promesses irréalistes (jamais de promesse de revenu ou d'enrichissement).
+
+${WRITING_GUIDE}`,
+      messages: [
+        {
+          role: "user",
+          content: `Crée le plan complet d'un cours sur : "${input.topic}"${input.level ? ` (niveau : ${input.level})` : ""}. Le cours doit avoir environ ${input.moduleCount} modules. ${contentTypeInstruction}`,
+        },
+      ],
+      tools: [COURSE_TOOL],
+      tool_choice: { type: "tool", name: "create_course_outline" },
+    })
+    .finalMessage();
+
+  // Cut off mid-answer: the plan is incomplete, whatever the parser says.
+  if (message.stop_reason === "max_tokens") {
+    throw new Error(
+      "La formation demandée est trop longue pour être générée d'un coup. Réessaie avec moins de modules.",
+    );
+  }
 
   const toolUse = message.content.find((block) => block.type === "tool_use");
   if (!toolUse || toolUse.type !== "tool_use") {
@@ -225,9 +261,14 @@ export async function persistGeneratedCourse(
       .insert(courses)
       .values({
         title: generated.title,
-        slug: slugify(generated.title),
+        slug: await findAvailableSlug(tx, generated.title),
         description: generated.description,
         category: generated.category,
+        // Sum of the lessons' estimates, when Claude gave them.
+        durationMinutes:
+          generated.modules
+            .flatMap((m) => m.lessons)
+            .reduce((total, l) => total + (l.estimatedMinutes ?? 0), 0) || null,
         status: "DRAFT",
         isActive: true,
       })
@@ -307,6 +348,13 @@ export async function generateCourseWithAI(
   // bounded separately, by generatedCourseSchema above.
   assertMaxLength(input.topic, LONG_TEXT_MAX, "Sujet");
   assertMaxLength(input.level, SHORT_TEXT_MAX, "Niveau");
+  if (
+    !Number.isInteger(input.moduleCount) ||
+    input.moduleCount < 1 ||
+    input.moduleCount > 10
+  ) {
+    throw new Error("Le nombre de modules doit être compris entre 1 et 10.");
+  }
   const generated = await callClaudeForCourseOutline(input);
   return persistGeneratedCourse(adminUserId, generated);
 }

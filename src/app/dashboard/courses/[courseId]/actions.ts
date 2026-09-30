@@ -10,6 +10,7 @@ export async function markLessonCompleteAction(
 ) {
   const { profile } = await requireActiveMember();
   await markLessonComplete(profile.id, lessonId);
-  revalidatePath(`/dashboard/courses/${courseId}`);
+  // "layout" also refreshes every lesson page under this course.
+  revalidatePath(`/dashboard/courses/${courseId}`, "layout");
   revalidatePath("/dashboard/courses");
 }

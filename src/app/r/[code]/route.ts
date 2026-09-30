@@ -52,9 +52,9 @@ export async function GET(
     landingPath: `/r/${parsedCode.data}`,
   });
 
-  const destination = courseId
-    ? `${origin}/dashboard/courses/${courseId}`
-    : origin;
+  // The formation's public page (it redirects itself to its slug), not
+  // /dashboard/..., which would put a login wall in front of a visitor.
+  const destination = courseId ? `${origin}/formations/${courseId}` : origin;
   const response = NextResponse.redirect(destination);
 
   if (click) {

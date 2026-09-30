@@ -27,9 +27,12 @@ vi.mock("@/db/client", () => ({
 
 type SentEmail = { to: string; subject: string; html: string };
 const sentEmails: SentEmail[] = [];
+// Simulates Resend being down.
+let emailsFail = false;
 vi.mock("@/services/notifications/resend-email", () => ({
   resendEmailProvider: {
     sendEmail: async (input: SentEmail) => {
+      if (emailsFail) throw new Error("Resend indisponible");
       sentEmails.push(input);
     },
   },
@@ -541,6 +544,99 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       paydunyaDisburse({ invoice: "network", check: statusIs("success") });
       await callback(PAYDUNYA_HASH, "success");
       expect((await withdrawalRow(requestId)).status).toBe("PAID");
+    });
+
+    it("emails the member when a withdrawal is received, paid (once) or rejected", async () => {
+      const { requestWithdrawal } = await import(
+        "@/services/wallet/request-withdrawal"
+      );
+      const { confirmWithdrawal } = await import(
+        "@/services/wallet/confirm-withdrawal"
+      );
+      const { approveWithdrawal } = await import(
+        "@/services/admin/approve-withdrawal"
+      );
+      const { rejectWithdrawal } = await import(
+        "@/services/admin/reject-withdrawal"
+      );
+      const { syncPaydunyaPayout } = await import(
+        "@/services/payments/sync-paydunya-payout"
+      );
+      const admin = await makeUser("admin", { role: "ADMIN" });
+      const subjectsSentTo = (email: string) =>
+        sentEmails.filter((m) => m.to === email).map((m) => m.subject);
+
+      // Received, then paid right away — then PayDunya's callback confirms
+      // the same transfer again: still a single "effectué" email.
+      const paid = await makeUser("mailpaid", { balance: 10000 });
+      const r1 = await requestWithdrawal(
+        paid.id,
+        5000,
+        "+221770000001",
+        "ORANGE_MONEY",
+        "SN",
+      );
+      await confirmWithdrawal(paid.id, r1.id, lastCodeSentTo(paid.email));
+      expect(subjectsSentTo(paid.email).at(-1)).toMatch(
+        /^Demande de retrait de 5.000 F reçue$/,
+      );
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-mail"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("success"),
+      });
+      await approveWithdrawal(admin.id, r1.id);
+      await syncPaydunyaPayout("tok-mail");
+      const paidMails = sentEmails.filter(
+        (m) => m.to === paid.email && m.subject.includes("effectué"),
+      );
+      expect(paidMails).toHaveLength(1);
+      expect(paidMails[0].html).toContain("+221770000001");
+
+      // Rejected: the admin's reason is shown, escaped.
+      const rejected = await makeUser("mailrej", { balance: 10000 });
+      const r2 = await requestWithdrawal(
+        rejected.id,
+        3000,
+        "+221770000002",
+        "ORANGE_MONEY",
+        "SN",
+      );
+      await confirmWithdrawal(
+        rejected.id,
+        r2.id,
+        lastCodeSentTo(rejected.email),
+      );
+      await rejectWithdrawal(admin.id, r2.id, "Numéro <b>incorrect</b>");
+      const rejectMail = sentEmails
+        .filter((m) => m.to === rejected.email)
+        .at(-1)!;
+      expect(rejectMail.subject).toMatch(/refusée$/);
+      expect(rejectMail.html).toContain("Numéro &lt;b&gt;incorrect&lt;/b&gt;");
+      expect(rejectMail.html).toContain("recrédité");
+
+      // Resend down: the withdrawal is still paid, nothing thrown.
+      const noMail = await makeUser("mailfail", { balance: 10000 });
+      const r3 = await requestWithdrawal(
+        noMail.id,
+        2000,
+        "+221770000003",
+        "ORANGE_MONEY",
+        "SN",
+      );
+      await confirmWithdrawal(noMail.id, r3.id, lastCodeSentTo(noMail.email));
+      paydunyaDisburse({
+        invoice: invoiceOk("tok-mailfail"),
+        submit: { body: { response_code: "00" } },
+        check: statusIs("success"),
+      });
+      emailsFail = true;
+      try {
+        await approveWithdrawal(admin.id, r3.id);
+      } finally {
+        emailsFail = false;
+      }
+      expect((await withdrawalRow(r3.id)).status).toBe("PAID");
     });
 
     it("an operator PayDunya can't pay out to is refused when the withdrawal is requested", async () => {

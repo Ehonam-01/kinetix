@@ -2,6 +2,7 @@ import { db } from "@/db/client";
 import { listAllMemberRewards } from "@/repositories/member-rewards";
 import { cn } from "@/lib/utils";
 import { DeliveryStatusButton } from "./delivery-status-button";
+import { requireAdmin } from "@/services/auth/current-user";
 
 const STATUS_LABEL: Record<string, string> = {
   ELIGIBLE: "À réclamer",
@@ -11,6 +12,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminRewardsPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const rewards = await listAllMemberRewards(db);
 
   return (

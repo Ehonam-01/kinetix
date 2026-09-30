@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { BalanceEvolutionChart } from "@/components/balance-evolution-chart";
-import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner";
 
 // A plain customer never sees the MLM tree, commissions, generations,
 // level, or ambassador balance (section 23 of the master prompt) — only
@@ -73,8 +72,6 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
-
-        <SubscriptionAlertBanner status={subscription} />
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
@@ -160,7 +157,6 @@ export default async function DashboardPage() {
     courses,
     rewards,
     subscriptionReferrals,
-    subscription,
   ] = await Promise.all([
     getBalance(db, profile.id),
     getBalanceHistory(db, profile.id, 30),
@@ -169,7 +165,6 @@ export default async function DashboardPage() {
     listCoursesForUser(db, profile.id),
     listMemberRewards(db, profile.id),
     listSubscriptionsForAmbassador(db, profile.id),
-    getSubscriptionStatus(db, profile.id),
   ]);
 
   const currentLevel = levelProgress
@@ -187,8 +182,6 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
-
-      <SubscriptionAlertBanner status={subscription} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard

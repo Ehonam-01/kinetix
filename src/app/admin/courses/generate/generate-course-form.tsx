@@ -102,6 +102,12 @@ export function GenerateCourseForm() {
         <Sparkles className="size-4" />
         {pending ? "Génération en cours..." : "Générer le cours"}
       </Button>
+      {pending && (
+        <p className="text-muted-foreground text-sm">
+          Claude rédige les modules, les articles et les quiz — cela peut
+          prendre 2 à 4 minutes. Garde cette page ouverte.
+        </p>
+      )}
     </div>
   );
 }

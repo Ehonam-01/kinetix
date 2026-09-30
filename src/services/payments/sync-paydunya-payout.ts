@@ -6,6 +6,7 @@ import {
   checkPaydunyaPayoutStatus,
   type PaydunyaPayoutStatus,
 } from "./paydunya-payout";
+import { notifyWithdrawal } from "@/services/notifications/withdrawal-emails";
 
 // Applies a PayDunya disbursement's real outcome to its withdrawal request —
 // called by PayDunya's callback (app/api/webhooks/providers/paydunya-payout)
@@ -26,7 +27,7 @@ export async function syncPaydunyaPayout(
 
   const status = await checkPaydunyaPayoutStatus(providerReference);
   if (status !== "pending") {
-    await db.transaction((tx) =>
+    const result = await db.transaction((tx) =>
       processPayoutWebhookEvent(tx, {
         providerReference,
         status: status === "success" ? "CONFIRMED" : "FAILED",
@@ -35,6 +36,9 @@ export async function syncPaydunyaPayout(
         raw: { status },
       }),
     );
+    if (result.processed && result.outcome === "PAID") {
+      await notifyWithdrawal(result.requestId, "PAID");
+    }
   }
   return status;
 }

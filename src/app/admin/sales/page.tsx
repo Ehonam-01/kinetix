@@ -2,6 +2,7 @@ import { db } from "@/db/client";
 import { listSalesForAdmin } from "@/repositories/sales";
 import { cn } from "@/lib/utils";
 import { RefundButton } from "./refund-button";
+import { requireAdmin } from "@/services/auth/current-user";
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confirmée",
@@ -9,6 +10,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminSalesPage() {
+  // Re-checked here, not only in admin/layout.tsx: a layout isn't
+  // re-run on every navigation, so it can't be the only gate (Next.js
+  // authentication guide, "Layouts and auth checks").
+  await requireAdmin();
   const sales = await listSalesForAdmin(db);
 
   return (

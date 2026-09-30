@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner";
 import { PendingPaymentWatcher } from "./pending-payment-watcher";
 import { SubscriptionPanel } from "./subscription-panel";
 
@@ -43,8 +42,6 @@ export default async function SubscriptionPage() {
       {pendingPayment && (
         <PendingPaymentWatcher paymentId={pendingPayment.id} />
       )}
-
-      <SubscriptionAlertBanner status={status} />
 
       <Card>
         <CardHeader>
