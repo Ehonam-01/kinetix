@@ -3,6 +3,10 @@ import { Geist_Mono, Poppins } from "next/font/google";
 import { InlineScript } from "@/components/inline-script";
 import { PWA_INSTALL_CAPTURE_SCRIPT } from "@/components/pwa/install-app-banner";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
+import {
+  LaunchScreen,
+  LAUNCH_SCREEN_SCRIPT,
+} from "@/components/pwa/launch-screen";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SITE_NAME } from "@/config/site";
 import "./globals.css";
@@ -63,10 +67,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <InlineScript html={THEME_INIT_SCRIPT} />
         <InlineScript html={PWA_INSTALL_CAPTURE_SCRIPT} />
+        <InlineScript html={LAUNCH_SCREEN_SCRIPT} />
       </head>
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <ThemeProvider>{children}</ThemeProvider>
         <ServiceWorkerRegister />
+        <LaunchScreen />
       </body>
     </html>
   );

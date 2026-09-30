@@ -1,13 +1,24 @@
 // Kinetix Africa service worker — deliberately minimal.
 //
 // It never caches pages, API responses or anything behind a login: member
-// data, balances and payments must always come fresh from the server. Its
-// only job is to show /offline.html (instead of the browser's own error
-// page) when a page can't be reached because the phone has no connection.
-// Bump CACHE when offline.html or the icons change.
-const CACHE = "kinetix-offline-v1";
+// data, balances and payments must always come fresh from the server. It
+// shows /offline.html (instead of the browser's own error page) when a page
+// can't be reached because the phone has no connection, and serves the few
+// static images listed in PRECACHE from its cache.
+// Bump CACHE when any PRECACHE file changes.
+const CACHE = "kinetix-offline-v2";
 const OFFLINE_URL = "/offline.html";
-const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png"];
+// The offline page and its icon, plus the launch screen's images so every
+// launch after the first shows them instantly
+// (components/pwa/launch-screen.tsx).
+const PRECACHE = [
+  OFFLINE_URL,
+  "/icons/icon-192.png",
+  "/launch/mark.png",
+  "/launch/photo-1.jpg",
+  "/launch/photo-2.jpg",
+  "/launch/photo-3.jpg",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

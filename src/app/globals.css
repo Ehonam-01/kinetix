@@ -184,3 +184,210 @@
     animation: none;
   }
 }
+
+/* Launch screen of the installed app (components/pwa/launch-screen.tsx).
+   Hidden unless LAUNCH_SCREEN_SCRIPT set html.kx-launch-on. Starts as the
+   phone's own splash (white, mark centered) then, over ~2 s: the mark
+   pulses and rings ripple out, three photos pop into orbit, the name and
+   tagline rise, the bar fills, and the whole screen fades away — all in
+   CSS, so it leaves even if the page's JavaScript is slow. Fixed light
+   colors on purpose: it continues the (white) system splash. */
+.kx-launch {
+  display: none;
+}
+html.kx-launch-on .kx-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  animation: kx-exit 0.45s cubic-bezier(0.4, 0, 1, 1) 2.1s forwards;
+}
+.kx-stage {
+  position: relative;
+  width: 0;
+  height: 0;
+  animation: kx-lift 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+}
+.kx-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 84px;
+  height: auto;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  animation: kx-pulse 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+.kx-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 120px;
+  height: 120px;
+  border: 2px solid #2563eb;
+  border-radius: 9999px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  animation: kx-ripple 1.4s ease-out 0.25s infinite;
+}
+.kx-ring-2 {
+  border-color: #e8742a;
+  animation-delay: 0.7s;
+}
+.kx-photo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  max-width: none;
+  border: 3px solid #ffffff;
+  border-radius: 9999px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgb(19 26 42 / 0.18);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: kx-orbit 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.kx-photo-1 {
+  --x: -96px;
+  --y: -74px;
+  animation-delay: 0.4s;
+}
+.kx-photo-2 {
+  --x: 96px;
+  --y: -74px;
+  animation-delay: 0.55s;
+}
+.kx-photo-3 {
+  --x: 0px;
+  --y: 104px;
+  animation-delay: 0.7s;
+}
+.kx-text {
+  position: absolute;
+  left: 0;
+  top: 164px;
+  width: 280px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.kx-title {
+  margin: 0;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #131a2a;
+  animation: kx-rise 0.5s ease-out 0.85s both;
+}
+.kx-tagline {
+  margin: 0;
+  font-size: 13px;
+  color: #5a6478;
+  animation: kx-rise 0.5s ease-out 1.05s both;
+}
+.kx-progress {
+  display: block;
+  width: 120px;
+  height: 4px;
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #eef2f9;
+  animation: kx-rise 0.3s ease-out 0.9s both;
+}
+.kx-progress > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e8742a, #f5a524);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: kx-fill 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.9s forwards;
+}
+@keyframes kx-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  35% {
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+@keyframes kx-ripple {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+}
+@keyframes kx-orbit {
+  to {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)))
+      scale(1);
+  }
+}
+@keyframes kx-lift {
+  to {
+    transform: translateY(-48px);
+  }
+}
+@keyframes kx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kx-fill {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes kx-exit {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.04);
+  }
+}
+/* Reduced motion: the finished picture, shown briefly, then a plain fade. */
+@media (prefers-reduced-motion: reduce) {
+  html.kx-launch-on .kx-launch {
+    animation-delay: 1.2s;
+  }
+  .kx-launch * {
+    animation: none !important;
+  }
+  .kx-stage {
+    transform: translateY(-48px);
+  }
+  .kx-photo {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
+  }
+  .kx-progress > span {
+    transform: none;
+  }
+}
