@@ -3,6 +3,20 @@ import { asc, desc, eq } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { profiles } from "@/db/schema/profiles";
 import { withdrawalRequests } from "@/db/schema/withdrawals";
+import type { WithdrawalFeeSettings } from "@/lib/withdrawal-fee";
+import { getCurrentParameterValueOrNull } from "./parameter-versions";
+
+// The admin's current withdrawal fee settings (/admin/parameters). A key
+// missing from parameter_versions counts as no fee.
+export async function getWithdrawalFeeSettings(
+  executor: Executor,
+): Promise<WithdrawalFeeSettings> {
+  const [percentBp, fixed] = await Promise.all([
+    getCurrentParameterValueOrNull(executor, "withdrawal.fee_percent_bp"),
+    getCurrentParameterValueOrNull(executor, "withdrawal.fee_fixed"),
+  ]);
+  return { percentBp: percentBp ?? 0, fixed: fixed ?? 0 };
+}
 
 export function findWithdrawalRequestById(executor: Executor, id: string) {
   return executor.query.withdrawalRequests.findFirst({
@@ -44,6 +58,7 @@ export type AdminWithdrawalRequest = {
   username: string;
   fullName: string;
   amount: number;
+  feeAmount: number;
   payoutPhone: string;
   operator: string | null;
   country: string | null;
@@ -58,6 +73,7 @@ const ADMIN_WITHDRAWAL_REQUEST_COLUMNS = {
   username: profiles.username,
   fullName: profiles.fullName,
   amount: withdrawalRequests.amount,
+  feeAmount: withdrawalRequests.feeAmount,
   payoutPhone: withdrawalRequests.payoutPhone,
   operator: withdrawalRequests.operator,
   country: withdrawalRequests.country,

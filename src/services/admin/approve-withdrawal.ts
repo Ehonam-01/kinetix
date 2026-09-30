@@ -100,7 +100,8 @@ export async function approveWithdrawal(
   let payout;
   try {
     payout = await createPaydunyaPayout({
-      amount: claimed.amount,
+      // The fee stays on the platform: the member receives the net amount.
+      amount: claimed.amount - claimed.feeAmount,
       phone: claimed.payoutPhone,
       operator,
       country,
@@ -160,6 +161,7 @@ export async function approveWithdrawal(
       metadata: {
         userId: claimed.userId,
         amount: claimed.amount,
+        feeAmount: claimed.feeAmount,
         payoutProviderReference: payout.payoutProviderReference,
         provider: "PAYDUNYA",
       },

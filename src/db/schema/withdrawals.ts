@@ -84,6 +84,12 @@ export const withdrawalRequests = pgTable(
       .notNull()
       .references(() => profiles.id),
     amount: integer("amount").notNull(),
+    // Withdrawal fee, snapshotted when the member requests the withdrawal
+    // (parameters withdrawal.fee_percent_bp + withdrawal.fee_fixed, see
+    // lib/withdrawal-fee.ts) and deducted from `amount`: the balance is
+    // debited `amount`, the member receives amount - fee_amount. 0 for
+    // every request made before fees existed.
+    feeAmount: integer("fee_amount").notNull().default(0),
     payoutPhone: text("payout_phone").notNull(),
     // Nullable: rows created before this column existed were already
     // resolved (PAID/REJECTED/EXPIRED) and never need a payout call. Every

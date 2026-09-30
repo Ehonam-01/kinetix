@@ -393,6 +393,13 @@
       "when": 1790767898874,
       "tag": "0055_four_level_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1790772459500,
+      "tag": "0056_withdrawal_fees",
+      "breakpoints": true
     }
   ]
 }

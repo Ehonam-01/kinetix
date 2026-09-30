@@ -21,8 +21,8 @@ export default async function AdminWithdrawalsPage() {
     <div className="space-y-8">
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          {requests.length} demande(s) en attente de validation. « Déclencher
-          le virement » envoie un virement PayDunya réel vers le numéro mobile
+          {requests.length} demande(s) en attente de validation. « Déclencher le
+          virement » envoie un virement PayDunya réel vers le numéro mobile
           money indiqué, depuis le solde de votre compte PayDunya — la demande
           passe automatiquement à « Payé » une fois le virement confirmé.
         </p>
@@ -42,6 +42,16 @@ export default async function AdminWithdrawalsPage() {
                   <div>
                     <p className="font-medium">
                       {r.amount.toLocaleString("fr-FR")} F · {r.username}
+                      {r.feeAmount > 0 && (
+                        <span className="text-muted-foreground font-normal">
+                          {" "}
+                          · {r.feeAmount.toLocaleString("fr-FR")} F de frais ·{" "}
+                          <strong className="text-foreground">
+                            {(r.amount - r.feeAmount).toLocaleString("fr-FR")} F
+                            à verser
+                          </strong>
+                        </span>
+                      )}
                     </p>
                     <p className="text-muted-foreground text-xs">
                       Numéro : {r.payoutPhone}
@@ -81,6 +91,16 @@ export default async function AdminWithdrawalsPage() {
               >
                 <p className="font-medium">
                   {r.amount.toLocaleString("fr-FR")} F · {r.username}
+                  {r.feeAmount > 0 && (
+                    <span className="text-muted-foreground font-normal">
+                      {" "}
+                      · {r.feeAmount.toLocaleString("fr-FR")} F de frais ·{" "}
+                      <strong className="text-foreground">
+                        {(r.amount - r.feeAmount).toLocaleString("fr-FR")} F à
+                        verser
+                      </strong>
+                    </span>
+                  )}
                 </p>
                 <p className="text-muted-foreground text-xs">
                   Numéro : {r.payoutPhone}

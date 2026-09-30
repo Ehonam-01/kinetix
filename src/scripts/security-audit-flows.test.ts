@@ -158,16 +158,18 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   }, 120_000);
 
   it("H2 — 50 concurrent wrong OTP attempts never exceed the 5-attempt cap", async () => {
-    const { initiateTransfer } = await import(
-      "@/services/wallet/initiate-transfer"
-    );
-    const { confirmTransfer } = await import(
-      "@/services/wallet/confirm-transfer"
-    );
+    const { initiateTransfer } =
+      await import("@/services/wallet/initiate-transfer");
+    const { confirmTransfer } =
+      await import("@/services/wallet/confirm-transfer");
     const sender = await makeUser("sender", { balance: 10000 });
     const recipient = await makeUser("recipient");
 
-    const transfer = await initiateTransfer(sender.id, recipient.username, 1000);
+    const transfer = await initiateTransfer(
+      sender.id,
+      recipient.username,
+      1000,
+    );
     const code = lastCodeSentTo(sender.email);
 
     const results = await Promise.allSettled(
@@ -182,7 +184,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     expect(incorrect).toHaveLength(5);
 
     // Cap reached: even the right code is refused now, nothing moved.
-    await expect(confirmTransfer(sender.id, transfer.id, code)).rejects.toThrow();
+    await expect(
+      confirmTransfer(sender.id, transfer.id, code),
+    ).rejects.toThrow();
     expect((await balanceOf(sender.id)).availableBalance).toBe(10000);
     expect((await balanceOf(recipient.id)).availableBalance).toBe(0);
 
@@ -194,12 +198,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   });
 
   it("H3 — only the wallet owner can confirm a third-party subscription payment", async () => {
-    const { requestSubscriptionWithWallet } = await import(
-      "@/services/subscriptions/request-subscription-wallet"
-    );
-    const { confirmSubscriptionWithWallet } = await import(
-      "@/services/subscriptions/confirm-subscription-wallet"
-    );
+    const { requestSubscriptionWithWallet } =
+      await import("@/services/subscriptions/request-subscription-wallet");
+    const { confirmSubscriptionWithWallet } =
+      await import("@/services/subscriptions/confirm-subscription-wallet");
     const owner = await makeUser("owner", { balance: 20000 });
     const buyer = await makeUser("buyer");
 
@@ -207,7 +209,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       buyerUserId: buyer.id,
       walletUsername: owner.username,
     });
-    const ownerEmail = [...sentEmails].reverse().find((m) => m.to === owner.email);
+    const ownerEmail = [...sentEmails]
+      .reverse()
+      .find((m) => m.to === owner.email);
     expect(ownerEmail?.html).toContain("Transférer");
     expect(ownerEmail?.html).toContain("Ne communiquez jamais ce code");
     const code = lastCodeSentTo(owner.email);
@@ -228,12 +232,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   });
 
   it("H3 — paying with your own wallet is unchanged", async () => {
-    const { requestSubscriptionWithWallet } = await import(
-      "@/services/subscriptions/request-subscription-wallet"
-    );
-    const { confirmSubscriptionWithWallet } = await import(
-      "@/services/subscriptions/confirm-subscription-wallet"
-    );
+    const { requestSubscriptionWithWallet } =
+      await import("@/services/subscriptions/request-subscription-wallet");
+    const { confirmSubscriptionWithWallet } =
+      await import("@/services/subscriptions/confirm-subscription-wallet");
     const member = await makeUser("self", { balance: 20000 });
 
     const request = await requestSubscriptionWithWallet({
@@ -249,9 +251,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   });
 
   it("H3 — a wallet can't be targeted more than 3 times an hour", async () => {
-    const { requestSubscriptionWithWallet } = await import(
-      "@/services/subscriptions/request-subscription-wallet"
-    );
+    const { requestSubscriptionWithWallet } =
+      await import("@/services/subscriptions/request-subscription-wallet");
     const wallet = await makeUser("target", { balance: 100000 });
     const buyers = await Promise.all(
       [1, 2, 3, 4].map((n) => makeUser(`spam${n}`)),
@@ -273,12 +274,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
   describe("H4 — withdrawal approval", () => {
     async function confirmedWithdrawal(label: string) {
-      const { requestWithdrawal } = await import(
-        "@/services/wallet/request-withdrawal"
-      );
-      const { confirmWithdrawal } = await import(
-        "@/services/wallet/confirm-withdrawal"
-      );
+      const { requestWithdrawal } =
+        await import("@/services/wallet/request-withdrawal");
+      const { confirmWithdrawal } =
+        await import("@/services/wallet/confirm-withdrawal");
       const member = await makeUser(label, { balance: 10000 });
       const request = await requestWithdrawal(
         member.id,
@@ -287,7 +286,11 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
         "ORANGE_MONEY",
         "SN",
       );
-      await confirmWithdrawal(member.id, request.id, lastCodeSentTo(member.email));
+      await confirmWithdrawal(
+        member.id,
+        request.id,
+        lastCodeSentTo(member.email),
+      );
       return request.id;
     }
 
@@ -305,8 +308,7 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     }
 
     type Step =
-      | { status?: number; body: unknown; delayMs?: number }
-      | "network";
+      { status?: number; body: unknown; delayMs?: number } | "network";
 
     // Answers PayDunya's three disbursement endpoints; "network" simulates
     // a connection failure on that step.
@@ -341,9 +343,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     }
 
     it("a double click sends exactly one PayDunya disbursement", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw1");
       paydunyaDisburse({
@@ -375,9 +376,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("an insufficient PayDunya balance puts the request back in the queue, with a clear reason", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw2");
       paydunyaDisburse({
@@ -396,9 +396,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("an unreachable callback URL is reported as such, not as a balance problem", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw2b");
       paydunyaDisburse({
@@ -418,12 +417,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("an uncertain outcome stays PROCESSING, can't be re-sent, and is settled by checking the status", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
-      const { syncPaydunyaPayout } = await import(
-        "@/services/payments/sync-paydunya-payout"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
+      const { syncPaydunyaPayout } =
+        await import("@/services/payments/sync-paydunya-payout");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw3");
       paydunyaDisburse({
@@ -457,9 +454,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("a disbursement PayDunya reports successful right away is marked paid immediately", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw4");
       paydunyaDisburse({
@@ -473,9 +469,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("a transfer the operator refuses goes back to the queue and can be retried", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const requestId = await confirmedWithdrawal("withdraw5");
       paydunyaDisburse({
@@ -502,12 +497,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("PayDunya's callback is only a signal: a forged one is ignored, a real one is re-checked", async () => {
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
-      const { GET, POST } = await import(
-        "@/app/api/webhooks/providers/paydunya-payout/route"
-      );
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
+      const { GET, POST } =
+        await import("@/app/api/webhooks/providers/paydunya-payout/route");
       // PayDunya's reachability probe must get a success, or it refuses to
       // create the disbursement (4002 "the callback is not accessible").
       expect((await GET()).status).toBe(200);
@@ -547,21 +540,16 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     });
 
     it("emails the member when a withdrawal is received, paid (once) or rejected", async () => {
-      const { requestWithdrawal } = await import(
-        "@/services/wallet/request-withdrawal"
-      );
-      const { confirmWithdrawal } = await import(
-        "@/services/wallet/confirm-withdrawal"
-      );
-      const { approveWithdrawal } = await import(
-        "@/services/admin/approve-withdrawal"
-      );
-      const { rejectWithdrawal } = await import(
-        "@/services/admin/reject-withdrawal"
-      );
-      const { syncPaydunyaPayout } = await import(
-        "@/services/payments/sync-paydunya-payout"
-      );
+      const { requestWithdrawal } =
+        await import("@/services/wallet/request-withdrawal");
+      const { confirmWithdrawal } =
+        await import("@/services/wallet/confirm-withdrawal");
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
+      const { rejectWithdrawal } =
+        await import("@/services/admin/reject-withdrawal");
+      const { syncPaydunyaPayout } =
+        await import("@/services/payments/sync-paydunya-payout");
       const admin = await makeUser("admin", { role: "ADMIN" });
       const subjectsSentTo = (email: string) =>
         sentEmails.filter((m) => m.to === email).map((m) => m.subject);
@@ -639,10 +627,94 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       expect((await withdrawalRow(r3.id)).status).toBe("PAID");
     });
 
+    it("withdrawal fees set by the admin are deducted: the net amount is paid out", async () => {
+      const { requestWithdrawal } =
+        await import("@/services/wallet/request-withdrawal");
+      const { confirmWithdrawal } =
+        await import("@/services/wallet/confirm-withdrawal");
+      const { approveWithdrawal } =
+        await import("@/services/admin/approve-withdrawal");
+      const { updateParameter } =
+        await import("@/services/admin/update-parameter");
+      const admin = await makeUser("feeadmin", { role: "ADMIN" });
+
+      // Out of bounds: refused.
+      await expect(
+        updateParameter(admin.id, "withdrawal.fee_percent_bp", 6000),
+      ).rejects.toThrow("ne peuvent pas dépasser 50 %");
+
+      // 1,5 % + 100 F.
+      await updateParameter(admin.id, "withdrawal.fee_percent_bp", 150);
+      await updateParameter(admin.id, "withdrawal.fee_fixed", 100);
+      try {
+        const member = await makeUser("feepayer", { balance: 20000 });
+        // A withdrawal the fees would swallow is refused (fixed fee raised
+        // above the amount for this one check).
+        await updateParameter(admin.id, "withdrawal.fee_fixed", 90000);
+        await expect(
+          requestWithdrawal(
+            member.id,
+            5000,
+            "+221770000009",
+            "ORANGE_MONEY",
+            "SN",
+          ),
+        ).rejects.toThrow("dépassent ce montant");
+        await updateParameter(admin.id, "withdrawal.fee_fixed", 100);
+
+        const request = await requestWithdrawal(
+          member.id,
+          10000,
+          "+221770000009",
+          "ORANGE_MONEY",
+          "SN",
+        );
+        expect(request.feeAmount).toBe(250);
+        const otpMail = sentEmails.filter((m) => m.to === member.email).at(-1)!;
+        expect(otpMail.html).toMatch(/vous recevrez <strong>9.750 F<\/strong>/);
+
+        await confirmWithdrawal(
+          member.id,
+          request.id,
+          lastCodeSentTo(member.email),
+        );
+        // The balance is debited the full amount.
+        expect((await balanceOf(member.id)).availableBalance).toBe(10000);
+
+        paydunyaDisburse({
+          invoice: invoiceOk("tok-fee"),
+          submit: { body: { response_code: "00" } },
+          check: statusIs("success"),
+        });
+        await approveWithdrawal(admin.id, request.id);
+
+        // PayDunya is asked for the net amount only.
+        const invoiceCall = fetchCalls
+          .filter((c) => c.url.endsWith("/get-invoice"))
+          .at(-1);
+        expect(invoiceCall?.body).toMatchObject({ amount: 9750 });
+        const row = await withdrawalRow(request.id);
+        expect(row.status).toBe("PAID");
+        const balance = await balanceRow(request.id);
+        expect(balance?.withdrawnBalance).toBe(10000);
+        const paidMail = sentEmails
+          .filter(
+            (m) => m.to === member.email && m.subject.includes("effectué"),
+          )
+          .at(-1)!;
+        expect(paidMail.html).toMatch(
+          /<strong>9.750 F<\/strong> ont été envoyés/,
+        );
+      } finally {
+        // Back to no fee for the other tests.
+        await updateParameter(admin.id, "withdrawal.fee_percent_bp", 0);
+        await updateParameter(admin.id, "withdrawal.fee_fixed", 0);
+      }
+    });
+
     it("an operator PayDunya can't pay out to is refused when the withdrawal is requested", async () => {
-      const { requestWithdrawal } = await import(
-        "@/services/wallet/request-withdrawal"
-      );
+      const { requestWithdrawal } =
+        await import("@/services/wallet/request-withdrawal");
       const member = await makeUser("mobicash", { balance: 10000 });
       await expect(
         requestWithdrawal(member.id, 5000, "+22890000000", "MOBICASH", "TG"),
@@ -652,9 +724,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
   describe("H5 — PayDunya IPN", () => {
     async function postIpn(token: string, hash = PAYDUNYA_HASH) {
-      const { POST } = await import(
-        "@/app/api/webhooks/providers/paydunya/route"
-      );
+      const { POST } =
+        await import("@/app/api/webhooks/providers/paydunya/route");
       return POST(
         new Request("http://localhost/api/webhooks/providers/paydunya", {
           method: "POST",
@@ -668,7 +739,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     function paydunyaConfirms(status: string, amount: string) {
       fetchHandler = (url) => {
         if (url.includes("/checkout-invoice/confirm/")) {
-          return { status: 200, body: { status, invoice: { total_amount: amount } } };
+          return {
+            status: 200,
+            body: { status, invoice: { total_amount: amount } },
+          };
         }
         throw new Error(`Appel inattendu : ${url}`);
       };
@@ -676,7 +750,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
     it("rejects a wrong hash without touching anything", async () => {
       const member = await makeUser("ipn0");
-      const payment = await insertPendingPayment({ userId: member.id, provider: "PAYDUNYA" });
+      const payment = await insertPendingPayment({
+        userId: member.id,
+        provider: "PAYDUNYA",
+      });
       const response = await postIpn(payment.providerReference, "faux-hash");
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Invalid webhook" });
@@ -685,7 +762,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
     it("a validly-hashed 'completed' IPN is ignored while PayDunya's API says pending", async () => {
       const member = await makeUser("ipn1");
-      const payment = await insertPendingPayment({ userId: member.id, provider: "PAYDUNYA" });
+      const payment = await insertPendingPayment({
+        userId: member.id,
+        provider: "PAYDUNYA",
+      });
       paydunyaConfirms("pending", "15000");
       expect((await postIpn(payment.providerReference)).status).toBe(200);
       expect(await paymentStatus(payment.id)).toBe("PENDING");
@@ -693,7 +773,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
     it("a confirmed payment for the wrong amount is not applied", async () => {
       const member = await makeUser("ipn2");
-      const payment = await insertPendingPayment({ userId: member.id, provider: "PAYDUNYA" });
+      const payment = await insertPendingPayment({
+        userId: member.id,
+        provider: "PAYDUNYA",
+      });
       paydunyaConfirms("completed", "1");
       await postIpn(payment.providerReference);
       expect(await paymentStatus(payment.id)).toBe("PENDING");
@@ -701,7 +784,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
     it("a real confirmation (amount as a string) activates the subscription, hash not stored", async () => {
       const member = await makeUser("ipn3");
-      const payment = await insertPendingPayment({ userId: member.id, provider: "PAYDUNYA" });
+      const payment = await insertPendingPayment({
+        userId: member.id,
+        provider: "PAYDUNYA",
+      });
       paydunyaConfirms("completed", "15000");
       await postIpn(payment.providerReference);
 
@@ -729,7 +815,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     it("refuses a payment that isn't a PayDunya Wizall one, without calling PayDunya", async () => {
       const member = await makeUser("wizall0");
       currentUser = { profile: { id: member.id } };
-      const payment = await insertPendingPayment({ userId: member.id, provider: "BICTORYS" });
+      const payment = await insertPendingPayment({
+        userId: member.id,
+        provider: "BICTORYS",
+      });
       const before = fetchCalls.length;
 
       const result = await (await action())(payment.id, "1234");
@@ -757,7 +846,10 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       const payment = await insertPendingPayment({
         userId: member.id,
         provider: "PAYDUNYA",
-        metadata: { wizallTransactionId: "wz-server-side", wizallPhone: "771234567" },
+        metadata: {
+          wizallTransactionId: "wz-server-side",
+          wizallPhone: "771234567",
+        },
       });
       let invoiceStatus = "pending";
       fetchHandler = (url) => {
@@ -779,7 +871,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       const wizallCall = [...fetchCalls]
         .reverse()
         .find((c) => c.url.includes("/softpay/wizall-money-senegal/confirm"));
-      expect(wizallCall?.body).toMatchObject({ transaction_id: "wz-server-side" });
+      expect(wizallCall?.body).toMatchObject({
+        transaction_id: "wz-server-side",
+      });
 
       invoiceStatus = "completed";
       const second = await (await action())(payment.id, "1234");
@@ -789,12 +883,14 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   });
 
   it("M7 — the payment poll never applies a confirmation for the wrong amount", async () => {
-    const { checkSubscriptionConfirmedAction } = await import(
-      "@/app/dashboard/subscription/actions"
-    );
+    const { checkSubscriptionConfirmedAction } =
+      await import("@/app/dashboard/subscription/actions");
     const member = await makeUser("poll");
     currentUser = { profile: { id: member.id } };
-    const payment = await insertPendingPayment({ userId: member.id, provider: "PAYDUNYA" });
+    const payment = await insertPendingPayment({
+      userId: member.id,
+      provider: "PAYDUNYA",
+    });
     fetchHandler = () => ({
       status: 200,
       body: { status: "completed", invoice: { total_amount: 14000 } },
@@ -807,19 +903,23 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   it("M3 — HTML in signup metadata never becomes a username", async () => {
     const { ensureProfile } = await import("@/services/auth/ensure-profile");
     const id = randomUUID();
-    await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [id]);
+    await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [
+      id,
+    ]);
 
     const profile = await ensureProfile({
       id,
-      user_metadata: { username: '<a href="https://phish">x</a>', full_name: "Test" },
+      user_metadata: {
+        username: '<a href="https://phish">x</a>',
+        full_name: "Test",
+      },
     } as never);
     expect(profile?.username).toBe(`membre_${id.slice(0, 8)}`);
   });
 
   it("M4 — member-controlled names are escaped in emails", async () => {
-    const { initiateAdminRecharge } = await import(
-      "@/services/admin/initiate-recharge"
-    );
+    const { initiateAdminRecharge } =
+      await import("@/services/admin/initiate-recharge");
     const admin = await makeUser("rechargeadmin", { role: "ADMIN" });
     const beneficiary = await makeUser("victim", {
       fullName: '<a href="https://phish.example">Sécurisez votre compte</a>',
@@ -827,7 +927,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
 
     await initiateAdminRecharge(admin.id, beneficiary.username, 1000);
     const mail = [...sentEmails].reverse().find((m) => m.to === admin.email);
-    expect(mail?.html).toContain("&lt;a href=&quot;https://phish.example&quot;&gt;");
+    expect(mail?.html).toContain(
+      "&lt;a href=&quot;https://phish.example&quot;&gt;",
+    );
     expect(mail?.html).not.toContain('<a href="https://phish.example">');
   });
 
@@ -835,7 +937,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
     const { ensureProfile } = await import("@/services/auth/ensure-profile");
     const sponsor = await makeUser("sponsorlogin");
     const id = randomUUID();
-    await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [id]);
+    await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [
+      id,
+    ]);
 
     // What getCurrentUser does on a plain password sign-in, with no
     // /auth/callback involved at all.
@@ -855,9 +959,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
   });
 
   it("a paid subscription is never rolled back by an ambassador opt-in that can't be honored", async () => {
-    const { checkSubscriptionConfirmedAction } = await import(
-      "@/app/dashboard/subscription/actions"
-    );
+    const { checkSubscriptionConfirmedAction } =
+      await import("@/app/dashboard/subscription/actions");
     // A tree root already exists (earlier tests may have created one; make
     // sure of it), and this member wants to be an ambassador but has no
     // sponsorship on file — the exact production case.
@@ -865,9 +968,8 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       where: sql`${schema.binaryNodes.binaryParentId} IS NULL`,
     });
     if (!existingRoot) {
-      const { createRootNode } = await import(
-        "@/services/genealogy/place-member"
-      );
+      const { createRootNode } =
+        await import("@/services/genealogy/place-member");
       const rootUser = await makeUser("root");
       await createRootNode(localDb, rootUser.id);
     }
@@ -887,7 +989,9 @@ describe("security audit fixes (pglite, no shared DB touched)", () => {
       body: { status: "completed", invoice: { total_amount: 300 } },
     });
 
-    expect(await checkSubscriptionConfirmedAction(payment.id)).toBe("CONFIRMED");
+    expect(await checkSubscriptionConfirmedAction(payment.id)).toBe(
+      "CONFIRMED",
+    );
     const profile = await localDb.query.profiles.findFirst({
       where: eq(schema.profiles.id, member.id),
     });

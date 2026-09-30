@@ -4,7 +4,12 @@ import { db } from "@/db/client";
 import { parameterVersions } from "@/db/schema/parameter-versions";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "./audit-log";
-import { SUBSCRIPTION_PRICE_MAX, SUBSCRIPTION_PRICE_MIN } from "./input-limits";
+import {
+  SUBSCRIPTION_PRICE_MAX,
+  SUBSCRIPTION_PRICE_MIN,
+  WITHDRAWAL_FEE_FIXED_MAX,
+  WITHDRAWAL_FEE_PERCENT_BP_MAX,
+} from "./input-limits";
 
 // Never updates a parameter_versions row in place (section 29/43,
 // non-rétroactivité — see MLM_RULES.md): closes whatever row is currently
@@ -26,6 +31,23 @@ export async function updateParameter(
   ) {
     throw new Error(
       `Le prix de l'abonnement doit être compris entre ${SUBSCRIPTION_PRICE_MIN.toLocaleString("fr-FR")} et ${SUBSCRIPTION_PRICE_MAX.toLocaleString("fr-FR")} F.`,
+    );
+  }
+
+  if (
+    parameterKey === "withdrawal.fee_percent_bp" &&
+    value > WITHDRAWAL_FEE_PERCENT_BP_MAX
+  ) {
+    throw new Error(
+      `Les frais de retrait ne peuvent pas dépasser ${WITHDRAWAL_FEE_PERCENT_BP_MAX / 100} % du montant.`,
+    );
+  }
+  if (
+    parameterKey === "withdrawal.fee_fixed" &&
+    value > WITHDRAWAL_FEE_FIXED_MAX
+  ) {
+    throw new Error(
+      `Les frais de retrait fixes ne peuvent pas dépasser ${WITHDRAWAL_FEE_FIXED_MAX.toLocaleString("fr-FR")} F.`,
     );
   }
 

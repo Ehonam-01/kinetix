@@ -7,9 +7,20 @@ import { Label } from "@/components/ui/label";
 import { BICTORYS_COUNTRY_OPTIONS } from "@/config/bictorys-countries";
 import { PAYDUNYA_PAYOUT_OPERATORS_BY_COUNTRY } from "@/config/paydunya-payout-operators";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
+import {
+  computeWithdrawalFee,
+  describeWithdrawalFee,
+  type WithdrawalFeeSettings,
+} from "@/lib/withdrawal-fee";
 import { confirmWithdrawalAction, requestWithdrawalAction } from "./actions";
 
-export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
+export function WithdrawalForm({
+  minimumAmount,
+  fee: feeSettings,
+}: {
+  minimumAmount: number;
+  fee: WithdrawalFeeSettings;
+}) {
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState<"form" | "otp" | "done">("form");
   const [amount, setAmount] = useState("");
@@ -19,6 +30,15 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
   const [requestId, setRequestId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Same calculation as the server (services/wallet/request-withdrawal.ts),
+  // shown before the member asks for a code.
+  const feeLabel = describeWithdrawalFee(feeSettings);
+  const parsedPreview = Number(amount);
+  const preview =
+    feeLabel && Number.isInteger(parsedPreview) && parsedPreview > 0
+      ? computeWithdrawalFee(parsedPreview, feeSettings)
+      : null;
 
   const availableOperators = country
     ? MOBILE_MONEY_OPERATOR_OPTIONS.filter((o) =>
@@ -191,8 +211,21 @@ export function WithdrawalForm({ minimumAmount }: { minimumAmount: number }) {
         />
         <p className="text-muted-foreground text-xs">
           Minimum : {minimumAmount.toLocaleString("fr-FR")} F
+          {feeLabel && <> · Frais de retrait : {feeLabel}</>}
         </p>
       </div>
+      {preview && (
+        <div className="bg-muted/50 space-y-1 rounded-xl px-3 py-2.5 text-sm">
+          <div className="text-muted-foreground flex justify-between">
+            <span>Frais de retrait</span>
+            <span>− {preview.fee.toLocaleString("fr-FR")} F</span>
+          </div>
+          <div className="flex justify-between font-semibold">
+            <span>Vous recevrez</span>
+            <span>{Math.max(0, preview.net).toLocaleString("fr-FR")} F</span>
+          </div>
+        </div>
+      )}
       {error && <p className="text-destructive text-sm">{error}</p>}
       <Button disabled={pending} onClick={handleRequest}>
         {pending ? "Envoi..." : "Recevoir un code de confirmation"}

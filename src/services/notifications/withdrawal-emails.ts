@@ -29,18 +29,25 @@ function buildEmail(
   kind: WithdrawalEmailKind,
   request: {
     amount: number;
+    feeAmount: number;
     payoutPhone: string;
     rejectionReason: string | null;
   },
 ) {
   const amount = formatAmount(request.amount);
   const phone = escapeHtml(request.payoutPhone);
+  // What actually reaches the member's mobile money account.
+  const net = formatAmount(request.amount - request.feeAmount);
+  const feeNote =
+    request.feeAmount > 0
+      ? ` Après ${formatAmount(request.feeAmount)} de frais de retrait, vous recevrez <strong>${net}</strong>.`
+      : "";
 
   if (kind === "RECEIVED") {
     return {
       subject: `Demande de retrait de ${amount} reçue`,
       lines: [
-        `Votre demande de retrait de <strong>${amount}</strong> vers le numéro <strong>${phone}</strong> est confirmée.`,
+        `Votre demande de retrait de <strong>${amount}</strong> vers le numéro <strong>${phone}</strong> est confirmée.${feeNote}`,
         "Elle est en cours de traitement : vous recevrez un nouvel email dès que le virement sera effectué.",
       ],
     };
@@ -49,7 +56,11 @@ function buildEmail(
     return {
       subject: `Retrait de ${amount} effectué`,
       lines: [
-        `Bonne nouvelle : <strong>${amount}</strong> ont été envoyés sur votre compte mobile money <strong>${phone}</strong>.`,
+        `Bonne nouvelle : <strong>${net}</strong> ont été envoyés sur votre compte mobile money <strong>${phone}</strong>${
+          request.feeAmount > 0
+            ? ` (retrait de ${amount}, dont ${formatAmount(request.feeAmount)} de frais)`
+            : ""
+        }.`,
         "Le montant peut mettre quelques minutes à apparaître selon votre opérateur.",
       ],
     };
@@ -61,7 +72,7 @@ function buildEmail(
     subject: `Demande de retrait de ${amount} refusée`,
     lines: [
       `Votre demande de retrait de <strong>${amount}</strong> vers le numéro <strong>${phone}</strong> n'a pas été validée.${reason}`,
-      `Le montant a été <strong>recrédité sur votre solde disponible</strong> : vous pouvez faire une nouvelle demande.`,
+      `La totalité du montant, soit ${amount}, a été <strong>recréditée sur votre solde disponible</strong>, sans frais : vous pouvez faire une nouvelle demande.`,
     ],
   };
 }

@@ -22,6 +22,10 @@ export const SUBSCRIPTION_PRICE_MIN = 100;
 export const SUBSCRIPTION_PRICE_MAX = 1_000_000;
 
 export const ADMIN_RECHARGE_MAX = 1_000_000;
+// Withdrawal fees (/admin/parameters): at most 50 % of the amount (basis
+// points) and 100 000 F fixed — guards against a typo, not a business rule.
+export const WITHDRAWAL_FEE_PERCENT_BP_MAX = 5_000;
+export const WITHDRAWAL_FEE_FIXED_MAX = 100_000;
 
 export function assertMaxLength(
   value: string | null | undefined,

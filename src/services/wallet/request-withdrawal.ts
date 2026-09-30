@@ -9,6 +9,8 @@ import {
 import { findAuthEmailByUserId } from "@/repositories/auth-users";
 import { getBalance } from "@/repositories/financial-transactions";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import { getWithdrawalFeeSettings } from "@/repositories/withdrawals";
+import { computeWithdrawalFee } from "@/lib/withdrawal-fee";
 import { findProfileById } from "@/repositories/profiles";
 import { getPaydunyaWithdrawMode } from "@/config/paydunya-payout-operators";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
@@ -39,17 +41,21 @@ export async function requestWithdrawal(
     throw new Error("Le numéro mobile money n'est pas valide.");
   }
   if (
-    !(
-      mobileMoneyOperatorEnum.enumValues as readonly string[]
-    ).includes(operator)
+    !(mobileMoneyOperatorEnum.enumValues as readonly string[]).includes(
+      operator,
+    )
   ) {
     throw new Error("Opérateur mobile money invalide.");
   }
-  const validOperator = operator as (typeof mobileMoneyOperatorEnum.enumValues)[number];
-  if (!(bictorysCountryEnum.enumValues as readonly string[]).includes(country)) {
+  const validOperator =
+    operator as (typeof mobileMoneyOperatorEnum.enumValues)[number];
+  if (
+    !(bictorysCountryEnum.enumValues as readonly string[]).includes(country)
+  ) {
     throw new Error("Pays invalide.");
   }
-  const validCountry = country as (typeof bictorysCountryEnum.enumValues)[number];
+  const validCountry =
+    country as (typeof bictorysCountryEnum.enumValues)[number];
   // Withdrawals are paid through PayDunya's disbursement API, which
   // doesn't cover every operator in every country (config/
   // paydunya-payout-operators.ts) — refused here rather than at payout time.
@@ -71,6 +77,19 @@ export async function requestWithdrawal(
   if (amount < minimum) {
     throw new Error(
       `Le montant minimum de retrait est de ${minimum.toLocaleString("fr-FR")} F.`,
+    );
+  }
+
+  // Deducted from the amount withdrawn, and snapshotted on the request:
+  // what the member is shown now is what they'll be paid, even if the admin
+  // changes the fee before the withdrawal is approved.
+  const { fee, net } = computeWithdrawalFee(
+    amount,
+    await getWithdrawalFeeSettings(db),
+  );
+  if (net <= 0) {
+    throw new Error(
+      `Les frais de retrait (${fee.toLocaleString("fr-FR")} F) dépassent ce montant.`,
     );
   }
 
@@ -102,6 +121,7 @@ export async function requestWithdrawal(
     .values({
       userId,
       amount,
+      feeAmount: fee,
       payoutPhone: trimmedPhone,
       operator: validOperator,
       country: validCountry,
@@ -114,7 +134,11 @@ export async function requestWithdrawal(
     to: email,
     subject: "Code de confirmation de votre retrait",
     html: `
-      <p>Vous avez demandé à retirer <strong>${amount.toLocaleString("fr-FR")} F</strong> vers le numéro <strong>${trimmedPhone}</strong>.</p>
+      <p>Vous avez demandé à retirer <strong>${amount.toLocaleString("fr-FR")} F</strong> vers le numéro <strong>${trimmedPhone}</strong>.${
+        fee > 0
+          ? ` Après ${fee.toLocaleString("fr-FR")} F de frais de retrait, vous recevrez <strong>${net.toLocaleString("fr-FR")} F</strong>.`
+          : ""
+      }</p>
       <p>Code de confirmation : <strong style="font-size:1.5em">${code}</strong></p>
       <p>Ce code expire dans ${OTP_TTL_MINUTES} minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
     `,

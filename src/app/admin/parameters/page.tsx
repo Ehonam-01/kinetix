@@ -15,6 +15,23 @@ const PARAMETER_LABEL: Record<string, string> = {
   "bv.value_in_cfa": "Valeur d'1 point (F CFA)",
   "subscription.price_in_cfa": "Prix de l'abonnement annuel (F CFA)",
   "subscription.business_volume": "Points générés par l'abonnement",
+  "withdrawal.minimum_amount": "Montant minimum de retrait (F CFA)",
+  "withdrawal.fee_percent_bp": "Frais de retrait : pourcentage du montant",
+  "withdrawal.fee_fixed": "Frais de retrait : montant fixe (F CFA)",
+};
+
+// How the value is typed and shown: most parameters are plain integers;
+// a percentage is stored in basis points (150 = 1,5 %) but edited as a
+// percentage with decimals.
+const PARAMETER_UNIT: Record<string, "percent_bp"> = {
+  "withdrawal.fee_percent_bp": "percent_bp",
+};
+
+const PARAMETER_HINT: Record<string, string> = {
+  "withdrawal.fee_percent_bp":
+    "Déduit du montant retiré, cumulé avec le montant fixe. Ex. 1,5 % + 100 F sur un retrait de 10 000 F : le membre reçoit 9 750 F.",
+  "withdrawal.fee_fixed":
+    "Déduit de chaque retrait, en plus du pourcentage. 0 = pas de frais fixes.",
 };
 
 export default async function AdminParametersPage() {
@@ -47,9 +64,15 @@ export default async function AdminParametersPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {PARAMETER_HINT[param.parameterKey] && (
+                <p className="text-muted-foreground mb-3 text-xs">
+                  {PARAMETER_HINT[param.parameterKey]}
+                </p>
+              )}
               <EditParameterForm
                 parameterKey={param.parameterKey}
                 currentValue={param.value}
+                unit={PARAMETER_UNIT[param.parameterKey]}
               />
             </CardContent>
           </Card>
