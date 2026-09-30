@@ -127,6 +127,13 @@ export default function ConditionsUtilisationPage() {
             programme ambassadeur…), y compris le paiement en autonomie.
           </li>
           <li>
+            Les commissions restent dues pendant la période de grâce. À compter
+            de la désactivation, le compte ne perçoit plus aucune commission :
+            celles qui lui seraient revenues pendant cette période sont
+            définitivement perdues, y compris en cas de réactivation
+            ultérieure.
+          </li>
+          <li>
             Seul le support peut réactiver un compte désactivé. La réactivation
             ouvre une nouvelle année d&apos;Abonnement à compter de sa date.
           </li>

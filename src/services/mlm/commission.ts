@@ -4,6 +4,7 @@ import type { Executor } from "@/db/executor";
 import { commissionEvents } from "@/db/schema/commission-events";
 import { financialTransactions } from "@/db/schema/financial-transactions";
 import { profiles } from "@/db/schema/profiles";
+import { hasActiveSubscription } from "@/repositories/subscriptions";
 import { creditBalance } from "./credit-balance";
 
 type CommissionInput = {
@@ -53,9 +54,24 @@ export async function createCommissionEvent(
   // ancestor flag later can still have it paid retroactively).
   const beneficiary = await executor.query.profiles.findFirst({
     where: eq(profiles.id, input.beneficiaryUserId),
-    columns: { becameAncestorAt: true },
+    columns: { becameAncestorAt: true, role: true },
   });
   if (beneficiary?.becameAncestorAt) return null;
+
+  // Only a member whose subscription is still valid earns — the paid
+  // period plus the grace period after it (hasActiveSubscription). Past
+  // that, the account is inactive and the commission is lost for good
+  // (explicit user decision): nothing is recorded, and nothing re-triggers
+  // it later — a generation completes once, a direct sale is paid on the
+  // buyer's first subscription only. A lapsed member still counts in their
+  // sponsor's generations; only their own earnings stop. Admins are exempt,
+  // same convention as every other subscription gate.
+  if (
+    beneficiary?.role !== "ADMIN" &&
+    !(await hasActiveSubscription(executor, input.beneficiaryUserId))
+  ) {
+    return null;
+  }
 
   const [event] = await executor
     .insert(commissionEvents)

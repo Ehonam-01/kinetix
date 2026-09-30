@@ -13,7 +13,7 @@ function formatDate(date: Date) {
   return date.toLocaleDateString("fr-FR", { dateStyle: "long" });
 }
 
-// Shown on the dashboard overview and the subscription page themselves —
+// Shown on every member page (dashboard/layout.tsx) —
 // the visual half of the expiry-alert system, the other half being the
 // scheduled email (send-expiry-reminders.ts). Two states: the last
 // ALERT_WINDOW_DAYS before expiry, and the grace period right after it
@@ -39,7 +39,7 @@ export function SubscriptionAlertBanner({
     const days = status.graceDaysLeft;
     message = `Votre abonnement a expiré le ${formatDate(status.expiresAt)}. ${
       days <= 1 ? "Il vous reste moins d'un jour" : `Il vous reste ${days} jours`
-    } pour le renouveler : passé le ${formatDate(status.graceEndsAt)}, votre compte sera désactivé et seul le support pourra le réactiver.`;
+    } pour le renouveler : passé le ${formatDate(status.graceEndsAt)}, votre compte sera désactivé, vous ne toucherez plus de commissions et seul le support pourra le réactiver.`;
   } else if (
     status.active &&
     status.expiresAt &&
