@@ -13,7 +13,7 @@ export const LEGAL_ENTITY = {
   address: "71-75 Shelton Street, Covent Garden, Londres WC2H 9JQ, Royaume-Uni",
   phone: "+228 79 80 03 61",
   email: "contact@kinetix-africa.com",
-  publicationDirector: "[NOM DU DIRECTEUR DE LA PUBLICATION]",
+  publicationDirector: "AMOUZOU P.",
   // Governing law and courts named in the terms of use — the publisher's
   // own jurisdiction.
   jurisdiction: "d'Angleterre et du pays de Galles",
