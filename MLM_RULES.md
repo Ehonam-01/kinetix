@@ -4,6 +4,12 @@ Référence métier pour la progression, le placement et les commissions. Le dé
 (schéma, requêtes, pièges) est dans `DATABASE.md` et `ARCHITECTURE.md` ; ce document explique le
 _pourquoi_ des règles, pas leur implémentation SQL.
 
+> **Mise à jour (migration 0055) : le plan s'arrête au niveau 4.** Le niveau 5 est désactivé
+> (`levels.is_active = false`), pas supprimé : le moteur considère comme sommet le plus haut niveau
+> actif. Terminer le niveau 4 fait du membre un « ancêtre » (plus aucune commission), et les membres
+> qui l'avaient déjà terminé ont reçu ce statut. Réseau nécessaire pour terminer le plan : 11
+> générations au lieu de 14. Les mentions du niveau 5 ci-dessous décrivent l'ancien plan.
+
 ## Les 5 niveaux
 
 Chaque membre commence au niveau 1 et progresse indépendamment de son parrain — un filleul peut

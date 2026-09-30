@@ -35,7 +35,8 @@ export default async function LevelsPage() {
           <CardHeader>
             <CardTitle>🏆 Ancêtre</CardTitle>
             <CardDescription>
-              Vous avez atteint le sommet du plan de compensation (niveau 5)
+              Vous avez atteint le sommet du plan de compensation (niveau{" "}
+              {levelProgress.at(-1)?.code})
               le{" "}
               {profile.becameAncestorAt.toLocaleDateString("fr-FR", {
                 dateStyle: "long",
