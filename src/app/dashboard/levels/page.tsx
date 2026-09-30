@@ -143,9 +143,6 @@ export default async function LevelsPage() {
                             {reward.description}
                           </p>
                         )}
-                        <p className="text-muted-foreground text-xs">
-                          Valeur : {reward.value.toLocaleString("fr-FR")} F CFA
-                        </p>
                       </div>
                     </div>
                   )}
