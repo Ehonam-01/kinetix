@@ -1,6 +1,9 @@
-import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/app/_components/reveal";
 import type { CompensationData } from "../data";
+
+// How many referred subscribers the worked example shows — always computed
+// from the live price and direct rate (data.ts), never typed by hand.
+const REFERRAL_EXAMPLES = [1, 5, 10];
 
 export function PaCompensation({ data }: { data: CompensationData }) {
   return (
@@ -35,23 +38,45 @@ export function PaCompensation({ data }: { data: CompensationData }) {
               </p>
 
               {data.example && (
-                <div className="border-border bg-muted/40 mt-6 flex flex-col gap-3 rounded-xl border p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-muted-foreground">
+                <div className="border-border bg-muted/40 mt-6 space-y-4 rounded-xl border p-4 text-sm">
+                  <p className="text-muted-foreground">
                     Exemple : abonnement annuel à{" "}
                     <span className="text-foreground font-medium">
                       {data.example.price.toLocaleString("fr-FR")} F CFA
                     </span>
-                  </span>
-                  <span className="flex items-center gap-2 font-semibold">
-                    <ArrowRight className="text-primary size-4" />
-                    {data.example.commission.toLocaleString("fr-FR")} F CFA de
-                    commission
-                  </span>
+                    , soit{" "}
+                    <span className="text-foreground font-medium">
+                      {data.example.commission.toLocaleString("fr-FR")} F CFA
+                    </span>{" "}
+                    de commission par nouvel abonné parrainé.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {REFERRAL_EXAMPLES.map((count) => (
+                      <div
+                        key={count}
+                        className="border-border bg-card flex flex-col justify-between gap-1 rounded-lg border p-3 text-center"
+                      >
+                        <p className="text-muted-foreground text-xs">
+                          {count} abonné{count > 1 ? "s" : ""} parrainé
+                          {count > 1 ? "s" : ""}
+                        </p>
+                        <p className="text-primary font-semibold whitespace-nowrap tabular-nums">
+                          {(data.example!.commission * count).toLocaleString(
+                            "fr-FR",
+                          )}{" "}
+                          F
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <p className="text-muted-foreground mt-4 text-xs">
-                Exemple donné à titre pédagogique. Les commissions sont soumises
-                aux règles en vigueur du programme ambassadeur.
+                Exemples donnés à titre pédagogique, calculés avec le prix et le
+                taux en vigueur : ce n&apos;est pas une promesse de gains. La
+                commission n&apos;est versée que sur la première souscription de
+                chaque abonné réellement apporté, selon les règles du programme
+                ambassadeur.
               </p>
             </div>
           </Reveal>
