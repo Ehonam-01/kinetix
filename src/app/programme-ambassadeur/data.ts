@@ -1,12 +1,11 @@
 import "server-only";
-import { asc } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
-import { levels } from "@/db/schema/levels";
 import {
   computeDirectSaleCommission,
   listEffectiveDirectSaleRules,
   listEffectiveGenerationRules,
 } from "@/repositories/commission-rules";
+import { listActiveLevels } from "@/repositories/member-levels";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 
 export type CompensationLevel = {
@@ -36,7 +35,7 @@ export async function getCompensationData(
   ] = await Promise.all([
     listEffectiveDirectSaleRules(executor),
     listEffectiveGenerationRules(executor),
-    executor.query.levels.findMany({ orderBy: asc(levels.code) }),
+    listActiveLevels(executor),
     getCurrentParameterValue(executor, "subscription.price_in_cfa"),
     getCurrentParameterValue(executor, "bv.value_in_cfa"),
   ]);
@@ -69,8 +68,9 @@ export async function getCompensationData(
     }
   }
 
-  const compensationLevels: CompensationLevel[] = [2, 3, 4, 5]
-    .filter((code) => rateByLevel.has(code))
+  const compensationLevels: CompensationLevel[] = levelRows
+    .map((l) => l.code)
+    .filter((code) => code >= 2 && rateByLevel.has(code))
     .map((code) => ({
       code,
       name: nameByCode.get(code) ?? `Niveau ${code}`,

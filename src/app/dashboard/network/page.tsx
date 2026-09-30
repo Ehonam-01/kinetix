@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
-import { asc } from "drizzle-orm";
 import { db } from "@/db/client";
-import { levels, type LevelConfig } from "@/db/schema/levels";
-import { listLevelProgress } from "@/repositories/member-levels";
+import type { LevelConfig } from "@/db/schema/levels";
+import {
+  listActiveLevels,
+  listLevelProgress,
+} from "@/repositories/member-levels";
 import {
   getAncestorNames,
   getNetworkView,
@@ -22,7 +24,7 @@ export default async function NetworkPage(
   const query = typeof q === "string" ? q.trim() : "";
 
   const [allLevels, viewerLevels] = await Promise.all([
-    db.query.levels.findMany({ orderBy: asc(levels.code) }),
+    listActiveLevels(db),
     listLevelProgress(db, profile.id),
   ]);
 

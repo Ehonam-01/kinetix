@@ -4,6 +4,7 @@ import {
   listEffectiveGenerationRules,
 } from "@/repositories/commission-rules";
 import { listAllCoursesForAdmin } from "@/repositories/courses";
+import { listActiveLevels } from "@/repositories/member-levels";
 import {
   Card,
   CardContent,
@@ -51,11 +52,19 @@ export default async function AdminCommissionRulesPage() {
   // re-run on every navigation, so it can't be the only gate (Next.js
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
-  const [directSaleRules, generationRules, courses] = await Promise.all([
-    listEffectiveDirectSaleRules(db),
-    listEffectiveGenerationRules(db),
-    listAllCoursesForAdmin(db),
-  ]);
+  const [directSaleRules, allGenerationRules, courses, activeLevels] =
+    await Promise.all([
+      listEffectiveDirectSaleRules(db),
+      listEffectiveGenerationRules(db),
+      listAllCoursesForAdmin(db),
+      listActiveLevels(db),
+    ]);
+  // Rules of a deactivated level (level 5 since migration 0055) stay in the
+  // database, unreachable — not listed here.
+  const activeLevelCodes = activeLevels.map((l) => l.code);
+  const generationRules = allGenerationRules.filter(
+    (r) => r.levelCode == null || activeLevelCodes.includes(r.levelCode),
+  );
   const titleByCourseId = new Map(courses.map((c) => [c.id, c.title]));
 
   return (
@@ -121,7 +130,7 @@ export default async function AdminCommissionRulesPage() {
 
       <div className="space-y-6">
         <p className="text-muted-foreground text-sm">
-          Commission versée quand une génération (niveaux 2 à 5) est qualifiée —
+          Commission versée quand une génération (niveaux 2 à 4) est qualifiée —
           par défaut, l&apos;effectif complet suffit (comportement historique).
           Une règle ici peut resserrer la condition : volume minimum, ou
           effectif complet ET volume minimum ensemble (section 14/16/17).
@@ -136,7 +145,9 @@ export default async function AdminCommissionRulesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <NewGenerationRuleForm />
+            <NewGenerationRuleForm
+              levels={activeLevelCodes.filter((code) => code >= 2)}
+            />
           </CardContent>
         </Card>
 

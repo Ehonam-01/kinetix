@@ -20,6 +20,7 @@ import {
   getCurrentParameterValue,
   getCurrentParameterValueOrNull,
 } from "@/repositories/parameter-versions";
+import { getTopLevelCode } from "@/repositories/member-levels";
 import { createCommissionEvent } from "./commission";
 import { levelCommissionDedupeKey } from "./dedupe-keys";
 import { unlockReward } from "./reward";
@@ -238,13 +239,15 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
     await unlockReward(tx, userId, levelCode);
   }
 
-  if (levelCode < 5) {
+  // The top of the plan is the highest ACTIVE level (4 since migration
+  // 0055), read from the levels table rather than hard-coded.
+  if (levelCode < (await getTopLevelCode(tx))) {
     await unlockLevel(tx, userId, levelCode + 1);
   } else {
     // The top of the compensation plan — this member becomes an "ancêtre"
     // (see createCommissionEvent, the only place that reads this column).
     // isNull guard keeps this a true one-time transition even if
-    // completeLevel were ever invoked again for level 5 for this user.
+    // completeLevel were ever invoked again for the top level.
     await tx
       .update(profiles)
       .set({ becameAncestorAt: sql`now()` })
@@ -254,7 +257,7 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
 
 // The single trigger validated in the architecture report: called every
 // time a member unlocks a level (level 1 right after binary placement,
-// levels 2-5 when completeLevel cascades into the next one). Idempotent —
+// levels 2+ when completeLevel cascades into the next one). Idempotent —
 // calling it again for a level the member already has is a no-op.
 export async function unlockLevel(
   tx: Executor,
@@ -286,7 +289,8 @@ export async function unlockLevel(
   const level = await tx.query.levels.findFirst({
     where: eq(levels.code, levelCode),
   });
-  if (!level) {
+  // A deactivated level (level 5 since migration 0055) can't be unlocked.
+  if (!level || !level.isActive) {
     throw new Error(`Niveau inconnu : ${levelCode}`);
   }
 

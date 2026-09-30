@@ -16,9 +16,8 @@ const TYPES = [
   { value: "BV_PERCENTAGE", label: "% du volume généré par la génération" },
 ] as const;
 
-const LEVELS = [2, 3, 4, 5];
-
-export function NewGenerationRuleForm() {
+// Levels that pay generation commissions: every active level from 2 up.
+export function NewGenerationRuleForm({ levels }: { levels: number[] }) {
   const [levelCode, setLevelCode] = useState(2);
   const [generation, setGeneration] = useState(1);
   const [commissionType, setCommissionType] =
@@ -63,7 +62,7 @@ export function NewGenerationRuleForm() {
         <div className="space-y-2">
           <Label>Niveau</Label>
           <div className="flex gap-2">
-            {LEVELS.map((l) => (
+            {levels.map((l) => (
               <button
                 key={l}
                 type="button"

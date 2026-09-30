@@ -1,9 +1,28 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { generationProgress } from "@/db/schema/generation-progress";
 import { levels } from "@/db/schema/levels";
 import { memberLevels } from "@/db/schema/member-levels";
+
+// The plan's levels, in order — only the active ones: a deactivated level
+// (level 5 since migration 0055) is unreachable and never shown.
+export function listActiveLevels(executor: Executor) {
+  return executor.query.levels.findMany({
+    where: eq(levels.isActive, true),
+    orderBy: asc(levels.code),
+  });
+}
+
+// The top of the compensation plan: the highest active level. Completing
+// it makes a member an "ancêtre" (services/mlm/unlock-level.ts).
+export async function getTopLevelCode(executor: Executor): Promise<number> {
+  const [row] = await executor
+    .select({ top: sql<number>`max(${levels.code})` })
+    .from(levels)
+    .where(eq(levels.isActive, true));
+  return Number(row?.top ?? 1);
+}
 
 export type LevelProgressView = {
   code: number;
@@ -28,7 +47,7 @@ export async function listLevelProgress(
   userId: string,
 ): Promise<LevelProgressView[]> {
   const [allLevels, memberLevelRows, generationRows] = await Promise.all([
-    executor.query.levels.findMany({ orderBy: asc(levels.code) }),
+    listActiveLevels(executor),
     executor.query.memberLevels.findMany({
       where: eq(memberLevels.userId, userId),
     }),
@@ -78,7 +97,7 @@ export type LevelStats = {
 // quick admin form.
 export async function getLevelStats(executor: Executor): Promise<LevelStats[]> {
   const [allLevels, memberLevelRows] = await Promise.all([
-    executor.query.levels.findMany({ orderBy: asc(levels.code) }),
+    listActiveLevels(executor),
     executor.query.memberLevels.findMany(),
   ]);
 
