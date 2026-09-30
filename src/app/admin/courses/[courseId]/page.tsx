@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/db/client";
 import { getCourseContent, getCourseStats } from "@/repositories/courses";
 import { buttonVariants } from "@/components/ui/button";
+import { VIDEO_PROVIDER_LABEL } from "@/lib/lesson-media-labels";
 import {
   Card,
   CardContent,
@@ -161,7 +162,9 @@ export default async function AdminCourseDetailPage(
                           ? lesson.hasQuiz
                             ? "Texte + quiz"
                             : "Texte"
-                          : lesson.videoProvider}
+                          : lesson.videoProvider
+                            ? VIDEO_PROVIDER_LABEL[lesson.videoProvider]
+                            : "Vidéo"}
                       </span>
                       <Link
                         href={`/admin/courses/${courseId}/lessons/${lesson.id}`}

@@ -17,7 +17,7 @@ import {
   getNeighbors,
   getProgress,
 } from "@/lib/course-navigation";
-import { getVideoEmbedUrl } from "@/lib/video-embed";
+import { getGoogleDriveEmbed, getVideoEmbedUrl } from "@/lib/video-embed";
 import { buttonVariants } from "@/components/ui/button";
 import { CourseOutline } from "@/components/course/course-outline";
 import { LessonContent } from "@/components/lesson-content";
@@ -64,6 +64,12 @@ export default async function LessonDetailPage(
   const embedUrl =
     lesson.lessonType === "VIDEO" && lesson.videoUrl
       ? getVideoEmbedUrl(lesson.videoProvider, lesson.videoUrl)
+      : null;
+  // A Google Drive file, Doc or folder (lib/video-embed.ts): shown in the
+  // page like a video, with a frame sized for what it is.
+  const drive =
+    lesson.lessonType === "VIDEO" && lesson.videoUrl
+      ? getGoogleDriveEmbed(lesson.videoUrl)
       : null;
 
   // Quizzes only exist on text lessons (services/lms/submit-quiz-attempt.ts).
@@ -132,7 +138,35 @@ export default async function LessonDetailPage(
         </div>
 
         {lesson.lessonType === "VIDEO" &&
-          (embedUrl ? (
+          (drive ? (
+            <div className="space-y-2">
+              <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+                <iframe
+                  src={drive.src}
+                  title={lesson.title}
+                  allow="autoplay; fullscreen"
+                  allowFullScreen
+                  className={cn(
+                    "w-full",
+                    drive.kind === "file"
+                      ? "aspect-video"
+                      : "h-[70vh] min-h-96",
+                  )}
+                />
+              </div>
+              <a
+                href={drive.src.replace("#list", "")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs"
+              >
+                <ExternalLink className="size-3.5" />
+                {drive.kind === "folder"
+                  ? "Ouvrir le dossier en plein écran"
+                  : "Ouvrir en plein écran"}
+              </a>
+            </div>
+          ) : embedUrl ? (
             <div className="overflow-hidden rounded-2xl border bg-black shadow-sm">
               <iframe
                 src={embedUrl}

@@ -2,13 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DRIVE_SHARING_HINT,
+  VIDEO_PROVIDER_LABEL,
+} from "@/lib/lesson-media-labels";
 import { Input } from "@/components/ui/input";
 import { createLessonAction } from "./actions";
 
 const PROVIDERS = ["YOUTUBE", "VIMEO", "OTHER"] as const;
 const LESSON_TYPES = ["VIDEO", "TEXT"] as const;
 const LESSON_TYPE_LABEL: Record<(typeof LESSON_TYPES)[number], string> = {
-  VIDEO: "Vidéo",
+  VIDEO: "Vidéo ou Google Drive",
   TEXT: "Texte",
 };
 
@@ -65,12 +69,17 @@ export function AddLessonForm({
             >
               {PROVIDERS.map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {VIDEO_PROVIDER_LABEL[p]}
                 </option>
               ))}
             </select>
             <Input
-              placeholder="URL de la vidéo"
+              placeholder={
+                videoProvider === "OTHER"
+                  ? "Lien Google Drive"
+                  : "URL de la vidéo"
+              }
+              title={videoProvider === "OTHER" ? DRIVE_SHARING_HINT : undefined}
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               className="max-w-64"

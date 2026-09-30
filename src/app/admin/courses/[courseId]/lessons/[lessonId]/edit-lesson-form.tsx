@@ -2,6 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  DRIVE_SHARING_HINT,
+  VIDEO_PROVIDER_LABEL,
+} from "@/lib/lesson-media-labels";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MarkdownEditor } from "@/components/markdown-editor";
@@ -10,7 +14,7 @@ import { updateLessonAction } from "./actions";
 const PROVIDERS = ["YOUTUBE", "VIMEO", "OTHER"] as const;
 const LESSON_TYPES = ["VIDEO", "TEXT"] as const;
 const LESSON_TYPE_LABEL: Record<(typeof LESSON_TYPES)[number], string> = {
-  VIDEO: "Vidéo",
+  VIDEO: "Vidéo ou Google Drive",
   TEXT: "Texte",
 };
 
@@ -115,19 +119,28 @@ export function EditLessonForm({
             >
               {PROVIDERS.map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {VIDEO_PROVIDER_LABEL[p]}
                 </option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lesson-video-url">URL de la vidéo</Label>
+            <Label htmlFor="lesson-video-url">
+              {videoProvider === "OTHER"
+                ? "Lien Google Drive"
+                : "URL de la vidéo"}
+            </Label>
             <Input
               id="lesson-video-url"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
             />
           </div>
+          {videoProvider === "OTHER" && (
+            <p className="text-muted-foreground col-span-2 text-xs">
+              {DRIVE_SHARING_HINT}
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
