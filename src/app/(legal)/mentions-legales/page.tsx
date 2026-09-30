@@ -26,14 +26,13 @@ export default function MentionsLegalesPage() {
         </p>
         <List>
           <li>
-            <Field value={e.companyName} />, <Field value={e.legalForm} /> au
-            capital de <Field value={e.shareCapital} />
+            <Field value={e.companyName} />, <Field value={e.legalForm} />
+          </li>
+          <li>
+            Immatriculée auprès de <Field value={e.registration} />
           </li>
           <li>
             Siège social : <Field value={e.address} />
-          </li>
-          <li>
-            RCCM : <Field value={e.rccm} /> — NIF : <Field value={e.taxId} />
           </li>
           <li>
             Téléphone : <Field value={e.phone} />

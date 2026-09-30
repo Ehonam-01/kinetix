@@ -4,11 +4,13 @@
 // missing one can't go unnoticed in production.
 export const LEGAL_ENTITY = {
   companyName: "EXCELLENCIA GROUP LTD",
-  legalForm: "[FORME JURIDIQUE — ex. SARL]",
-  shareCapital: "[CAPITAL SOCIAL] F CFA",
-  rccm: "[NUMÉRO RCCM]",
-  taxId: "[NIF]",
-  address: "Rue Bui-tsè, Lomé, Togo",
+  // An English private limited company (company numbers without an SC/NI
+  // prefix are registered in England and Wales).
+  legalForm: "société de droit anglais (private limited company)",
+  registration:
+    "Companies House, Angleterre et pays de Galles (Royaume-Uni), sous le numéro 16421484",
+  // Registered office, as filed at Companies House.
+  address: "71-75 Shelton Street, Covent Garden, Londres WC2H 9JQ, Royaume-Uni",
   phone: "+228 79 80 03 61",
   email: "contact@kinetix-africa.com",
   publicationDirector: "[NOM DU DIRECTEUR DE LA PUBLICATION]",
@@ -16,7 +18,7 @@ export const LEGAL_ENTITY = {
   jurisdiction: "Lomé",
 } as const;
 
-export const LEGAL_LAST_UPDATED = "28 septembre 2026";
+export const LEGAL_LAST_UPDATED = "30 septembre 2026";
 
 export function isPlaceholder(value: string): boolean {
   return value.includes("[");
