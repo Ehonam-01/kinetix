@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/services/auth/current-user";
 import { createCourse } from "@/services/lms/create-course";
+import { revalidatePublicCourses } from "@/lib/revalidate-public-courses";
 
 export async function createCourseAction(input: {
   title: string;
@@ -21,5 +22,6 @@ export async function createCourseAction(input: {
     };
   }
   revalidatePath("/admin/courses");
+  revalidatePublicCourses();
   redirect(`/admin/courses/${course.id}`);
 }

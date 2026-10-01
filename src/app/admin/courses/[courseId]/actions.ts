@@ -17,6 +17,7 @@ import type {
   lessonTypeEnum,
   videoProviderEnum,
 } from "@/db/schema/courses";
+import { revalidatePublicCourses } from "@/lib/revalidate-public-courses";
 
 type VideoProvider = (typeof videoProviderEnum.enumValues)[number];
 type LessonType = (typeof lessonTypeEnum.enumValues)[number];
@@ -32,6 +33,7 @@ export async function createModuleAction(courseId: string, title: string) {
     };
   }
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
   return { error: null };
 }
 
@@ -56,6 +58,7 @@ export async function createLessonAction(
     };
   }
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
   return { error: null };
 }
 
@@ -68,6 +71,7 @@ export async function updateModuleAction(
   try {
     await updateModule(profile.id, moduleId, input);
     revalidatePath(`/admin/courses/${courseId}`);
+    revalidatePublicCourses();
     return { error: null };
   } catch (err) {
     return {
@@ -83,8 +87,8 @@ export async function updateCourseStatusAction(
   const { profile } = await requireAdmin();
   await updateCourseStatus(profile.id, courseId, status);
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
   revalidatePath("/admin/courses");
-  revalidatePath("/");
 }
 
 export async function updateCoursePricingAction(
@@ -100,7 +104,7 @@ export async function updateCoursePricingAction(
     };
   }
   revalidatePath(`/admin/courses/${courseId}`);
-  revalidatePath("/");
+  revalidatePublicCourses();
   return { error: null };
 }
 
@@ -121,6 +125,7 @@ export async function moveCourseItemAction(
   }
   // "layout" also refreshes the learner pages under this course.
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
   revalidatePath(`/dashboard/courses/${courseId}`, "layout");
   return { error: null };
 }

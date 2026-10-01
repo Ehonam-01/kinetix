@@ -5,6 +5,7 @@ import { requireAdmin } from "@/services/auth/current-user";
 import { saveQuiz, type QuizQuestionInput } from "@/services/lms/save-quiz";
 import { updateLesson } from "@/services/lms/update-lesson";
 import type { lessonTypeEnum, videoProviderEnum } from "@/db/schema/courses";
+import { revalidatePublicCourses } from "@/lib/revalidate-public-courses";
 
 type VideoProvider = (typeof videoProviderEnum.enumValues)[number];
 type LessonType = (typeof lessonTypeEnum.enumValues)[number];
@@ -26,6 +27,7 @@ export async function updateLessonAction(
   try {
     await updateLesson(profile.id, lessonId, input);
     revalidatePath(`/admin/courses/${courseId}`);
+    revalidatePublicCourses();
     revalidatePath(`/admin/courses/${courseId}/lessons/${lessonId}`);
     return { error: null };
   } catch (err) {

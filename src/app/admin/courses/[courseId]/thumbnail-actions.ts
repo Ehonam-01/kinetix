@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/services/auth/current-user";
 import { uploadCourseThumbnail } from "@/services/lms/upload-course-thumbnail";
+import { revalidatePublicCourses } from "@/lib/revalidate-public-courses";
 
 export async function uploadCourseThumbnailAction(
   courseId: string,
@@ -16,8 +17,8 @@ export async function uploadCourseThumbnailAction(
       file,
     );
     revalidatePath(`/admin/courses/${courseId}`);
+    revalidatePublicCourses();
     revalidatePath("/admin/courses");
-    revalidatePath("/");
     return { thumbnailUrl, error: null };
   } catch (err) {
     return {
