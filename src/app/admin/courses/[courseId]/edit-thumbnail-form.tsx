@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resizeImageForUpload } from "@/lib/resize-image";
 import { uploadCourseThumbnailAction } from "./thumbnail-actions";
 
 export function EditThumbnailForm({
@@ -23,7 +24,15 @@ export function EditThumbnailForm({
     if (!file) return;
     setError(null);
     startTransition(async () => {
-      const result = await uploadCourseThumbnailAction(courseId, file);
+      let result;
+      try {
+        // Phone photos exceed what a Server Action accepts — shrunk first.
+        const upload = await resizeImageForUpload(file);
+        result = await uploadCourseThumbnailAction(courseId, upload);
+      } catch {
+        setError("L'envoi de l'image a échoué. Réessayez, ou choisissez une image plus légère.");
+        return;
+      }
       if (result.error || !result.thumbnailUrl) {
         setError(result.error ?? "Une erreur est survenue.");
         return;

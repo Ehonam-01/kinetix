@@ -5,6 +5,7 @@ import { ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { resizeImageForUpload } from "@/lib/resize-image";
 import { upsertRewardAction, uploadRewardImageAction } from "./actions";
 
 export function RewardEditor({
@@ -55,7 +56,15 @@ export function RewardEditor({
     if (!file || !rewardId) return;
     setError(null);
     startTransition(async () => {
-      const result = await uploadRewardImageAction(rewardId, file);
+      let result;
+      try {
+        // Phone photos exceed what a Server Action accepts — shrunk first.
+        const upload = await resizeImageForUpload(file);
+        result = await uploadRewardImageAction(rewardId, upload);
+      } catch {
+        setError("L'envoi de l'image a échoué. Réessayez, ou choisissez une image plus légère.");
+        return;
+      }
       if (result.error || !result.imageUrl) {
         setError(result.error ?? "Une erreur est survenue.");
         return;

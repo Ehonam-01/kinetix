@@ -29,6 +29,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Image uploads (course thumbnails, reward pictures) go through
+      // Server Actions, limited to 1 MB by default. The upload forms shrink
+      // images in the browser first (lib/resize-image.ts); this is the
+      // safety net, kept under Vercel's own 4.5 MB request limit.
+      bodySizeLimit: "4mb",
+    },
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
