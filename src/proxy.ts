@@ -33,7 +33,13 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  // Refreshes the session cookie when the access token has expired.
+  // getClaims (Supabase's current recommendation for middleware) validates
+  // the token locally when the project signs with asymmetric keys, and
+  // falls back to the same getUser round trip otherwise — never weaker,
+  // often one network call fewer on every request. Pages and actions still
+  // validate the user with Supabase themselves (services/auth/session.ts).
+  await supabase.auth.getClaims();
 
   return response;
 }

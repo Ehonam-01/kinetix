@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Who's signed in, and what Supabase answers about their second factor.
+// Who's signed in (validated by Supabase's getUser), their factors, and the
+// session token in the cookies.
 let role: "ADMIN" | "USER" = "ADMIN";
-let aal: { currentLevel: string; nextLevel: string } | "error" = {
-  currentLevel: "aal1",
-  nextLevel: "aal1",
-};
-const aalCalls: (string | undefined)[] = [];
+let factors: { status: string }[] = [];
+let session: { access_token: string } | null = null;
+let getUserCalls = 0;
+
+function token(claims: Record<string, unknown>) {
+  const encode = (o: object) =>
+    Buffer.from(JSON.stringify(o)).toString("base64url");
+  return `${encode({ alg: "HS256" })}.${encode(claims)}.signature`;
+}
+const inOneHour = () => Math.floor(Date.now() / 1000) + 3600;
 
 vi.mock("@/db/client", () => ({ db: {} }));
 vi.mock("@/services/auth/ensure-profile", () => ({
@@ -15,18 +21,11 @@ vi.mock("@/services/auth/ensure-profile", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({
     auth: {
-      getUser: async () => ({ data: { user: { id: "u1" } } }),
-      getSession: async () => ({
-        data: { session: { access_token: "jeton-de-session" } },
-      }),
-      mfa: {
-        getAuthenticatorAssuranceLevel: async (jwt?: string) => {
-          aalCalls.push(jwt);
-          return aal === "error"
-            ? { data: null, error: new Error("indisponible") }
-            : { data: aal, error: null };
-        },
+      getUser: async () => {
+        getUserCalls += 1;
+        return { data: { user: { id: "u1", factors } } };
       },
+      getSession: async () => ({ data: { session } }),
     },
   }),
 }));
@@ -40,42 +39,69 @@ async function expectRedirectTo(promise: Promise<unknown>, path: string) {
 describe("requireAdmin with a second factor", () => {
   beforeEach(() => {
     role = "ADMIN";
-    aalCalls.length = 0;
+    factors = [{ status: "verified" }];
+    session = null;
+    getUserCalls = 0;
   });
 
   it("lets an admin through once the session passed the second factor", async () => {
-    aal = { currentLevel: "aal2", nextLevel: "aal2" };
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal2" }),
+    };
     const { requireAdmin } = await import("./current-user");
     await expect(requireAdmin()).resolves.toMatchObject({
       profile: { role: "ADMIN" },
     });
-    // The session token is handed to Supabase to validate, not decoded locally.
-    expect(aalCalls).toEqual(["jeton-de-session"]);
+    // The level comes from the session Supabase validated through getUser —
+    // the mocked client has no mfa API at all, so asking Supabase for the
+    // assurance level again would throw here. (React's cache() makes the
+    // two getUser calls one inside a real request; not in a plain test.)
+    expect(getUserCalls).toBeGreaterThan(0);
   });
 
   it("sends an admin with an enrolled factor but no code yet to /mfa", async () => {
-    aal = { currentLevel: "aal1", nextLevel: "aal2" };
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal1" }),
+    };
     const { requireAdmin } = await import("./current-user");
     await expectRedirectTo(requireAdmin(), "/mfa");
+    const { getAdminMfaState } = await import("./admin-mfa");
+    expect(await getAdminMfaState()).toEqual({ status: "needs-code" });
   });
 
   it("sends an admin who never enrolled to /mfa", async () => {
-    aal = { currentLevel: "aal1", nextLevel: "aal1" };
-    const { requireAdmin } = await import("./current-user");
-    await expectRedirectTo(requireAdmin(), "/mfa");
+    factors = [];
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal1" }),
+    };
+    const { getAdminMfaState } = await import("./admin-mfa");
+    expect(await getAdminMfaState()).toEqual({ status: "needs-enrollment" });
   });
 
-  it("fails closed when Supabase can't be asked", async () => {
-    aal = "error";
+  it("fails closed on a session that isn't the validated user's, has expired, or is missing", async () => {
     const { requireAdmin } = await import("./current-user");
+    session = {
+      access_token: token({
+        sub: "someone-else",
+        exp: inOneHour(),
+        aal: "aal2",
+      }),
+    };
+    await expectRedirectTo(requireAdmin(), "/mfa");
+    session = { access_token: token({ sub: "u1", exp: 1000, aal: "aal2" }) };
+    await expectRedirectTo(requireAdmin(), "/mfa");
+    session = { access_token: "pas-un-jeton" };
+    await expectRedirectTo(requireAdmin(), "/mfa");
+    session = null;
     await expectRedirectTo(requireAdmin(), "/mfa");
   });
 
   it("still sends a non-admin to the dashboard, without asking for MFA", async () => {
     role = "USER";
-    aal = { currentLevel: "aal2", nextLevel: "aal2" };
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal2" }),
+    };
     const { requireAdmin } = await import("./current-user");
     await expectRedirectTo(requireAdmin(), "/dashboard");
-    expect(aalCalls).toEqual([]);
   });
 });

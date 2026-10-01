@@ -1,5 +1,5 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser, getVerifiedSessionClaims } from "./session";
 
 export type AdminMfaState =
   // Session already passed the second factor (aal2).
@@ -14,21 +14,25 @@ export type AdminMfaState =
 // Second factor (TOTP, Supabase Auth — free on every project) required for
 // every admin page and action: the admin account validates withdrawals,
 // recharges balances and sets commission rates, so a stolen password alone
-// must not be enough. The session's access token is passed explicitly,
-// which makes Supabase validate it and return the assurance level itself,
-// rather than trusting a value decoded locally from the cookie.
+// must not be enough.
+//
+// Same answer as Supabase's getAuthenticatorAssuranceLevel, without its
+// extra network call: the session was already validated by Supabase in
+// this request (getAuthUser), so its access token's own "aal" claim is the
+// current level, and the user's verified factors tell whether aal2 is
+// reachable. Never trusts a token that isn't that validated user's, or
+// that has expired (getVerifiedSessionClaims).
 export async function getAdminMfaState(): Promise<AdminMfaState> {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) return { status: "unavailable" };
+  const user = await getAuthUser();
+  if (!user) return { status: "unavailable" };
+  const claims = await getVerifiedSessionClaims(user);
+  if (!claims) return { status: "unavailable" };
 
-  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(
-    session.access_token,
+  if (claims.aal === "aal2") return { status: "verified" };
+  const hasVerifiedFactor = (user.factors ?? []).some(
+    (f) => f.status === "verified",
   );
-  if (error || !data) return { status: "unavailable" };
-  if (data.currentLevel === "aal2") return { status: "verified" };
-  if (data.nextLevel === "aal2") return { status: "needs-code" };
-  return { status: "needs-enrollment" };
+  return hasVerifiedFactor
+    ? { status: "needs-code" }
+    : { status: "needs-enrollment" };
 }

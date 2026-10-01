@@ -1,24 +1,25 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { getAdminMfaState } from "./admin-mfa";
 import { ensureProfile } from "./ensure-profile";
+import { getAuthUser } from "./session";
 
-export async function getCurrentUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+// Once per request (React cache()): the layout, the page and every guard
+// below share one Supabase validation and one profile read, instead of
+// repeating them — that repetition made each admin page validate the
+// session up to five times over the network.
+export const getCurrentUser = cache(async () => {
+  const user = await getAuthUser();
   if (!user) return null;
 
   const profile = await ensureProfile(user);
   if (!profile) return null;
 
   return { authUser: user, profile };
-}
+});
 
 export async function requireUser() {
   const current = await getCurrentUser();
