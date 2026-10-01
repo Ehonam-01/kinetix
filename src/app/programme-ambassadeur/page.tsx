@@ -9,6 +9,7 @@ import { PaHero } from "./_components/pa-hero";
 import { PaProgramIntro } from "./_components/pa-program-intro";
 import { PaCompensation } from "./_components/pa-compensation";
 import { PaProgression } from "./_components/pa-progression";
+import { PaRewards } from "./_components/pa-rewards";
 import { PaBenefits } from "./_components/pa-benefits";
 import { PaObjections } from "./_components/pa-objections";
 import { PaFinalCta } from "./_components/pa-final-cta";
@@ -60,6 +61,7 @@ export default async function ProgrammeAmbassadeurPage() {
         <PaProgramIntro />
         <PaCompensation data={compensation} />
         <PaProgression levels={compensation.levels} />
+        <PaRewards levels={compensation.levels} />
         <PaBenefits levelNames={levelNames} />
         <PaObjections />
         <PaFinalCta />
