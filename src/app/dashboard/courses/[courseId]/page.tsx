@@ -130,18 +130,17 @@ export default async function CourseDetailPage(
               <p className="text-muted-foreground text-sm">
                 Cette formation, comme toutes les autres, est incluse dans
                 l&apos;abonnement annuel.
-                {course.price != null && (
-                  <>
-                    {" "}
-                    <span className="line-through">
-                      {course.price.toLocaleString("fr-FR")} F
-                    </span>{" "}
-                    <span className="font-medium text-emerald-600">
-                      Gratuit avec l&apos;abonnement
-                    </span>
-                  </>
-                )}
               </p>
+              {course.price != null && (
+                <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="text-muted-foreground text-xl font-semibold line-through tabular-nums">
+                    {course.price.toLocaleString("fr-FR")} F
+                  </span>
+                  <span className="text-base font-semibold text-emerald-600">
+                    Gratuit avec l&apos;abonnement
+                  </span>
+                </p>
+              )}
               <Link
                 href="/dashboard/subscription"
                 className={cn(buttonVariants(), "w-full sm:w-auto")}

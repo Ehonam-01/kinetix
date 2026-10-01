@@ -112,16 +112,16 @@ export function PublicCourseView({
 
               <div className="mt-6">
                 {course.price ? (
-                  <p className="text-sm">
-                    <span className="text-muted-foreground line-through">
+                  <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="text-muted-foreground text-2xl font-semibold line-through tabular-nums">
                       {course.price.toLocaleString("fr-FR")} F
-                    </span>{" "}
-                    <span className="font-semibold text-emerald-600">
+                    </span>
+                    <span className="text-lg font-semibold text-emerald-600">
                       Gratuit avec l&apos;abonnement
                     </span>
                   </p>
                 ) : (
-                  <p className="text-sm font-semibold text-emerald-600">
+                  <p className="text-lg font-semibold text-emerald-600">
                     Incluse dans l&apos;abonnement annuel
                   </p>
                 )}

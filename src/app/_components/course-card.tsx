@@ -51,18 +51,18 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
         </div>
 
         <div className="border-border mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t pt-4">
-          <span className="text-xs font-medium">
+          <span className="flex flex-col">
             {course.price ? (
               <>
-                <span className="text-muted-foreground line-through">
+                <span className="text-muted-foreground text-lg font-semibold line-through tabular-nums">
                   {course.price.toLocaleString("fr-FR")} F
-                </span>{" "}
-                <span className="text-green-600">
+                </span>
+                <span className="text-sm font-semibold text-green-600">
                   Gratuit avec l&apos;abonnement
                 </span>
               </>
             ) : (
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground text-sm font-medium">
                 Inclus dans l&apos;abonnement
               </span>
             )}
