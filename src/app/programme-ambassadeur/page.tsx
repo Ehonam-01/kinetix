@@ -59,7 +59,7 @@ export default async function ProgrammeAmbassadeurPage() {
         <PaHero />
         <PaProgramIntro />
         <PaCompensation data={compensation} />
-        <PaProgression levelNames={levelNames} />
+        <PaProgression levels={compensation.levels} />
         <PaBenefits levelNames={levelNames} />
         <PaObjections />
         <PaFinalCta />

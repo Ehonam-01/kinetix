@@ -6,12 +6,23 @@ import {
   listEffectiveGenerationRules,
 } from "@/repositories/commission-rules";
 import { listActiveLevels } from "@/repositories/member-levels";
+import { listRewardCatalog } from "@/repositories/rewards";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+
+// What completing a generation of this level pays, per qualified member of
+// the team: a percentage of the subscription price, or a fixed amount
+// (min = max when every generation of the level pays the same).
+export type GenerationPay =
+  | { kind: "percent"; value: number }
+  | { kind: "fixed"; min: number; max: number };
 
 export type CompensationLevel = {
   code: number;
   name: string;
-  ratePercent: number;
+  generation: GenerationPay | null;
+  // The level's material reward — its name and picture only, never its
+  // value (explicit decision: members see the item, not its price).
+  reward: { name: string; imageUrl: string | null } | null;
 };
 
 export type CompensationData = {
@@ -32,12 +43,14 @@ export async function getCompensationData(
     levelRows,
     subscriptionPrice,
     bvValueInCfa,
+    rewardRows,
   ] = await Promise.all([
     listEffectiveDirectSaleRules(executor),
     listEffectiveGenerationRules(executor),
     listActiveLevels(executor),
     getCurrentParameterValue(executor, "subscription.price_in_cfa"),
     getCurrentParameterValue(executor, "bv.value_in_cfa"),
+    listRewardCatalog(executor),
   ]);
 
   const defaultDirectRule =
@@ -47,35 +60,44 @@ export async function getCompensationData(
       ? defaultDirectRule.rate / 100
       : null;
 
-  const nameByCode = new Map(levelRows.map((l) => [l.code, l.name]));
-  const rateByLevel = new Map<number, number>();
+  // Generation pay per level, from the rules actually applied — all of a
+  // level's generations, so a level whose generations pay differently
+  // shows a range rather than one of them.
+  const percentByLevel = new Map<number, number>();
+  const fixedByLevel = new Map<number, number[]>();
   for (const rule of generationRules) {
-    if (rule.levelCode == null) continue;
-    // Both express "X% of what the generation is worth" and render
-    // identically as a percentage badge — BV_PERCENTAGE is what every rule
-    // is configured as today, PERCENTAGE is the price-indexed replacement
-    // (business decision: BV no longer has a reason to exist now that every
-    // sale is the same flat-price subscription, see repositories/
-    // commission-rules.ts's computeGenerationCommission). Only matching
-    // BV_PERCENTAGE here silently dropped a level from this page the moment
-    // an admin migrated it to PERCENTAGE from /admin/commission-rules.
-    if (
-      (rule.commissionType === "PERCENTAGE" ||
-        rule.commissionType === "BV_PERCENTAGE") &&
-      rule.rate > 0
-    ) {
-      rateByLevel.set(rule.levelCode, rule.rate / 100);
+    if (rule.levelCode == null || rule.rate <= 0) continue;
+    if (rule.commissionType === "FIXED") {
+      fixedByLevel.set(rule.levelCode, [
+        ...(fixedByLevel.get(rule.levelCode) ?? []),
+        rule.rate,
+      ]);
+    } else {
+      // PERCENTAGE and the legacy BV_PERCENTAGE both read as "X % of the
+      // subscription" (see computeGenerationCommission).
+      percentByLevel.set(rule.levelCode, rule.rate / 100);
     }
   }
+  const rewardByLevel = new Map(
+    rewardRows
+      .filter((r) => r.isActive)
+      .map((r) => [r.levelCode, { name: r.name, imageUrl: r.imageUrl }]),
+  );
 
-  const compensationLevels: CompensationLevel[] = levelRows
-    .map((l) => l.code)
-    .filter((code) => code >= 2 && rateByLevel.has(code))
-    .map((code) => ({
-      code,
-      name: nameByCode.get(code) ?? `Niveau ${code}`,
-      ratePercent: rateByLevel.get(code)!,
-    }));
+  const compensationLevels: CompensationLevel[] = levelRows.map((level) => {
+    const fixed = fixedByLevel.get(level.code);
+    const percent = percentByLevel.get(level.code);
+    return {
+      code: level.code,
+      name: level.name,
+      generation: fixed?.length
+        ? { kind: "fixed", min: Math.min(...fixed), max: Math.max(...fixed) }
+        : percent != null
+          ? { kind: "percent", value: percent }
+          : null,
+      reward: rewardByLevel.get(level.code) ?? null,
+    };
+  });
 
   // The worked example uses the real subscription price, run through the
   // real computeDirectSaleCommission — never a number typed by hand, so it

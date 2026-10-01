@@ -82,38 +82,6 @@ export function PaCompensation({ data }: { data: CompensationData }) {
           </Reveal>
         )}
 
-        {data.levels.length > 0 && (
-          <Reveal delayMs={150}>
-            <div className="mt-8">
-              <h3 className="font-heading text-center text-lg font-semibold">
-                Le système de génération
-              </h3>
-              <p className="text-muted-foreground mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed">
-                Quand ton activité de recommandation se développe, les
-                souscriptions réalisées dans ton organisation génèrent du
-                volume. Selon les conditions d&apos;éligibilité et le niveau
-                atteint, certaines souscriptions ouvrent droit à une commission
-                de génération.
-              </p>
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {data.levels.map((level) => (
-                  <div
-                    key={level.code}
-                    className="border-border bg-card rounded-xl border p-4 text-center"
-                  >
-                    <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                      {level.name}
-                    </p>
-                    <p className="text-primary mt-1 text-2xl font-bold">
-                      {level.ratePercent}&nbsp;%
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal>
-        )}
-
         <Reveal delayMs={200}>
           <p className="text-muted-foreground mx-auto mt-8 max-w-xl text-center text-sm leading-relaxed">
             Le simple fait qu&apos;une personne rejoigne Kinetix ne déclenche
