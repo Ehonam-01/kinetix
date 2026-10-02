@@ -10,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Award, Download } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -36,13 +38,12 @@ export default async function LevelsPage() {
             <CardTitle>🏆 Ancêtre</CardTitle>
             <CardDescription>
               Vous avez atteint le sommet du plan de compensation (niveau{" "}
-              {levelProgress.at(-1)?.code})
-              le{" "}
+              {levelProgress.at(-1)?.code}) le{" "}
               {profile.becameAncestorAt.toLocaleDateString("fr-FR", {
                 dateStyle: "long",
               })}
-              . Votre solde et l&apos;accès à la plateforme restent
-              inchangés, mais vous ne recevez plus de nouvelles commissions.
+              . Votre solde et l&apos;accès à la plateforme restent inchangés,
+              mais vous ne recevez plus de nouvelles commissions.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -80,6 +81,24 @@ export default async function LevelsPage() {
                     {level.completedAt &&
                       ` · complété le ${level.completedAt.toLocaleDateString("fr-FR", { dateStyle: "medium" })}`}
                   </CardDescription>
+                )}
+                {level.status === "COMPLETED" && (
+                  <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+                    <Award className="size-5 shrink-0 text-amber-600" />
+                    <p className="min-w-0 flex-1 text-sm">
+                      Votre certificat de réussite du niveau {level.code} est
+                      prêt.
+                    </p>
+                    {/* A plain link, not next/link: it's a PDF download. */}
+                    <a
+                      href={`/dashboard/levels/${level.code}/certificate`}
+                      download
+                      className={buttonVariants({ size: "sm" })}
+                    >
+                      <Download className="size-4" />
+                      Télécharger
+                    </a>
+                  </div>
                 )}
               </CardHeader>
               {((level.status !== "LOCKED" && level.generations.length > 0) ||

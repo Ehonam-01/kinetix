@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4mb",
     },
   },
+  // The level certificate (app/dashboard/levels/[levelCode]/certificate)
+  // draws the logo from disk: public/ isn't bundled with server functions
+  // unless asked.
+  outputFileTracingIncludes: {
+    "/dashboard/levels/*/certificate": ["./public/logo-horizontal.png"],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

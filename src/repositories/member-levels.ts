@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { generationProgress } from "@/db/schema/generation-progress";
 import { levels } from "@/db/schema/levels";
@@ -121,4 +121,32 @@ export async function getLevelStats(executor: Executor): Promise<LevelStats[]> {
     inProgress: countsByCode.get(level.code)?.inProgress ?? 0,
     completed: countsByCode.get(level.code)?.completed ?? 0,
   }));
+}
+
+// A level this member has completed, with its name — what a certificate is
+// drawn from (services/certificates/level-certificate.ts). null while the
+// level is locked or still in progress.
+export async function getCompletedLevel(
+  executor: Executor,
+  userId: string,
+  levelCode: number,
+) {
+  const [row] = await executor
+    .select({
+      id: memberLevels.id,
+      levelCode: memberLevels.levelCode,
+      levelName: levels.name,
+      completedAt: memberLevels.completedAt,
+    })
+    .from(memberLevels)
+    .innerJoin(levels, eq(levels.code, memberLevels.levelCode))
+    .where(
+      and(
+        eq(memberLevels.userId, userId),
+        eq(memberLevels.levelCode, levelCode),
+        eq(memberLevels.status, "COMPLETED"),
+      ),
+    );
+  if (!row?.completedAt) return null;
+  return { ...row, completedAt: row.completedAt };
 }
