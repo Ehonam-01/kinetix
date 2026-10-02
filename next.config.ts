@@ -39,10 +39,13 @@ const nextConfig: NextConfig = {
     },
   },
   // The level certificate (app/dashboard/levels/[levelCode]/certificate)
-  // draws the logo from disk: public/ isn't bundled with server functions
-  // unless asked.
+  // draws the logo and its fonts from disk: neither is bundled with server
+  // functions unless asked.
   outputFileTracingIncludes: {
-    "/dashboard/levels/*/certificate": ["./public/logo-horizontal.png"],
+    "/dashboard/levels/*/certificate": [
+      "./public/logo-horizontal.png",
+      "./src/assets/fonts/*.ttf",
+    ],
   },
   async headers() {
     return [
