@@ -65,12 +65,11 @@ export default async function CourseDetailPage(
         ← Toutes les formations
       </Link>
 
-      <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm md:flex">
-        <CourseCover
-          thumbnailUrl={course.thumbnailUrl}
-          className="md:aspect-auto md:w-80 md:shrink-0"
-        />
-        <div className="flex-1 space-y-4 p-5 sm:p-6">
+      {/* The thumbnail on top, full width and uncropped (16:9, the format
+          admins design them in), the details below it. */}
+      <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+        <CourseCover thumbnailUrl={course.thumbnailUrl} />
+        <div className="space-y-4 p-5 sm:p-6">
           <div>
             {course.category && (
               <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-xs font-medium">
@@ -79,7 +78,7 @@ export default async function CourseDetailPage(
             )}
             <h1 className="mt-3 text-2xl font-semibold">{course.title}</h1>
             {course.description && (
-              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed whitespace-pre-line">
                 {course.description}
               </p>
             )}
@@ -133,7 +132,7 @@ export default async function CourseDetailPage(
               </p>
               {course.price != null && (
                 <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="text-muted-foreground text-xl font-semibold line-through tabular-nums">
+                  <span className="text-muted-foreground text-xl font-semibold tabular-nums line-through">
                     {course.price.toLocaleString("fr-FR")} F
                   </span>
                   <span className="text-base font-semibold text-emerald-600">
