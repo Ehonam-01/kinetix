@@ -16,6 +16,9 @@ export async function upsertRewardAction(input: {
     const reward = await upsertRewardCatalogEntry(profile.id, input);
     revalidatePath("/admin/levels");
     revalidatePath("/dashboard/levels");
+    // The public ambassador page shows each level's reward (name and
+    // picture); it's statically generated, so it's refreshed right away.
+    revalidatePath("/programme-ambassadeur");
     return { reward, error: null };
   } catch (err) {
     return {
@@ -31,6 +34,9 @@ export async function uploadRewardImageAction(rewardId: string, file: File) {
     const imageUrl = await uploadRewardImage(profile.id, rewardId, file);
     revalidatePath("/admin/levels");
     revalidatePath("/dashboard/levels");
+    // The public ambassador page shows each level's reward (name and
+    // picture); it's statically generated, so it's refreshed right away.
+    revalidatePath("/programme-ambassadeur");
     return { imageUrl, error: null };
   } catch (err) {
     return {
