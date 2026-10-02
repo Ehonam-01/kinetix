@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { db } from "@/db/client";
 import { getPublicCourse } from "@/repositories/courses";
 import { SITE_NAME } from "@/config/site";
+import { getSiteEnv } from "@/config/env.site";
 import { PublicCourseView } from "./public-course-view";
 
 // Every page is generated on its first visit, then served statically and
@@ -62,5 +63,10 @@ export default async function PublicCoursePage(
     permanentRedirect(`/formations/${course.slug}`);
   }
 
-  return <PublicCourseView content={content} />;
+  return (
+    <PublicCourseView
+      content={content}
+      shareUrl={`${getSiteEnv().SITE_URL}/formations/${course.slug ?? course.id}`}
+    />
+  );
 }

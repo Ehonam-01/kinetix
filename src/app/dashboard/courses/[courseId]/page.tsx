@@ -8,7 +8,10 @@ import {
   PartyPopper,
   Sparkles,
 } from "lucide-react";
+import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
+import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { getSiteEnv } from "@/config/env.site";
 import {
   getCourseContent,
   hasCourseAccess,
@@ -24,6 +27,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { CourseCover } from "@/components/course/course-cover";
 import { CourseOutline } from "@/components/course/course-outline";
+import { ShareCourse } from "@/components/course/share-course";
 import { ProgressBar } from "../_components/progress-bar";
 
 export default async function CourseDetailPage(
@@ -48,7 +52,23 @@ export default async function CourseDetailPage(
   // Every course requires an active annual subscription now (explicit
   // user decision, "remplacement complet" — see db/schema/subscriptions.ts):
   // no per-course purchase prompt, just a link to subscribe.
-  const access = await hasCourseAccess(db, profile.id, courseId);
+  const [access, ambassador] = await Promise.all([
+    hasCourseAccess(db, profile.id, courseId),
+    db.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, profile.id),
+    }),
+  ]);
+
+  // An active ambassador shares their referral link (app/r/[code]), which
+  // lands on the same public page; anyone else, the public page itself. A
+  // draft has no public page: nothing to share.
+  const siteUrl = getSiteEnv().SITE_URL;
+  const isAmbassador = ambassador?.status === "ACTIVE";
+  const shareUrl = !isCourseVisible(course)
+    ? null
+    : isAmbassador
+      ? `${siteUrl}/r/${ambassador.referralCode}?course=${course.id}`
+      : `${siteUrl}/formations/${course.slug ?? course.id}`;
 
   const lessons = flattenLessons(content);
   const progress = getProgress(lessons);
@@ -147,6 +167,19 @@ export default async function CourseDetailPage(
                 Voir l&apos;abonnement
               </Link>
             </div>
+          )}
+
+          {shareUrl && (
+            <ShareCourse
+              url={shareUrl}
+              courseTitle={course.title}
+              className="border-border border-t pt-4"
+              hint={
+                isAmbassador
+                  ? "Votre lien de parrainage est inclus : si la personne s'abonne grâce à ce lien, le parrainage vous est attribué."
+                  : undefined
+              }
+            />
           )}
         </div>
       </div>

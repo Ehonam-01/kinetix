@@ -14,6 +14,7 @@ import { cn, formatDuration } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { CourseCover } from "@/components/course/course-cover";
 import { CourseOutline } from "@/components/course/course-outline";
+import { ShareCourse } from "@/components/course/share-course";
 
 export type PublicCourseContent = NonNullable<
   Awaited<ReturnType<typeof getPublicCourse>>
@@ -23,8 +24,10 @@ export type PublicCourseContent = NonNullable<
 // metadata, redirects) so it only depends on the content it's given.
 export function PublicCourseView({
   content,
+  shareUrl,
 }: {
   content: PublicCourseContent;
+  shareUrl: string;
 }) {
   const { course } = content;
 
@@ -113,7 +116,7 @@ export function PublicCourseView({
               <div className="mt-6">
                 {course.price ? (
                   <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <span className="text-muted-foreground text-2xl font-semibold line-through tabular-nums">
+                    <span className="text-muted-foreground text-2xl font-semibold tabular-nums line-through">
                       {course.price.toLocaleString("fr-FR")} F
                     </span>
                     <span className="text-lg font-semibold text-emerald-600">
@@ -141,6 +144,11 @@ export function PublicCourseView({
                     Déjà membre ? Accéder à la formation
                   </Link>
                 </div>
+                <ShareCourse
+                  url={shareUrl}
+                  courseTitle={course.title}
+                  className="mt-6"
+                />
               </div>
             </div>
 
