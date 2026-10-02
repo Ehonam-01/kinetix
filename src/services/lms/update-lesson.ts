@@ -53,9 +53,8 @@ export async function updateLesson(
       throw new Error("Leçon introuvable.");
     }
 
-    if (input.lessonType === "VIDEO" && !input.videoUrl) {
-      throw new Error("Une leçon vidéo a besoin d'une URL de vidéo.");
-    }
+    // The video link may stay empty for now (see create-lesson.ts).
+    const videoUrl = input.videoUrl?.trim() || null;
 
     const [lesson] = await tx
       .update(lessons)
@@ -70,7 +69,7 @@ export async function updateLesson(
           input.lessonType === "VIDEO"
             ? (input.videoProvider ?? "YOUTUBE")
             : null,
-        videoUrl: input.lessonType === "VIDEO" ? input.videoUrl : null,
+        videoUrl: input.lessonType === "VIDEO" ? videoUrl : null,
         content: input.lessonType === "TEXT" ? (input.content ?? null) : null,
         isActive: input.isActive,
       })

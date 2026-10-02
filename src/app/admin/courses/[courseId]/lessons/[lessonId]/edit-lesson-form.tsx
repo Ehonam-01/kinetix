@@ -46,8 +46,8 @@ export function EditLessonForm({
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const canSubmit =
-    title.trim() !== "" && (lessonType === "TEXT" || videoUrl.trim() !== "");
+  // The video link may be added later: only the title is required.
+  const canSubmit = title.trim() !== "";
 
   function handleSave() {
     setError(null);
