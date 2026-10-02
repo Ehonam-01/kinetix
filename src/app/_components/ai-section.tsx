@@ -1,12 +1,13 @@
-import { Cpu, LineChart, Workflow, Zap } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Code2, LineChart, PenLine, Workflow } from "lucide-react";
 import { AiMockup } from "./ai-mockup";
 import { MediaSlot } from "./media-slot";
 import { Reveal } from "./reveal";
 
 const USES = [
-  { icon: Zap, label: "Gagner en productivité" },
-  { icon: Cpu, label: "Créer plus vite" },
-  { icon: LineChart, label: "Analyser et décider" },
+  { icon: PenLine, label: "Créer du contenu avec l'IA" },
+  { icon: Code2, label: "Créer une application sans coder" },
+  { icon: LineChart, label: "Analyser et décider plus vite" },
   { icon: Workflow, label: "Automatiser les tâches répétitives" },
 ];
 
@@ -20,16 +21,16 @@ export function AiSection() {
         <Reveal>
           <div>
             <span className="text-brand-accent text-xs font-semibold tracking-widest uppercase">
-              Intelligence artificielle
+              Formations en intelligence artificielle
             </span>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-              L&apos;IA change déjà le monde du travail.
+              L&apos;IA, au cœur de nos formations.
             </h2>
             <p className="text-muted-foreground mt-5 text-xl leading-relaxed text-pretty">
-              Sur Kinetix, l&apos;intelligence artificielle n&apos;est pas une
-              option en plus : c&apos;est un axe central. Apprends à t&apos;en
-              servir pour créer, analyser, automatiser et développer ton
-              profil professionnel ou ton projet.
+              L&apos;IA change déjà le monde du travail, et c&apos;est le cœur
+              du catalogue Kinetix. Des formations concrètes, pas à pas, pour
+              apprendre à utiliser les outils d&apos;IA et en faire un vrai
+              levier pour ton activité, ton projet ou ton profil professionnel.
             </p>
             <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {USES.map((use) => (
@@ -44,6 +45,13 @@ export function AiSection() {
                 </li>
               ))}
             </ul>
+            <Link
+              href="/formations"
+              className="text-brand-accent mt-8 inline-flex items-center gap-1.5 text-base font-semibold hover:underline"
+            >
+              Voir les formations
+              <ArrowRight className="size-4" />
+            </Link>
           </div>
         </Reveal>
 
@@ -55,7 +63,7 @@ export function AiSection() {
             />
             <MediaSlot
               src="/ai-demo.png"
-              alt="Démonstration de l'IA utilisée sur Kinetix"
+              alt="Exemple d'exercice d'une formation IA Kinetix"
               brief="Vraie capture d'écran ou démo produit — pas d'illustration de robot. En attendant, l'aperçu ci-dessous reste affiché."
               className="mx-auto max-w-lg lg:max-w-none"
               placeholder={<AiMockup />}

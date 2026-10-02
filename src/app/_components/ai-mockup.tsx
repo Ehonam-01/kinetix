@@ -1,10 +1,9 @@
 import { Sparkles, Wand2 } from "lucide-react";
 
 // A hand-built illustration, same spirit and construction as
-// product-mockup.tsx (not a screenshot, evocative of a chat with an AI
-// assistant) — deliberately not a humanoid-robot cliché, just a plausible
-// product surface: a prompt, a structured answer, a couple of capability
-// chips.
+// product-mockup.tsx: the kind of exercise the AI courses walk through (a
+// prompt, a structured answer). Labelled "Exemple" — Kinetix teaches how
+// to use AI tools, it doesn't provide an assistant itself.
 export function AiMockup() {
   return (
     <div className="border-border bg-card mx-auto max-w-lg rounded-2xl border p-6 shadow-2xl lg:max-w-none">
@@ -12,7 +11,10 @@ export function AiMockup() {
         <span className="bg-brand-accent/10 text-brand-accent flex size-7 items-center justify-center rounded-lg">
           <Sparkles className="size-3.5" />
         </span>
-        <span className="text-sm font-medium">Assistant IA</span>
+        <span className="text-sm font-medium">Atelier pratique · IA</span>
+        <span className="border-border text-muted-foreground ml-auto rounded-full border px-2 py-0.5 text-[11px] font-medium">
+          Exemple
+        </span>
       </div>
 
       <div className="bg-muted ml-auto w-fit max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
@@ -32,7 +34,7 @@ export function AiMockup() {
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {["Productivité", "Création", "Automatisation"].map((chip) => (
+        {["Prompts efficaces", "Création", "Automatisation"].map((chip) => (
           <span
             key={chip}
             className="border-border text-muted-foreground rounded-full border px-2.5 py-1 text-xs font-medium"
