@@ -14,6 +14,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   COURSE_STATUS_UPDATED: "Statut de cours modifié",
   QUIZ_SAVED: "Quiz enregistré",
   PARAMETER_UPDATED: "Paramètre modifié",
+  COURSE_DETAILS_UPDATED: "Titre/description de formation modifiés",
   COURSE_PRICING_UPDATED: "Prix/points de formation modifié",
   COURSE_THUMBNAIL_UPDATED: "Miniature de formation modifiée",
   COMMISSION_RULE_CREATED: "Règle de commission créée",

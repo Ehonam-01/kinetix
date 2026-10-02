@@ -17,6 +17,7 @@ import { AddModuleForm } from "./add-module-form";
 import { CourseStatsCard } from "./course-stats-card";
 import { CourseStatusForm } from "./course-status-form";
 import { EditModuleForm } from "./edit-module-form";
+import { EditDetailsForm } from "./edit-details-form";
 import { EditPricingForm } from "./edit-pricing-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
 import { MoveButtons } from "./move-buttons";
@@ -65,6 +66,26 @@ export default async function AdminCourseDetailPage(
       </div>
 
       {stats && <CourseStatsCard stats={stats} />}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Titre et description</CardTitle>
+          <CardDescription>
+            Affichés sur le catalogue, la fiche publique du cours et
+            l&apos;espace membre.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* key: the form starts over from the saved values once they
+              change (after a save, or an edit made in another tab). */}
+          <EditDetailsForm
+            key={`${content.course.title}|${content.course.description ?? ""}`}
+            courseId={courseId}
+            currentTitle={content.course.title}
+            currentDescription={content.course.description}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -171,4 +171,37 @@ describe("admin course tools (pglite, no shared DB touched)", () => {
       "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view",
     );
   });
+
+  it("edits a course's title and description, keeping its public address", async () => {
+    const { updateCourseDetails } =
+      await import("@/services/lms/update-course-details");
+    const [course] = await localDb
+      .insert(schema.courses)
+      .values({ title: "Ancien titre", slug: "ancien-titre-x1" })
+      .returning();
+
+    const updated = await updateCourseDetails(admin, course.id, {
+      title: "  Se lancer dans l'e-commerce en Afrique  ",
+      description: "  Nouvelle description.  ",
+    });
+    expect(updated).toMatchObject({
+      title: "Se lancer dans l'e-commerce en Afrique",
+      description: "Nouvelle description.",
+      slug: "ancien-titre-x1",
+    });
+
+    const cleared = await updateCourseDetails(admin, course.id, {
+      title: updated.title,
+      description: "   ",
+    });
+    expect(cleared.description).toBeNull();
+
+    await expect(
+      updateCourseDetails(admin, course.id, { title: "  ", description: null }),
+    ).rejects.toThrow("Le titre ne peut pas être vide.");
+    const member = await makeProfile("USER");
+    await expect(
+      updateCourseDetails(member, course.id, { title: "X", description: null }),
+    ).rejects.toThrow("Seul un administrateur peut modifier un cours.");
+  });
 });

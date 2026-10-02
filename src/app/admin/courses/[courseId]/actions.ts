@@ -7,6 +7,7 @@ import { createLesson } from "@/services/lms/create-lesson";
 import { updateModule } from "@/services/lms/update-module";
 import { updateCourseStatus } from "@/services/lms/update-course-status";
 import { updateCoursePricing } from "@/services/lms/update-course-pricing";
+import { updateCourseDetails } from "@/services/lms/update-course-details";
 import {
   moveLesson,
   moveModule,
@@ -104,6 +105,24 @@ export async function updateCoursePricingAction(
     };
   }
   revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
+  return { error: null };
+}
+
+export async function updateCourseDetailsAction(
+  courseId: string,
+  input: { title: string; description: string | null },
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await updateCourseDetails(profile.id, courseId, input);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePath("/admin/courses");
   revalidatePublicCourses();
   return { error: null };
 }
