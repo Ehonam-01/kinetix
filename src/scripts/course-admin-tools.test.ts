@@ -86,9 +86,8 @@ describe("admin course tools (pglite, no shared DB touched)", () => {
   }, 120_000);
 
   it("moves lessons and modules, and refuses a non-admin", async () => {
-    const { moveLesson, moveModule } = await import(
-      "@/services/lms/reorder-course-items"
-    );
+    const { moveLesson, moveModule } =
+      await import("@/services/lms/reorder-course-items");
     const c = await makeCourse();
 
     await moveLesson(admin, c.A3, "up");
@@ -145,5 +144,31 @@ describe("admin course tools (pglite, no shared DB touched)", () => {
           `${l.title}=${l.completions}`,
       ),
     ).toEqual(["A1=2", "A2=1", "A3=1", "B1=1"]);
+  });
+
+  it("creates a video lesson before its video exists, and adds the link later", async () => {
+    const { createLesson } = await import("@/services/lms/create-lesson");
+    const { updateLesson } = await import("@/services/lms/update-lesson");
+    const c = await makeCourse();
+
+    const lesson = await createLesson(admin, {
+      moduleId: c.modB,
+      title: "Séance 1 — Les bases du montage",
+      lessonType: "VIDEO",
+      videoProvider: "YOUTUBE",
+      videoUrl: "  ",
+    });
+    expect(lesson).toMatchObject({ videoUrl: null, position: 2 });
+
+    const updated = await updateLesson(admin, lesson.id, {
+      title: lesson.title,
+      lessonType: "VIDEO",
+      videoProvider: "OTHER",
+      videoUrl: "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view",
+      isActive: true,
+    });
+    expect(updated.videoUrl).toBe(
+      "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOp/view",
+    );
   });
 });

@@ -50,10 +50,11 @@ export async function createLesson(
       throw new Error("Module introuvable.");
     }
 
+    // A video lesson can be created before its video exists (to lay out a
+    // whole course first): the link is added later from the lesson page,
+    // and learners see "pas encore disponible" until then.
     const lessonType = input.lessonType ?? "VIDEO";
-    if (lessonType === "VIDEO" && !input.videoUrl) {
-      throw new Error("Une leçon vidéo a besoin d'une URL de vidéo.");
-    }
+    const videoUrl = input.videoUrl?.trim() || null;
 
     const existingLessons = await tx.query.lessons.findMany({
       where: eq(lessons.moduleId, input.moduleId),
@@ -68,7 +69,7 @@ export async function createLesson(
         lessonType,
         videoProvider:
           lessonType === "VIDEO" ? (input.videoProvider ?? "YOUTUBE") : null,
-        videoUrl: lessonType === "VIDEO" ? input.videoUrl : null,
+        videoUrl: lessonType === "VIDEO" ? videoUrl : null,
         content: lessonType === "TEXT" ? input.content : null,
         position: existingLessons.length + 1,
       })
