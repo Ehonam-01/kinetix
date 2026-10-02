@@ -7,7 +7,7 @@ import { writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { and, eq } from "drizzle-orm";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as schema from "@/db/schema";
 import { getCompletedLevel } from "@/repositories/member-levels";
 import {
@@ -21,11 +21,32 @@ let localDb: any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let localClient: any;
 
+vi.mock("@/db/client", () => ({
+  get db() {
+    return localDb;
+  },
+}));
+const sentEmails: { to: string; subject: string; html: string }[] = [];
+let failNextSend = false;
+vi.mock("@/services/notifications/resend-email", () => ({
+  resendEmailProvider: {
+    sendEmail: async (input: { to: string; subject: string; html: string }) => {
+      if (failNextSend) {
+        failNextSend = false;
+        throw new Error("Resend indisponible");
+      }
+      sentEmails.push(input);
+    },
+  },
+}));
+process.env.SITE_URL ??= "https://kinetix.example";
+
 describe("level certificates", () => {
   beforeAll(async () => {
     const { client, db } = await createSimulationDb();
     localClient = client;
     localDb = db;
+    await client.exec('ALTER TABLE "auth"."users" ADD COLUMN email text;');
   }, 120_000);
 
   it("exists only once the level is completed", async () => {
@@ -86,5 +107,48 @@ describe("level certificates", () => {
         );
       }
     }
+  });
+
+  it("emails the member once per completed level, retrying a failed send", async () => {
+    const { sendLevelCompletedEmails } =
+      await import("@/services/notifications/level-completed-emails");
+    // Whatever earlier tests left pending goes out first.
+    await sendLevelCompletedEmails();
+    sentEmails.length = 0;
+
+    const userId = randomUUID();
+    await localClient.query(
+      'INSERT INTO "auth"."users" (id, email) VALUES ($1, $2);',
+      [userId, "kodjo@example.test"],
+    );
+    await localDb.insert(schema.profiles).values({
+      id: userId,
+      username: `k_${userId.slice(0, 8)}`,
+      fullName: "Kodjo Mensah",
+      status: "ACTIVE",
+      role: "USER",
+    });
+    await localDb.insert(schema.memberLevels).values({
+      userId,
+      levelCode: 2,
+      status: "COMPLETED",
+      completedAt: new Date(),
+    });
+
+    failNextSend = true;
+    expect(await sendLevelCompletedEmails()).toEqual({ sent: 0, failed: 1 });
+    expect(sentEmails).toHaveLength(0);
+
+    expect(await sendLevelCompletedEmails()).toEqual({ sent: 1, failed: 0 });
+    expect(sentEmails[0]).toMatchObject({
+      to: "kodjo@example.test",
+      subject: "Félicitations : niveau 2 complété, votre certificat est prêt",
+    });
+    expect(sentEmails[0].html).toContain("Félicitations Kodjo");
+    expect(sentEmails[0].html).toContain("/dashboard/levels");
+
+    // Already announced: nothing more.
+    expect(await sendLevelCompletedEmails()).toEqual({ sent: 0, failed: 0 });
+    expect(sentEmails).toHaveLength(1);
   });
 });

@@ -23,6 +23,7 @@ import {
 import { getTopLevelCode } from "@/repositories/member-levels";
 import { createCommissionEvent } from "./commission";
 import { levelCommissionDedupeKey } from "./dedupe-keys";
+import { scheduleLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { unlockReward } from "./reward";
 
 // Batch-checks which of the given candidate users already have a
@@ -234,6 +235,10 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
         eq(memberLevels.levelCode, levelCode),
       ),
     );
+
+  // "Niveau complété, votre certificat est prêt" — sent once this
+  // transaction is committed.
+  scheduleLevelCompletedEmails();
 
   if (levelCode >= 3) {
     await unlockReward(tx, userId, levelCode);

@@ -32,6 +32,12 @@ export const memberLevels = pgTable(
       .notNull()
       .defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    // When the "niveau complété, votre certificat est prêt" email went out
+    // (services/notifications/level-completed-emails.ts) — null on a
+    // completed level means it is still to be sent.
+    certificateEmailedAt: timestamp("certificate_emailed_at", {
+      withTimezone: true,
+    }),
   },
   (table) => [
     uniqueIndex("member_levels_user_level_unique").on(

@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCronEnv } from "@/config/env.cron";
+import { sendLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { sendExpiryReminders } from "@/services/subscriptions/send-expiry-reminders";
 
 // Triggered by Vercel Cron (vercel.json) — Vercel automatically sends
@@ -19,5 +20,9 @@ export async function GET(request: Request) {
   }
 
   const result = await sendExpiryReminders();
-  return NextResponse.json(result);
+  // Safety net for the "niveau complété" emails: normally sent right
+  // after the level is completed, this catches any that failed or were
+  // completed outside a request.
+  const levelEmails = await sendLevelCompletedEmails();
+  return NextResponse.json({ ...result, levelEmails });
 }
