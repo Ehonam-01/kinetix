@@ -35,6 +35,16 @@ export async function updateParameter(
   }
 
   if (
+    parameterKey === "subscription.regular_price_in_cfa" &&
+    value !== 0 &&
+    (value < SUBSCRIPTION_PRICE_MIN || value > SUBSCRIPTION_PRICE_MAX)
+  ) {
+    throw new Error(
+      `Le tarif normal doit être 0 (mention retirée) ou compris entre ${SUBSCRIPTION_PRICE_MIN.toLocaleString("fr-FR")} et ${SUBSCRIPTION_PRICE_MAX.toLocaleString("fr-FR")} F.`,
+    );
+  }
+
+  if (
     parameterKey === "withdrawal.fee_percent_bp" &&
     value > WITHDRAWAL_FEE_PERCENT_BP_MAX
   ) {

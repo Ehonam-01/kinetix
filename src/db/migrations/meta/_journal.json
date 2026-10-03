@@ -414,6 +414,13 @@
       "when": 1790957455734,
       "tag": "0058_level_certificate_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1791026223183,
+      "tag": "0059_subscription_regular_price",
+      "breakpoints": true
     }
   ]
 }

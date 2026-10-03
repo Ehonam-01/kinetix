@@ -14,6 +14,8 @@ const PARAMETER_LABEL: Record<string, string> = {
   "commission.level_1_bonus": "Bonus fin de niveau 1",
   "bv.value_in_cfa": "Valeur d'1 point (F CFA)",
   "subscription.price_in_cfa": "Prix de l'abonnement annuel (F CFA)",
+  "subscription.regular_price_in_cfa":
+    "Tarif normal annoncé après le lancement (F CFA)",
   "subscription.business_volume": "Points générés par l'abonnement",
   "withdrawal.minimum_amount": "Montant minimum de retrait (F CFA)",
   "withdrawal.fee_percent_bp": "Frais de retrait : pourcentage du montant",
@@ -28,6 +30,8 @@ const PARAMETER_UNIT: Record<string, "percent_bp"> = {
 };
 
 const PARAMETER_HINT: Record<string, string> = {
+  "subscription.regular_price_in_cfa":
+    "Affiché barré sur la page d'accueil, avec la mention « Prix de lancement ». Jamais facturé. Mettez 0 (ou une valeur égale au prix actuel) pour retirer la mention à la fin du lancement.",
   "withdrawal.fee_percent_bp":
     "Déduit du montant retiré, cumulé avec le montant fixe. Ex. 1,5 % + 100 F sur un retrait de 10 000 F : le membre reçoit 9 750 F.",
   "withdrawal.fee_fixed":
