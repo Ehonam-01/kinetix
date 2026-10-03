@@ -19,6 +19,11 @@ const FAQS = [
       "Créez un compte et souscrivez à l'abonnement annuel : vous accédez immédiatement à l'ensemble du catalogue depuis votre tableau de bord, sans avoir à payer chaque formation séparément.",
   },
   {
+    question: "Suis-je engagé sur la durée ?",
+    answer:
+      "Non, l'abonnement est sans engagement. Il dure un an et n'est jamais renouvelé automatiquement : avant l'échéance, vous recevez un rappel, puis vous choisissez librement de renouveler ou non.",
+  },
+  {
     question: "Puis-je suivre plusieurs formations ?",
     answer:
       "Oui — l'abonnement donne accès à tout le catalogue. Suivez autant de formations que vous le souhaitez, chacune à votre propre rythme.",

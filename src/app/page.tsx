@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/db/client";
 import { listPublishedCoursesForMarketing } from "@/repositories/courses";
+import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
@@ -12,6 +13,7 @@ import { AiSection } from "./_components/ai-section";
 import { CommunityMentorshipSection } from "./_components/community-mentorship-section";
 import { ProjectsOpportunitiesSection } from "./_components/projects-opportunities-section";
 import { HowItWorks } from "./_components/how-it-works";
+import { PricingSection } from "./_components/pricing-section";
 import { LearnerAmbassadorSection } from "./_components/learner-ambassador-section";
 import { AmbassadorSection } from "./_components/ambassador-section";
 import { FaqSection } from "./_components/faq-section";
@@ -50,7 +52,10 @@ export const metadata: Metadata = {
 export const revalidate = 600;
 
 export default async function HomePage() {
-  const courses = await listPublishedCoursesForMarketing(db, 6);
+  const [courses, subscriptionPrice] = await Promise.all([
+    listPublishedCoursesForMarketing(db, 6),
+    getCurrentParameterValue(db, "subscription.price_in_cfa"),
+  ]);
 
   return (
     <>
@@ -65,6 +70,7 @@ export default async function HomePage() {
         <CommunityMentorshipSection />
         <ProjectsOpportunitiesSection />
         <HowItWorks />
+        <PricingSection price={subscriptionPrice} />
         <LearnerAmbassadorSection />
         <AmbassadorSection />
         <FaqSection />

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/#ia", label: "IA" },
   { href: "/#communaute", label: "Communauté" },
   { href: "/#comment-ca-marche", label: "Comment ça marche" },
+  { href: "/#tarif", label: "Tarif" },
   { href: "/programme-ambassadeur", label: "Ambassadeurs" },
 ];
 

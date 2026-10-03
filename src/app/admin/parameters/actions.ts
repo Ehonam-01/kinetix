@@ -21,5 +21,9 @@ export async function updateParameterAction(
     };
   }
   revalidatePath("/admin/parameters");
+  // The subscription price is shown on the public pages (homepage pricing,
+  // ambassador page), both statically generated: refreshed right away.
+  revalidatePath("/");
+  revalidatePath("/programme-ambassadeur");
   return { error: null };
 }
