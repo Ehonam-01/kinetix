@@ -78,7 +78,7 @@ export function ProblemSection() {
         </div>
 
         <Reveal delayMs={300}>
-          <p className="border-border mt-4 border-t pt-10 text-2xl font-semibold text-balance sm:text-3xl">
+          <p className="border-border mt-4 border-t pt-10 text-center text-2xl font-semibold text-balance sm:text-3xl">
             C&apos;est exactement pour ça que{" "}
             <span className="text-brand-accent">Kinetix Africa</span> existe.
           </p>
