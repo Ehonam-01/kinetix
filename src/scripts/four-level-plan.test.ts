@@ -157,6 +157,67 @@ describe("4-level plan (pglite, no shared DB touched)", () => {
     ).rejects.toThrow("Niveau inconnu");
   });
 
+  it("an ancêtre earns nothing more, but keeps their account and courses while subscribed", async () => {
+    const { incrementGenerationBv } =
+      await import("@/services/mlm/unlock-level");
+    const { createCommissionEvent } = await import("@/services/mlm/commission");
+    const { hasCourseAccess } = await import("@/repositories/courses");
+    const id = await memberAboutToCompleteLevel4();
+    await localDb.transaction((tx: never) =>
+      incrementGenerationBv(tx, id, 4, 3, 0),
+    );
+    const [course] = await localDb
+      .insert(schema.courses)
+      .values({ title: "Formation ancêtre", status: "PUBLISHED" })
+      .returning();
+
+    // No commission of any kind any more.
+    const paid = await localDb.transaction((tx: never) =>
+      createCommissionEvent(tx, {
+        beneficiaryUserId: id,
+        type: "DIRECT_SALE",
+        amount: 3900,
+        dedupeKey: `test:ancestor:${id}`,
+      }),
+    );
+    expect(paid).toBeNull();
+
+    // The account stays active and the courses open while subscribed.
+    const profile = await localDb.query.profiles.findFirst({
+      where: eq(schema.profiles.id, id),
+    });
+    expect(profile.status).toBe("ACTIVE");
+    expect(await hasCourseAccess(localDb, id, course.id)).toBe(true);
+
+    // Lapsed past the grace period: no access, like any member...
+    await localDb
+      .update(schema.subscriptions)
+      .set({ expiresAt: new Date(Date.now() - 30 * DAY_MS) })
+      .where(eq(schema.subscriptions.userId, id));
+    expect(await hasCourseAccess(localDb, id, course.id)).toBe(false);
+
+    // ...and renewing gives it back.
+    const [renewal] = await localDb
+      .insert(schema.payments)
+      .values({
+        beneficiaryUserId: id,
+        purpose: "SUBSCRIPTION",
+        method: "ADMIN_CREDIT",
+        amount: 19500,
+        status: "CONFIRMED",
+        idempotencyKey: `TEST:${randomUUID()}`,
+      })
+      .returning();
+    await localDb.insert(schema.subscriptions).values({
+      userId: id,
+      paymentId: renewal.id,
+      expiresAt: new Date(Date.now() + 365 * DAY_MS),
+      pricePaid: 19500,
+      businessVolume: 15,
+    });
+    expect(await hasCourseAccess(localDb, id, course.id)).toBe(true);
+  });
+
   it("the migration makes anyone who already completed level 4 an ancêtre", async () => {
     const id = randomUUID();
     await localClient.query('INSERT INTO "auth"."users" (id) VALUES ($1);', [

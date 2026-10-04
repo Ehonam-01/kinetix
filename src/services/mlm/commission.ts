@@ -46,10 +46,12 @@ export async function createCommissionEvent(
   executor: Executor,
   input: CommissionInput,
 ) {
-  // A member who completed level 5 ("ancêtre", profiles.became_ancestor_at
-  // set by completeLevel) has graduated out of the earning structure — no
-  // further commission of any kind, from here on, regardless of type or
-  // source. Checked first, before the dedupe insert, so a blocked event
+  // A member who completed the top level (level 4 since migration 0055 —
+  // "ancêtre", profiles.became_ancestor_at set by completeLevel) has
+  // graduated out of the earning structure — no further commission of any
+  // kind, from here on, regardless of type or source. That's all it
+  // changes: the account, the balance and course access stay governed by
+  // the subscription like any member's (scripts/four-level-plan.test.ts). Checked first, before the dedupe insert, so a blocked event
   // never occupies its dedupe_key (an admin fixing a misconfigured
   // ancestor flag later can still have it paid retroactively).
   const beneficiary = await executor.query.profiles.findFirst({

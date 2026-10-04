@@ -42,8 +42,9 @@ export default async function LevelsPage() {
               {profile.becameAncestorAt.toLocaleDateString("fr-FR", {
                 dateStyle: "long",
               })}
-              . Votre solde et l&apos;accès à la plateforme restent inchangés,
-              mais vous ne recevez plus de nouvelles commissions.
+              . Vous ne recevez plus de nouvelles commissions, mais votre compte,
+              votre solde et vos formations restent accessibles tant que votre
+              abonnement est valide ou renouvelé.
             </CardDescription>
           </CardHeader>
         </Card>
