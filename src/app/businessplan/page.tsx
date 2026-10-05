@@ -855,7 +855,7 @@ function Transparency({ plan }: { plan: Plan }) {
           <ul className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
             {[
               "Les commissions ne sont versées qu'aux ambassadeurs dont l'abonnement est valide.",
-              "La commission directe porte sur la première souscription de la personne recommandée ; les renouvellements n'en génèrent pas.",
+              "La commission directe porte sur la première souscription de la personne recommandée.",
               `Après le niveau ${plan.topLevel}, le rang d'Ancêtre met fin aux nouvelles commissions.`,
               "Les récompenses sont attribuées selon les conditions et critères du programme.",
             ].map((t) => (
@@ -947,7 +947,7 @@ function buildFaqs(plan: Plan): FaqItem[] {
     },
     {
       q: `Comment fonctionne la commission de ${rate} % ?`,
-      a: `Quand une personne souscrit pour la première fois grâce à ta recommandation, tu peux percevoir ${rate} % de sa souscription, soit ${F(plan.directExample ?? Math.floor((plan.price * rate) / 100))} au tarif actuel. Il faut que ton propre abonnement soit valide. Les renouvellements ne génèrent pas de commission directe.`,
+      a: `Quand une personne souscrit pour la première fois grâce à ta recommandation, tu peux percevoir ${rate} % de sa souscription, soit ${F(plan.directExample ?? Math.floor((plan.price * rate) / 100))} au tarif actuel. Il faut que ton propre abonnement soit valide.`,
     },
     {
       q: "Qu'est-ce qu'une structure binaire ?",
