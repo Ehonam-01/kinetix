@@ -1,8 +1,12 @@
 import { db } from "@/db/client";
 import { listPayments } from "@/repositories/payments";
-import { getActiveProviderKey } from "@/repositories/payment-settings";
+import {
+  getActiveProviderKey,
+  getSupportWhatsapp,
+} from "@/repositories/payment-settings";
 import { cn } from "@/lib/utils";
 import { ProviderToggle } from "./provider-toggle";
+import { SupportWhatsappForm } from "./support-whatsapp-form";
 import { ReconcilePaymentButton } from "./reconcile-payment-button";
 import { requireAdmin } from "@/services/auth/current-user";
 
@@ -25,14 +29,16 @@ export default async function AdminPaymentsPage() {
   // re-run on every navigation, so it can't be the only gate (Next.js
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
-  const [payments, activeProvider] = await Promise.all([
+  const [payments, activeProvider, supportWhatsapp] = await Promise.all([
     listPayments(db),
     getActiveProviderKey(db),
+    getSupportWhatsapp(db),
   ]);
 
   return (
     <div className="space-y-6">
       <ProviderToggle activeProvider={activeProvider} />
+      <SupportWhatsappForm current={supportWhatsapp} />
 
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">

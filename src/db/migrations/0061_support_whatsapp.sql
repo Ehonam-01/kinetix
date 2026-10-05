@@ -1,0 +1,1 @@
+ALTER TABLE "payment_settings" ADD COLUMN "support_whatsapp" text;

@@ -25,6 +25,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   WITHDRAWAL_PAYOUT_CONFIRMED: "Virement de retrait confirmé",
   WITHDRAWAL_PAYOUT_FAILED: "Virement de retrait échoué",
   PAYMENT_PROVIDER_CHANGED: "Fournisseur de paiement modifié",
+  SUPPORT_WHATSAPP_UPDATED: "WhatsApp du support modifié",
   ACCOUNT_DELETED: "Compte supprimé (anonymisé)",
   TEST_SUBSCRIPTION_DELETED: "Abonnement de test supprimé",
   MENTOR_REQUEST_APPROVED: "Mentor validé",

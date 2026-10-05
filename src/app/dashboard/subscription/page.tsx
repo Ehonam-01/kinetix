@@ -1,7 +1,11 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { db } from "@/db/client";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import { getActiveProviderKey } from "@/repositories/payment-settings";
+import {
+  getActiveProviderKey,
+  getSupportWhatsapp,
+} from "@/repositories/payment-settings";
+import { CountrySupportHint } from "@/components/support/country-support-hint";
 import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
@@ -17,12 +21,14 @@ import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
   const { profile } = await requireUser();
-  const [status, price, activeProvider, pendingPayment] = await Promise.all([
-    getSubscriptionStatus(db, profile.id),
-    getCurrentParameterValue(db, "subscription.price_in_cfa"),
-    getActiveProviderKey(db),
-    findRecentPendingPayment(db, profile.id, "SUBSCRIPTION"),
-  ]);
+  const [status, price, activeProvider, pendingPayment, supportWhatsapp] =
+    await Promise.all([
+      getSubscriptionStatus(db, profile.id),
+      getCurrentParameterValue(db, "subscription.price_in_cfa"),
+      getActiveProviderKey(db),
+      findRecentPendingPayment(db, profile.id, "SUBSCRIPTION"),
+      getSupportWhatsapp(db),
+    ]);
 
   return (
     <div className="max-w-lg space-y-6">
@@ -90,12 +96,13 @@ export default async function SubscriptionPage() {
               " La nouvelle année démarre à la date d'expiration de votre abonnement précédent."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <SubscriptionPanel
             price={price}
             username={profile.username}
             activeProvider={activeProvider}
           />
+          <CountrySupportHint whatsapp={supportWhatsapp} context="paiement" />
         </CardContent>
       </Card>
     </div>

@@ -21,6 +21,10 @@ export const paymentSettings = pgTable("payment_settings", {
   activeProvider: paymentProviderEnum("active_provider")
     .notNull()
     .default("MONEROO"),
+  // Support WhatsApp number, international format digits only (e.g.
+  // 22890000000), shown to members whose country isn't in a payment or
+  // withdrawal list. null = not set, nothing shown.
+  supportWhatsapp: text("support_whatsapp"),
   updatedBy: uuid("updated_by").references(() => profiles.id),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

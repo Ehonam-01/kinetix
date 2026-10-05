@@ -10,6 +10,8 @@ import {
 import { requireUser } from "@/services/auth/current-user";
 import { cn } from "@/lib/utils";
 import { WithdrawalForm } from "./withdrawal-form";
+import { getSupportWhatsapp } from "@/repositories/payment-settings";
+import { CountrySupportHint } from "@/components/support/country-support-hint";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING_OTP: "En attente de code",
@@ -63,6 +65,10 @@ export default async function WithdrawalsPage() {
       </div>
 
       <WithdrawalForm minimumAmount={minimumAmount} fee={feeSettings} />
+      <CountrySupportHint
+        whatsapp={await getSupportWhatsapp(db)}
+        context="retrait"
+      />
 
       <div className="space-y-3">
         <h2 className="text-lg font-medium">Mes demandes de retrait</h2>

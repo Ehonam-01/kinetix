@@ -7,6 +7,7 @@ import {
   type PaymentProviderKey,
 } from "@/services/admin/update-payment-provider";
 import { reconcilePayment } from "@/services/admin/reconcile-payment";
+import { updateSupportWhatsapp } from "@/services/admin/update-support-whatsapp";
 
 export async function updatePaymentProviderAction(
   provider: PaymentProviderKey,
@@ -34,6 +35,22 @@ export async function reconcilePaymentAction(paymentId: string) {
   } catch (err) {
     return {
       result: null,
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+}
+
+export async function updateSupportWhatsappAction(input: string) {
+  const { profile } = await requireAdmin();
+  try {
+    const number = await updateSupportWhatsapp(profile.id, input);
+    revalidatePath("/admin/payments");
+    revalidatePath("/dashboard/subscription");
+    revalidatePath("/dashboard/withdrawals");
+    return { number, error: null };
+  } catch (err) {
+    return {
+      number: null,
       error: err instanceof Error ? err.message : "Une erreur est survenue.",
     };
   }

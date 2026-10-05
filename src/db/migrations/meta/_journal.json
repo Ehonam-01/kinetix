@@ -428,6 +428,13 @@
       "when": 1791187714315,
       "tag": "0060_commission_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1791190256490,
+      "tag": "0061_support_whatsapp",
+      "breakpoints": true
     }
   ]
 }
