@@ -41,9 +41,9 @@ export default function AuthLayout({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-12">
-          <Link href="/" className="mb-8 flex items-center self-start">
-            <Logo />
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-12">
+          <Link href="/" className="mb-8 flex items-center">
+            <Logo className="h-16 sm:h-20" priority />
           </Link>
           <div className="w-full max-w-sm">{children}</div>
         </div>

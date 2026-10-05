@@ -1,12 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   REFERRAL_COOKIE_NAME,
   resolveReferralUsername,
@@ -31,22 +25,22 @@ export default async function RegisterPage({
     undefined;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nous rejoindre</CardTitle>
-        <CardDescription>
-          Déjà inscrit ?{" "}
-          <Link
-            href="/login"
-            className="text-primary underline underline-offset-4"
-          >
-            Se connecter
-          </Link>
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <RegisterForm defaultSponsorUsername={defaultSponsorUsername} />
-      </CardContent>
-    </Card>
+    <RegisterForm
+      defaultSponsorUsername={defaultSponsorUsername}
+      header={
+        <CardHeader>
+          <CardTitle>Nous rejoindre</CardTitle>
+          <CardDescription>
+            Déjà inscrit ?{" "}
+            <Link
+              href="/login"
+              className="text-primary underline underline-offset-4"
+            >
+              Se connecter
+            </Link>
+          </CardDescription>
+        </CardHeader>
+      }
+    />
   );
 }
