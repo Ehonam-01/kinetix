@@ -8,6 +8,9 @@ import {
 } from "@/repositories/financial-transactions";
 import { listSubscriptionsForAmbassador } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
+import { getSiteEnv } from "@/config/env.site";
+import { getCurrentParameterValue } from "@/repositories/parameter-versions";
+import { ReferralLinkCard } from "./referral-link-card";
 import {
   Card,
   CardContent,
@@ -60,14 +63,13 @@ export default async function CommissionsPage() {
   return (
     <div className="space-y-6">
       {ambassador && (
-        <Card size="sm">
-          <CardContent className="space-y-1">
-            <CardDescription>Mon lien de parrainage</CardDescription>
-            <CardTitle className="font-mono text-sm font-normal break-all">
-              /r/{ambassador.referralCode}
-            </CardTitle>
-          </CardContent>
-        </Card>
+        <ReferralLinkCard
+          url={`${getSiteEnv().SITE_URL}/r/${ambassador.referralCode}`}
+          validDays={await getCurrentParameterValue(
+            db,
+            "attribution.cookie_days",
+          )}
+        />
       )}
 
       <div className="grid grid-cols-3 gap-3">
