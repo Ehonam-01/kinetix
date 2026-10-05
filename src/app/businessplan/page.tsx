@@ -164,7 +164,7 @@ export default async function BusinessPlanPage() {
 
       <footer className="border-t border-white/5 px-4 py-10 text-center text-xs text-[#8d9bbd]">
         <p>
-          {SITE_NAME} · EXCELLENCIA GROUP LTD, Londres, Royaume-Uni ·{" "}
+          {SITE_NAME} · EXCELLENCIA GROUP LTD ·{" "}
           <Link
             href="/conditions-utilisation"
             className="underline underline-offset-2"
