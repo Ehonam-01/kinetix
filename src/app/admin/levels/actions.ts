@@ -19,6 +19,7 @@ export async function upsertRewardAction(input: {
     // The public ambassador page shows each level's reward (name and
     // picture); it's statically generated, so it's refreshed right away.
     revalidatePath("/programme-ambassadeur");
+    revalidatePath("/businessplan");
     return { reward, error: null };
   } catch (err) {
     return {
@@ -37,6 +38,7 @@ export async function uploadRewardImageAction(rewardId: string, file: File) {
     // The public ambassador page shows each level's reward (name and
     // picture); it's statically generated, so it's refreshed right away.
     revalidatePath("/programme-ambassadeur");
+    revalidatePath("/businessplan");
     return { imageUrl, error: null };
   } catch (err) {
     return {

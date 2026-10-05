@@ -2,7 +2,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hardenSessionCookie } from "@/lib/supabase/cookie-options";
 
+// businessplan.<domain> serves the ambassador sales page
+// (app/businessplan) at its root — the same page as <domain>/businessplan.
+// Only the root is rewritten: its links point at the main site.
+function businessPlanRewrite(request: NextRequest) {
+  const host = request.headers.get("host") ?? "";
+  if (host.startsWith("businessplan.") && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/businessplan";
+    return NextResponse.rewrite(url);
+  }
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
+  const rewrite = businessPlanRewrite(request);
+  if (rewrite) return rewrite;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

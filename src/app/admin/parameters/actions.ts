@@ -25,5 +25,6 @@ export async function updateParameterAction(
   // ambassador page), both statically generated: refreshed right away.
   revalidatePath("/");
   revalidatePath("/programme-ambassadeur");
+  revalidatePath("/businessplan");
   return { error: null };
 }
