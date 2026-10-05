@@ -153,7 +153,6 @@ export default async function BusinessPlanPage() {
         <DirectCommission plan={plan} siteUrl={siteUrl} />
         <BinarySection siteUrl={siteUrl} />
         <Levels plan={plan} siteUrl={siteUrl} />
-        <Generations plan={plan} />
         <WhatYouGet />
         <HowToStart />
         <ForWho />
@@ -697,69 +696,6 @@ function LevelCard({
         </p>
       )}
     </div>
-  );
-}
-
-// ─── Generations ─────────────────────────────────────────────────────────
-
-function Generations({ plan }: { plan: Plan }) {
-  const gens = Array.from({ length: plan.totalGenerations }, (_, i) => i + 1);
-  let cursor = 0;
-  const levelOf = gens.map(() => 0);
-  plan.levels.forEach((l, i) => {
-    for (let k = 0; k < l.sizes.length; k++) levelOf[cursor++] = i;
-  });
-  const tints = ["#4f8cff", "#7c6cff", "#c084fc", "#f5a524"];
-  return (
-    <Section>
-      <Reveal>
-        <div className="mx-auto max-w-3xl space-y-4 text-center">
-          <p className={EYEBROW}>Ton organisation</p>
-          <h2 className={H2}>
-            Jusqu&apos;à {plan.totalGenerations} générations dans ton
-            organisation
-          </h2>
-          <p className="text-[#b7c3e0]">
-            Une génération correspond à une ligne de membres située à un niveau
-            donné sous l&apos;organisation de l&apos;Ambassadeur.
-          </p>
-        </div>
-      </Reveal>
-      <Reveal delayMs={120}>
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-          {gens.map((g, i) => (
-            <div key={g} className="flex items-center gap-2 sm:gap-3">
-              <span
-                className="flex size-12 items-center justify-center rounded-2xl border text-sm font-black text-white sm:size-14"
-                style={{
-                  borderColor: `${tints[levelOf[i]]}80`,
-                  background: `${tints[levelOf[i]]}1f`,
-                }}
-              >
-                G{g}
-              </span>
-              {g < gens.length && <span className="text-[#4f8cff]/60">→</span>}
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs">
-          {plan.levels.map((l, i) => (
-            <span key={l.code} className="flex items-center gap-2">
-              <span
-                className="size-2.5 rounded-full"
-                style={{ background: tints[i] }}
-              />
-              Niveau {l.code} : {l.sizes.length} générations
-            </span>
-          ))}
-        </div>
-        <p className={`${DISCLAIMER} mx-auto mt-6 max-w-2xl text-center`}>
-          Les générations décrivent la structure du plan. Elles ne constituent
-          pas une garantie de revenus : les commissions dépendent des
-          souscriptions réelles et de l&apos;activité éligible.
-        </p>
-      </Reveal>
-    </Section>
   );
 }
 
