@@ -4,6 +4,7 @@ import type { Executor } from "@/db/executor";
 import { paymentEvents, payments } from "@/db/schema/payments";
 import { findPaymentByProviderReference } from "@/repositories/payments";
 import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
+import { applyInstallmentDeposit } from "@/services/subscriptions/installments";
 import { activateRegistration } from "./activate-registration";
 import type { WebhookEvent } from "./provider";
 
@@ -48,6 +49,10 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
   if (event.status === "CONFIRMED") {
     if (payment.purpose === "SUBSCRIPTION") {
       await confirmSubscriptionPurchase(tx, payment.id);
+    } else if (payment.purpose === "INSTALLMENT") {
+      // A deposit towards an installment plan: activates the subscription
+      // only once the plan is fully paid.
+      await applyInstallmentDeposit(tx, payment.id);
     } else if (payment.purpose === "REGISTRATION") {
       await activateRegistration(tx, payment.id);
     }

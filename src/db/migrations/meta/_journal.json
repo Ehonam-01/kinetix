@@ -435,6 +435,13 @@
       "when": 1791190256490,
       "tag": "0061_support_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1791191932231,
+      "tag": "0062_installment_plans",
+      "breakpoints": true
     }
   ]
 }

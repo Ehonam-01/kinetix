@@ -26,6 +26,10 @@ export const paymentPurposeEnum = pgEnum("payment_purpose", [
   "REGISTRATION",
   "COURSE_PURCHASE",
   "SUBSCRIPTION",
+  // One deposit towards an installment plan (db/schema/installment-plans.ts)
+  // — never grants access by itself; the subscription comes from the
+  // separate SUBSCRIPTION payment created once the plan is fully paid.
+  "INSTALLMENT",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [

@@ -6,50 +6,71 @@ import { MonerooSubscribeButton } from "./moneroo-subscribe-button";
 import { PaydunyaSubscribeForm } from "./paydunya-subscribe-form";
 import { SubscribeButton } from "./subscribe-button";
 import { WalletSubscribeForm } from "./wallet-subscribe-form";
+import {
+  InstallmentPanel,
+  type InstallmentPlanView,
+} from "./installment-panel";
+
+type Method = "MOBILE_MONEY" | "WALLET" | "INSTALLMENTS";
 
 export function SubscriptionPanel({
   price,
   username,
   activeProvider,
+  installments,
 }: {
   price: number;
   username: string;
   activeProvider: string;
+  // Present only when this member may pay in several deposits (first
+  // subscription, PayDunya active) — see page.tsx.
+  installments?: {
+    plan: InstallmentPlanView | null;
+    bounds: { min: number; max: number };
+    months: number;
+    feeLabel: string | null;
+  };
 }) {
-  const [method, setMethod] = useState<"MOBILE_MONEY" | "WALLET">(
-    "MOBILE_MONEY",
+  // A member who already started a cagnotte lands back on it.
+  const [method, setMethod] = useState<Method>(
+    installments?.plan ? "INSTALLMENTS" : "MOBILE_MONEY",
   );
+  const tabs: { value: Method; label: string }[] = [
+    { value: "MOBILE_MONEY", label: "Mobile Money" },
+    ...(installments
+      ? [{ value: "INSTALLMENTS" as const, label: "En plusieurs fois" }]
+      : []),
+    { value: "WALLET", label: "Solde (wallet)" },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="bg-muted grid grid-cols-2 gap-1 rounded-lg p-1">
-        <button
-          type="button"
-          onClick={() => setMethod("MOBILE_MONEY")}
-          className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            method === "MOBILE_MONEY"
-              ? "bg-background shadow-sm"
-              : "text-muted-foreground",
-          )}
-        >
-          Mobile Money
-        </button>
-        <button
-          type="button"
-          onClick={() => setMethod("WALLET")}
-          className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            method === "WALLET"
-              ? "bg-background shadow-sm"
-              : "text-muted-foreground",
-          )}
-        >
-          Solde (wallet)
-        </button>
+      <div
+        className={cn(
+          "bg-muted grid gap-1 rounded-lg p-1",
+          tabs.length === 3 ? "grid-cols-3" : "grid-cols-2",
+        )}
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setMethod(tab.value)}
+            className={cn(
+              "rounded-md px-2 py-1.5 text-sm font-medium transition-colors",
+              method === tab.value
+                ? "bg-background shadow-sm"
+                : "text-muted-foreground",
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {method === "MOBILE_MONEY" ? (
+      {method === "INSTALLMENTS" && installments ? (
+        <InstallmentPanel price={price} {...installments} />
+      ) : method === "MOBILE_MONEY" ? (
         activeProvider === "PAYDUNYA" ? (
           <PaydunyaSubscribeForm price={price} />
         ) : activeProvider === "BICTORYS" ? (

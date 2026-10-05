@@ -165,6 +165,20 @@ export default function ConditionsUtilisationPage() {
           de paiement utilisé ou sur le Solde du Membre. Les commissions versées
           au titre d&apos;un paiement remboursé sont annulées.
         </p>
+        <p>
+          <strong>Paiement en plusieurs fois (cagnotte).</strong> Lors de sa
+          première souscription, le Membre peut régler l&apos;Abonnement en
+          plusieurs versements, au prix en vigueur à l&apos;ouverture de la
+          cagnotte. L&apos;Abonnement n&apos;est activé, et aucun contenu
+          n&apos;est accessible, qu&apos;une fois la totalité du prix versée.
+          Le Membre dispose de trois (3) mois à compter de son premier
+          versement pour compléter la cagnotte. Passé ce délai, la cagnotte
+          est clôturée, l&apos;inscription n&apos;est pas activée et les
+          sommes versées sont remboursées sur le compte mobile money du
+          dernier versement, déduction faite des frais de retrait en vigueur.
+          Après une cagnotte clôturée, l&apos;Abonnement ne peut plus être
+          réglé qu&apos;en une seule fois.
+        </p>
       </Section>
 
       <Section title="6. Utilisation des contenus et de la communauté">

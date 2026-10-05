@@ -4,9 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PAYDUNYA_COUNTRY_OPTIONS } from "@/config/paydunya-countries";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
-import {
-  PAYDUNYA_OPERATORS_BY_COUNTRY,
-} from "@/config/paydunya-country-operators";
+import { PAYDUNYA_OPERATORS_BY_COUNTRY } from "@/config/paydunya-country-operators";
 import {
   PAYDUNYA_REQUIRES_ADDRESS,
   PAYDUNYA_REQUIRES_OTP,
@@ -25,7 +23,25 @@ const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75;
 const COUNTRY_OPTIONS = PAYDUNYA_COUNTRY_OPTIONS;
 
-export function PaydunyaSubscribeForm({ price }: { price: number }) {
+// Starts the charge: the full subscription by default, or one deposit
+// towards an installment plan (installment-panel.tsx).
+type StartPayment = (
+  country: string,
+  operator: string,
+  phone: string,
+  otp?: string,
+  address?: string,
+) => ReturnType<typeof subscribeAction>;
+
+export function PaydunyaSubscribeForm({
+  price,
+  start = subscribeAction,
+  submitLabel = "Payer",
+}: {
+  price: number;
+  start?: StartPayment;
+  submitLabel?: string;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [country, setCountry] = useState("");
@@ -34,17 +50,15 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
   const [otp, setOtp] = useState("");
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [confirmationMessage, setConfirmationMessage] = useState<
-    string | null
-  >(null);
+  const [confirmationMessage, setConfirmationMessage] = useState<string | null>(
+    null,
+  );
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [pollOutcome, setPollOutcome] = useState<"failed" | "timeout" | null>(
     null,
   );
-  const [wizall, setWizall] = useState<{ transactionId: string } | null>(
-    null,
-  );
+  const [wizall, setWizall] = useState<{ transactionId: string } | null>(null);
   const [wizallCode, setWizallCode] = useState("");
 
   const combo = country && operator ? `${country}:${operator}` : "";
@@ -117,7 +131,7 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
       return;
     }
     startTransition(async () => {
-      const result = await subscribeAction(
+      const result = await start(
         country,
         operator,
         phone.trim(),
@@ -165,8 +179,8 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
     return (
       <div className="max-w-sm space-y-3">
         <p className="text-muted-foreground text-sm">
-          Un code de confirmation vous a été envoyé par SMS. Saisissez-le
-          pour finaliser le paiement.
+          Un code de confirmation vous a été envoyé par SMS. Saisissez-le pour
+          finaliser le paiement.
         </p>
         <div className="space-y-2">
           <Label htmlFor="wizall-code">Code de confirmation</Label>
@@ -177,7 +191,11 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
           />
         </div>
         {error && <p className="text-destructive text-sm">{error}</p>}
-        <Button disabled={pending} onClick={handleWizallConfirm} className="w-full">
+        <Button
+          disabled={pending}
+          onClick={handleWizallConfirm}
+          className="w-full"
+        >
           {pending ? "Confirmation..." : "Confirmer le paiement"}
         </Button>
       </div>
@@ -256,8 +274,7 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
         </select>
         {PAYDUNYA_REQUIRES_WIZALL_CONFIRM.has(combo as never) && (
           <p className="text-muted-foreground text-xs">
-            Un code de confirmation vous sera envoyé par SMS après cette
-            étape.
+            Un code de confirmation vous sera envoyé par SMS après cette étape.
           </p>
         )}
       </div>
@@ -296,7 +313,7 @@ export function PaydunyaSubscribeForm({ price }: { price: number }) {
       <Button disabled={pending} onClick={handleClick} className="w-full">
         {pending
           ? "Envoi de la demande de paiement..."
-          : `Payer — ${price.toLocaleString("fr-FR")} F`}
+          : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
       </Button>
     </div>
   );

@@ -15,6 +15,7 @@ import {
 } from "@/services/auth/current-user";
 import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
 import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
+import { initiateInstallmentDeposit } from "@/services/subscriptions/installments";
 import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
 import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-subscription-wallet";
 import {
@@ -115,6 +116,64 @@ export async function subscribeAction(
   redirect(checkoutUrl);
 }
 
+// One deposit towards the member's installment plan ("cagnotte",
+// services/subscriptions/installments.ts) — same checks and same return
+// shape as subscribeAction, so the payment form works with either.
+export async function depositInstallmentAction(
+  amount: number,
+  country: string,
+  operator: string,
+  phone: string,
+  otp?: string,
+  address?: string,
+) {
+  const none = {
+    confirmationMessage: null,
+    paymentId: null,
+    pendingWizallConfirmation: null,
+  };
+  const { authUser, profile } = await requireUser();
+  if (await isAccountDeactivated(profile)) {
+    return { error: DEACTIVATED_ACCOUNT_MESSAGE, ...none };
+  }
+  if (await isRateLimited("paymentStart", `user:${profile.id}`)) {
+    return { error: RATE_LIMIT_MESSAGE, ...none };
+  }
+  if (!authUser.email) {
+    return { error: "Aucun email associé à ce compte.", ...none };
+  }
+  const origin = await getTrustedOrigin();
+  const visitorToken = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
+  let intent: Awaited<ReturnType<typeof initiateInstallmentDeposit>>;
+  try {
+    intent = await initiateInstallmentDeposit({
+      buyerUserId: profile.id,
+      email: authUser.email,
+      fullName: profile.fullName,
+      returnUrl: `${origin}/dashboard/subscription`,
+      visitorToken,
+      amount,
+      country,
+      operator,
+      phone,
+      otp,
+      address,
+    });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+      ...none,
+    };
+  }
+  if (intent.checkoutUrl) redirect(intent.checkoutUrl);
+  return {
+    error: null,
+    confirmationMessage: intent.confirmationMessage ?? null,
+    paymentId: intent.payment.id,
+    pendingWizallConfirmation: intent.pendingWizallConfirmation ?? null,
+  };
+}
+
 // PayDunya's Wizall Money (Sénégal) only — the charge above only starts
 // the transaction; the member gets an authorization code by SMS and must
 // submit it here to actually complete it. Only the payment id and the code
@@ -123,7 +182,10 @@ export async function subscribeAction(
 // payment is only ever marked CONFIRMED once PayDunya's invoice-confirm
 // endpoint itself reports it paid for the expected amount — never on the
 // strength of the Wizall confirm call alone (security audit H1).
-const wizallCodeSchema = z.string().trim().regex(/^\d{4,8}$/);
+const wizallCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4,8}$/);
 
 export async function confirmWizallPaymentAction(
   paymentId: string,
@@ -140,9 +202,7 @@ export async function confirmWizallPaymentAction(
 
   const payment = await findPaymentById(db, paymentId);
   const metadata = payment?.metadata as
-    | { wizallTransactionId?: string; wizallPhone?: string }
-    | null
-    | undefined;
+    { wizallTransactionId?: string; wizallPhone?: string } | null | undefined;
   const providerReference = payment?.providerReference;
   if (
     !payment ||

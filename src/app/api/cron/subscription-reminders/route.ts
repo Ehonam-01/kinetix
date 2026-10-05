@@ -4,6 +4,7 @@ import { getCronEnv } from "@/config/env.cron";
 import { sendCommissionEmails } from "@/services/notifications/commission-emails";
 import { sendLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { sendExpiryReminders } from "@/services/subscriptions/send-expiry-reminders";
+import { processInstallmentDeadlines } from "@/services/subscriptions/installments";
 
 // Triggered by Vercel Cron (vercel.json) — Vercel automatically sends
 // `Authorization: Bearer ${CRON_SECRET}` on every scheduled invocation once
@@ -27,5 +28,13 @@ export async function GET(request: Request) {
   const levelEmails = await sendLevelCompletedEmails();
   // Same safety net for the "nouveau filleul" commission emails.
   const commissionEmails = await sendCommissionEmails();
-  return NextResponse.json({ ...result, levelEmails, commissionEmails });
+  // Installment plans: close the ones past their deadline (refund owed),
+  // remind the ones close to it.
+  const installments = await processInstallmentDeadlines();
+  return NextResponse.json({
+    ...result,
+    levelEmails,
+    commissionEmails,
+    installments,
+  });
 }

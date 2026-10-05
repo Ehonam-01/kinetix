@@ -46,16 +46,18 @@ export async function initiateSubscriptionPayment(input: {
   phone?: string;
   otp?: string;
   address?: string;
+  // One deposit towards an installment plan (services/subscriptions/
+  // installments.ts) instead of the full price: charged the same way, but
+  // recorded as an INSTALLMENT payment, which never grants access itself.
+  installment?: { planId: string; amount: number };
 }) {
-  const amount = await getCurrentParameterValue(
-    db,
-    "subscription.price_in_cfa",
-  );
-  const attribution = await resolveSaleAttribution(
-    input.buyerUserId,
-    input.visitorToken,
-  );
-  const idempotencyKey = `SUBSCRIPTION:${input.buyerUserId}:${randomUUID()}`;
+  const amount = input.installment
+    ? input.installment.amount
+    : await getCurrentParameterValue(db, "subscription.price_in_cfa");
+  const attribution = input.installment
+    ? null
+    : await resolveSaleAttribution(input.buyerUserId, input.visitorToken);
+  const idempotencyKey = `${input.installment ? "INSTALLMENT" : "SUBSCRIPTION"}:${input.buyerUserId}:${randomUUID()}`;
   const { firstName, lastName } = splitFullName(input.fullName);
   const provider = await getActivePaymentProvider(db);
 
@@ -70,7 +72,7 @@ export async function initiateSubscriptionPayment(input: {
     .insert(payments)
     .values({
       beneficiaryUserId: input.buyerUserId,
-      purpose: "SUBSCRIPTION",
+      purpose: input.installment ? "INSTALLMENT" : "SUBSCRIPTION",
       method: "MOBILE_MONEY",
       amount,
       provider: provider.name,
@@ -80,16 +82,28 @@ export async function initiateSubscriptionPayment(input: {
       // attributed ambassador — payments has no ambassadorUserId column of
       // its own (it stays purpose-agnostic, shared with REGISTRATION and
       // the retired COURSE_PURCHASE).
-      metadata: {
-        ambassadorUserId: attribution?.ambassadorUserId ?? null,
-        attributionId: attribution?.attributionId ?? null,
-      },
+      metadata: input.installment
+        ? {
+            installmentPlanId: input.installment.planId,
+            // Where a refund would go if the plan expired unpaid.
+            payout: {
+              country: input.country ?? null,
+              operator: input.operator ?? null,
+              phone: input.phone ?? null,
+            },
+          }
+        : {
+            ambassadorUserId: attribution?.ambassadorUserId ?? null,
+            attributionId: attribution?.attributionId ?? null,
+          },
     })
     .returning();
 
   const intent = await provider.createPayment({
     amount,
-    description: "Abonnement annuel Kinetix Africa",
+    description: input.installment
+      ? "Versement — abonnement annuel Kinetix Africa"
+      : "Abonnement annuel Kinetix Africa",
     customer: { email: input.email, firstName, lastName, phone: input.phone },
     returnUrl: input.returnUrl,
     idempotencyKey,

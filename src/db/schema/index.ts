@@ -29,3 +29,4 @@ export * from "./admin-recharge-requests";
 export * from "./mentor-profiles";
 export * from "./mentorships";
 export * from "./lesson-discussions";
+export * from "./installment-plans";
