@@ -1,6 +1,7 @@
 import type { NetworkChild, NetworkView } from "@/repositories/network";
 import { BinaryConnector } from "./binary-connector";
 import { TreeNode } from "./tree-node";
+import { CenteredScroll } from "./centered-scroll";
 
 function levelName(
   code: number | null,
@@ -22,19 +23,23 @@ function Branch({
   selectedLevel: number;
   levelNameByCode: Record<number, string>;
 }) {
-  if (!node) return <TreeNode variant="vacant" />;
-
-  const qualified = (node.currentLevelCode ?? 0) >= selectedLevel;
-  const left = node.children.find((c) => c.position === "LEFT");
-  const right = node.children.find((c) => c.position === "RIGHT");
+  // A vacant position still shows the positions under it, down to the
+  // level's last generation: the member sees every place left to fill.
+  const qualified = (node?.currentLevelCode ?? 0) >= selectedLevel;
+  const left = node?.children.find((c) => c.position === "LEFT");
+  const right = node?.children.find((c) => c.position === "RIGHT");
 
   return (
     <div className="flex flex-col items-center">
-      <TreeNode
-        username={node.username}
-        levelName={levelName(node.currentLevelCode, levelNameByCode)}
-        variant={qualified ? "member" : "unqualified"}
-      />
+      {node ? (
+        <TreeNode
+          username={node.username}
+          levelName={levelName(node.currentLevelCode, levelNameByCode)}
+          variant={qualified ? "member" : "unqualified"}
+        />
+      ) : (
+        <TreeNode variant="vacant" />
+      )}
       {depth < maxDepth && (
         <BinaryConnector
           left={
@@ -76,7 +81,7 @@ export function GenealogyTree({
   const right = network.children.find((c) => c.position === "RIGHT");
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <CenteredScroll className="overflow-x-auto pb-4">
       <div className="flex min-w-fit flex-col items-center px-4">
         <TreeNode
           username={network.username}
@@ -104,6 +109,6 @@ export function GenealogyTree({
           }
         />
       </div>
-    </div>
+    </CenteredScroll>
   );
 }

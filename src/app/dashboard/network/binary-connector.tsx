@@ -1,7 +1,10 @@
 // Draws the classic org-chart connector for exactly two children: a stub
-// down from the parent, an L-shaped bar spanning to each child's center,
-// and a stub up into each child — relies on the two slots being equal
-// width (flex-1), not on measuring pixel positions.
+// down from the parent, then two equal columns, each carrying its half of
+// the horizontal bar (from its center towards the middle) and a stub down
+// into its child — so the bar always meets the children's centers,
+// without measuring pixel positions. The columns size to their content
+// (never squeezed: a deep tree scrolls sideways instead), and every node
+// has the same width (tree-node.tsx), so both columns match.
 export function BinaryConnector({
   left,
   right,
@@ -11,23 +14,21 @@ export function BinaryConnector({
 }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="bg-primary/40 h-6 w-0.5" />
-      <div className="flex w-full">
-        <div className="flex flex-1 justify-end">
-          <div className="border-primary/40 h-6 w-1/2 border-t-2 border-r-2" />
-        </div>
-        <div className="flex flex-1 justify-start">
-          <div className="border-primary/40 h-6 w-1/2 border-t-2 border-l-2" />
-        </div>
-      </div>
-      <div className="flex gap-8">
+      <div className="bg-primary/40 h-5 w-0.5" />
+      <div className="grid grid-cols-[auto_auto]">
         <div className="flex flex-col items-center">
-          <div className="bg-primary/40 h-6 w-0.5" />
-          {left}
+          <div className="relative h-5 w-full">
+            <div className="border-primary/40 absolute top-0 right-0 left-1/2 border-t-2" />
+            <div className="bg-primary/40 absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2" />
+          </div>
+          <div className="px-1 sm:px-3">{left}</div>
         </div>
         <div className="flex flex-col items-center">
-          <div className="bg-primary/40 h-6 w-0.5" />
-          {right}
+          <div className="relative h-5 w-full">
+            <div className="border-primary/40 absolute top-0 right-1/2 left-0 border-t-2" />
+            <div className="bg-primary/40 absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2" />
+          </div>
+          <div className="px-1 sm:px-3">{right}</div>
         </div>
       </div>
     </div>
