@@ -536,7 +536,7 @@ export async function renderLevelCertificate(
     spacing: 0.8,
     align: "right",
   });
-  text(page, "Kinetix Africa · EXCELLENCIA GROUP LTD, Londres", {
+  text(page, "Kinetix Africa · EXCELLENCIA GROUP LTD", {
     x: WIDTH - 40,
     top: 550,
     font: fonts.regular,
