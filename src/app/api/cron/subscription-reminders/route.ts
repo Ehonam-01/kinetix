@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCronEnv } from "@/config/env.cron";
+import { sendCommissionEmails } from "@/services/notifications/commission-emails";
 import { sendLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { sendExpiryReminders } from "@/services/subscriptions/send-expiry-reminders";
 
@@ -24,5 +25,7 @@ export async function GET(request: Request) {
   // after the level is completed, this catches any that failed or were
   // completed outside a request.
   const levelEmails = await sendLevelCompletedEmails();
-  return NextResponse.json({ ...result, levelEmails });
+  // Same safety net for the "nouveau filleul" commission emails.
+  const commissionEmails = await sendCommissionEmails();
+  return NextResponse.json({ ...result, levelEmails, commissionEmails });
 }

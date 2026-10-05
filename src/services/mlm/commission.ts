@@ -5,6 +5,7 @@ import { commissionEvents } from "@/db/schema/commission-events";
 import { financialTransactions } from "@/db/schema/financial-transactions";
 import { profiles } from "@/db/schema/profiles";
 import { hasActiveSubscription } from "@/repositories/subscriptions";
+import { scheduleCommissionEmails } from "@/services/notifications/commission-emails";
 import { creditBalance } from "./credit-balance";
 
 type CommissionInput = {
@@ -103,6 +104,10 @@ export async function createCommissionEvent(
   });
 
   await creditBalance(executor, input.beneficiaryUserId, input.amount);
+
+  // "Félicitations, nouveau filleul" — sent once this transaction is
+  // committed.
+  if (input.type === "DIRECT_SALE") scheduleCommissionEmails();
 
   return event;
 }

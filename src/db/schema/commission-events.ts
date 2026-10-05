@@ -47,6 +47,9 @@ export const commissionEvents = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // When the beneficiary was emailed about it (DIRECT_SALE only, see
+    // services/notifications/commission-emails.ts). null = still to send.
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
   },
   (table) => [
     index("commission_events_beneficiary_idx").on(

@@ -421,6 +421,13 @@
       "when": 1791026223183,
       "tag": "0059_subscription_regular_price",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1791187714315,
+      "tag": "0060_commission_emails",
+      "breakpoints": true
     }
   ]
 }
