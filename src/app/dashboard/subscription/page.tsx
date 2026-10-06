@@ -167,6 +167,7 @@ export default async function SubscriptionPage() {
             username={profile.username}
             activeProvider={activeProvider}
             installments={installments}
+            otherCountries={Boolean(process.env.SASPAY_SECRET_KEY)}
           />
           <CountrySupportHint whatsapp={supportWhatsapp} context="paiement" />
         </CardContent>

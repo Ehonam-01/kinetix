@@ -1,7 +1,10 @@
 import { requireAdmin } from "@/services/auth/current-user";
 import { listInstallmentPlansForAdmin } from "@/services/subscriptions/installments";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
-import { PAYDUNYA_COUNTRY_OPTIONS } from "@/config/paydunya-countries";
+import {
+  OTHER_COUNTRY,
+  PAYDUNYA_COUNTRY_OPTIONS,
+} from "@/config/paydunya-countries";
 import { RefundButton } from "./refund-button";
 
 const fmt = (amount: number) => `${amount.toLocaleString("fr-FR")} F`;
@@ -12,6 +15,7 @@ const operatorLabel = (value: string | null | undefined) =>
   value ??
   "—";
 const countryLabel = (value: string | null | undefined) =>
+  (value === OTHER_COUNTRY ? "Autre pays (SasPay)" : null) ??
   PAYDUNYA_COUNTRY_OPTIONS.find((c) => c.value === value)?.label ??
   value ??
   "—";

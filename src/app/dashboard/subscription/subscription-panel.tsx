@@ -18,10 +18,13 @@ export function SubscriptionPanel({
   username,
   activeProvider,
   installments,
+  otherCountries = false,
 }: {
   price: number;
   username: string;
   activeProvider: string;
+  // SasPay configured: "Autre pays / carte bancaire" on the PayDunya form.
+  otherCountries?: boolean;
   // Present only when this member may pay in several deposits (first
   // subscription, PayDunya active) — see page.tsx.
   installments?: {
@@ -69,10 +72,17 @@ export function SubscriptionPanel({
       </div>
 
       {method === "INSTALLMENTS" && installments ? (
-        <InstallmentPanel price={price} {...installments} />
+        <InstallmentPanel
+          price={price}
+          otherCountries={otherCountries}
+          {...installments}
+        />
       ) : method === "MOBILE_MONEY" ? (
         activeProvider === "PAYDUNYA" ? (
-          <PaydunyaSubscribeForm price={price} />
+          <PaydunyaSubscribeForm
+            price={price}
+            otherCountries={otherCountries}
+          />
         ) : activeProvider === "BICTORYS" ? (
           <SubscribeButton price={price} />
         ) : (

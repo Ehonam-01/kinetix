@@ -11,3 +11,8 @@ export const PAYDUNYA_COUNTRY_OPTIONS = [
   { value: "TG", label: "Togo" },
   { value: "CM", label: "Cameroun" },
 ] as const;
+
+// "Mon pays n'est pas dans la liste / carte bancaire": the payment goes
+// through SasPay's hosted checkout instead (services/payments/saspay.ts),
+// which covers more countries and bank cards.
+export const OTHER_COUNTRY = "OTHER";

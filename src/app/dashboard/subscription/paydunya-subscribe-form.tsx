@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { PAYDUNYA_COUNTRY_OPTIONS } from "@/config/paydunya-countries";
+import {
+  OTHER_COUNTRY,
+  PAYDUNYA_COUNTRY_OPTIONS,
+} from "@/config/paydunya-countries";
 import { MOBILE_MONEY_OPERATOR_OPTIONS } from "@/config/mobile-money-operators";
 import { PAYDUNYA_OPERATORS_BY_COUNTRY } from "@/config/paydunya-country-operators";
 import {
@@ -37,10 +40,14 @@ export function PaydunyaSubscribeForm({
   price,
   start = subscribeAction,
   submitLabel = "Payer",
+  otherCountries = false,
 }: {
   price: number;
   start?: StartPayment;
   submitLabel?: string;
+  // Offers "Autre pays / carte bancaire" (SasPay's hosted checkout) when
+  // SasPay is configured.
+  otherCountries?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -118,11 +125,17 @@ export function PaydunyaSubscribeForm({
     setAddress("");
   }
 
+  // Another country: SasPay's own page collects the network and number.
+  const isOther = country === OTHER_COUNTRY;
+
   function handleClick() {
     setError(null);
+    if (!country) {
+      setError("Choisissez votre pays.");
+      return;
+    }
     if (
-      !country ||
-      !operator ||
+      (!isOther && !operator) ||
       !phone.trim() ||
       (needsOtp && !otp.trim()) ||
       (needsAddress && !address.trim())
@@ -252,68 +265,87 @@ export function PaydunyaSubscribeForm({
               {c.label}
             </option>
           ))}
+          {otherCountries && (
+            <option value={OTHER_COUNTRY}>Autre pays / carte bancaire</option>
+          )}
         </select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="paydunya-operator">Opérateur</Label>
-        <select
-          id="paydunya-operator"
-          value={operator}
-          disabled={!country}
-          onChange={(e) => handleOperatorChange(e.target.value)}
-          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 disabled:opacity-50 md:text-sm"
-        >
-          <option value="">
-            {country ? "Choisir un opérateur" : "Choisissez d'abord un pays"}
-          </option>
-          {availableOperators.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        {PAYDUNYA_REQUIRES_WIZALL_CONFIRM.has(combo as never) && (
-          <p className="text-muted-foreground text-xs">
-            Un code de confirmation vous sera envoyé par SMS après cette étape.
-          </p>
-        )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="paydunya-phone">Numéro mobile money</Label>
-        <Input
-          id="paydunya-phone"
-          placeholder="Sans indicatif, ex : 91282590"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-      </div>
-      {needsOtp && (
-        <div className="space-y-2">
-          <Label htmlFor="paydunya-otp">
-            Code USSD (composez le code fourni par votre opérateur)
-          </Label>
-          <Input
-            id="paydunya-otp"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-        </div>
-      )}
-      {needsAddress && (
-        <div className="space-y-2">
-          <Label htmlFor="paydunya-address">Adresse</Label>
-          <Input
-            id="paydunya-address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
+      {isOther ? (
+        <p className="border-border bg-muted/40 rounded-lg border p-3 text-sm">
+          Tu vas être redirigé vers la page de paiement sécurisée de notre
+          partenaire SasPay : choisis ton pays et ton opérateur mobile money, ou
+          paie par carte bancaire. Le montant est converti automatiquement dans
+          ta monnaie.
+        </p>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="paydunya-operator">Opérateur</Label>
+            <select
+              id="paydunya-operator"
+              value={operator}
+              disabled={!country}
+              onChange={(e) => handleOperatorChange(e.target.value)}
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3 disabled:opacity-50 md:text-sm"
+            >
+              <option value="">
+                {country
+                  ? "Choisir un opérateur"
+                  : "Choisissez d'abord un pays"}
+              </option>
+              {availableOperators.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {PAYDUNYA_REQUIRES_WIZALL_CONFIRM.has(combo as never) && (
+              <p className="text-muted-foreground text-xs">
+                Un code de confirmation vous sera envoyé par SMS après cette
+                étape.
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="paydunya-phone">Numéro mobile money</Label>
+            <Input
+              id="paydunya-phone"
+              placeholder="Sans indicatif, ex : 91282590"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+          {needsOtp && (
+            <div className="space-y-2">
+              <Label htmlFor="paydunya-otp">
+                Code USSD (composez le code fourni par votre opérateur)
+              </Label>
+              <Input
+                id="paydunya-otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+            </div>
+          )}
+          {needsAddress && (
+            <div className="space-y-2">
+              <Label htmlFor="paydunya-address">Adresse</Label>
+              <Input
+                id="paydunya-address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
+          )}
+        </>
       )}
       {error && <p className="text-destructive text-sm">{error}</p>}
       <Button disabled={pending} onClick={handleClick} className="w-full">
         {pending
           ? "Envoi de la demande de paiement..."
-          : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
+          : isOther
+            ? `Continuer vers le paiement — ${price.toLocaleString("fr-FR")} F`
+            : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
       </Button>
     </div>
   );

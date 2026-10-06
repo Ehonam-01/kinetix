@@ -73,7 +73,13 @@ export type RefundResult = {
   refundReference: string;
 };
 
-export type PaymentProviderName = "MONEROO" | "BICTORYS" | "PAYDUNYA";
+export type PaymentProviderName =
+  | "MONEROO"
+  | "BICTORYS"
+  | "PAYDUNYA"
+  // Alongside the active provider, for the countries it doesn't cover
+  // (services/payments/saspay.ts).
+  | "SASPAY";
 
 export interface PaymentProvider {
   // Written verbatim to payments.provider (a plain text column) — lets

@@ -24,12 +24,14 @@ export function InstallmentPanel({
   bounds,
   months,
   feeLabel,
+  otherCountries = false,
 }: {
   price: number;
   plan: InstallmentPlanView | null;
   bounds: { min: number; max: number };
   months: number;
   feeLabel: string | null;
+  otherCountries?: boolean;
 }) {
   const target = plan?.targetAmount ?? price;
   const paid = plan?.paidAmount ?? 0;
@@ -127,6 +129,7 @@ export function InstallmentPanel({
             <PaydunyaSubscribeForm
               price={parsed}
               submitLabel="Verser"
+              otherCountries={otherCountries}
               start={(country, operator, phone, otp, address) =>
                 depositInstallmentAction(
                   parsed,

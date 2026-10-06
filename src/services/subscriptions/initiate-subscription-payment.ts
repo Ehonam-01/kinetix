@@ -6,6 +6,8 @@ import { payments } from "@/db/schema/payments";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
+import { saspayProvider } from "@/services/payments/saspay";
+import { OTHER_COUNTRY } from "@/config/paydunya-countries";
 
 function splitFullName(fullName: string): {
   firstName: string;
@@ -59,7 +61,12 @@ export async function initiateSubscriptionPayment(input: {
     : await resolveSaleAttribution(input.buyerUserId, input.visitorToken);
   const idempotencyKey = `${input.installment ? "INSTALLMENT" : "SUBSCRIPTION"}:${input.buyerUserId}:${randomUUID()}`;
   const { firstName, lastName } = splitFullName(input.fullName);
-  const provider = await getActivePaymentProvider(db);
+  // "Mon pays n'est pas dans la liste" on the payment form: SasPay's hosted
+  // checkout, where the member picks any country it covers, or a card.
+  const provider =
+    input.country === OTHER_COUNTRY
+      ? saspayProvider
+      : await getActivePaymentProvider(db);
 
   // Inserted before calling the provider, deliberately — providerReference
   // is filled in once createPayment returns, below. If that call throws

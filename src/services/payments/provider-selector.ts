@@ -4,6 +4,7 @@ import { getActiveProviderKey } from "@/repositories/payment-settings";
 import { bictorysProvider } from "./bictorys";
 import { monerooProvider } from "./moneroo";
 import { paydunyaProvider } from "./paydunya";
+import { saspayProvider } from "./saspay";
 import type { PaymentProvider } from "./provider";
 
 // The one indirection point between "which inbound-payment provider is
@@ -30,5 +31,6 @@ export function getPaymentProviderByName(name: string): PaymentProvider {
   if (name === "BICTORYS") return bictorysProvider;
   if (name === "MONEROO") return monerooProvider;
   if (name === "PAYDUNYA") return paydunyaProvider;
+  if (name === "SASPAY") return saspayProvider;
   throw new Error(`Fournisseur de paiement inconnu : ${name}`);
 }

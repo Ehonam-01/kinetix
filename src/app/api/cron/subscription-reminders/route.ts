@@ -5,6 +5,7 @@ import { sendCommissionEmails } from "@/services/notifications/commission-emails
 import { sendLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { sendExpiryReminders } from "@/services/subscriptions/send-expiry-reminders";
 import { processInstallmentDeadlines } from "@/services/subscriptions/installments";
+import { reconcilePendingSaspayPayments } from "@/services/payments/saspay-reconcile";
 
 // Triggered by Vercel Cron (vercel.json) — Vercel automatically sends
 // `Authorization: Bearer ${CRON_SECRET}` on every scheduled invocation once
@@ -31,10 +32,16 @@ export async function GET(request: Request) {
   // Installment plans: close the ones past their deadline (refund owed),
   // remind the ones close to it.
   const installments = await processInstallmentDeadlines();
+  // SasPay payments whose confirmation never reached us (no webhook, the
+  // member closed the page before coming back).
+  const saspay = process.env.SASPAY_SECRET_KEY
+    ? await reconcilePendingSaspayPayments()
+    : null;
   return NextResponse.json({
     ...result,
     levelEmails,
     commissionEmails,
     installments,
+    saspay,
   });
 }
