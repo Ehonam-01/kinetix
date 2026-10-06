@@ -27,6 +27,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PAYMENT_PROVIDER_CHANGED: "Fournisseur de paiement modifié",
   SUPPORT_WHATSAPP_UPDATED: "WhatsApp du support modifié",
   ALTERNATIVE_PAYMENT_URL_UPDATED: "Lien de paiement alternatif modifié",
+  SASPAY_TOGGLED: "SasPay activé/désactivé",
   INSTALLMENT_REFUNDED: "Cagnotte remboursée",
   ACCOUNT_DELETED: "Compte supprimé (anonymisé)",
   TEST_SUBSCRIPTION_DELETED: "Abonnement de test supprimé",

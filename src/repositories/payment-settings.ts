@@ -44,4 +44,13 @@ export async function getAlternativePaymentUrl(
   return row?.alternativePaymentUrl ?? null;
 }
 
+// Whether the admin offers SasPay ("Autre pays / carte bancaire").
+export async function isSaspayEnabled(executor: Executor): Promise<boolean> {
+  const row = await executor.query.paymentSettings.findFirst({
+    where: eq(paymentSettings.id, SETTINGS_ID),
+    columns: { saspayEnabled: true },
+  });
+  return row?.saspayEnabled ?? true;
+}
+
 export const PAYMENT_SETTINGS_ID = SETTINGS_ID;

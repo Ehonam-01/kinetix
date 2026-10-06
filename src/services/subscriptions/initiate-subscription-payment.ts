@@ -7,6 +7,7 @@ import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
 import { saspayProvider } from "@/services/payments/saspay";
+import { isSaspayEnabled } from "@/repositories/payment-settings";
 import { OTHER_COUNTRY } from "@/config/paydunya-countries";
 
 function splitFullName(fullName: string): {
@@ -63,6 +64,9 @@ export async function initiateSubscriptionPayment(input: {
   const { firstName, lastName } = splitFullName(input.fullName);
   // "Mon pays n'est pas dans la liste" on the payment form: SasPay's hosted
   // checkout, where the member picks any country it covers, or a card.
+  if (input.country === OTHER_COUNTRY && !(await isSaspayEnabled(db))) {
+    throw new Error("Ce moyen de paiement n'est plus proposé pour le moment.");
+  }
   const provider =
     input.country === OTHER_COUNTRY
       ? saspayProvider

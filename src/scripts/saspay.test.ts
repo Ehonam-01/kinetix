@@ -281,4 +281,38 @@ describe("SasPay", () => {
     });
     expect(plan).toMatchObject({ status: "OPEN", paidAmount: 5000 });
   });
+
+  it("can be switched off by the admin: 'Autre pays' is then refused", async () => {
+    const { updateSaspayEnabled } =
+      await import("@/services/admin/update-saspay-enabled");
+    const { isSaspayEnabled } = await import("@/repositories/payment-settings");
+    const { initiateSubscriptionPayment } =
+      await import("@/services/subscriptions/initiate-subscription-payment");
+    const admin = await makeMember("admin");
+    await localDb
+      .update(schema.profiles)
+      .set({ role: "ADMIN" })
+      .where(eq(schema.profiles.id, admin));
+    const member = await makeMember("off");
+    const start = () =>
+      initiateSubscriptionPayment({
+        buyerUserId: member,
+        email: "off@example.test",
+        fullName: "Off Test",
+        returnUrl: "https://kinetix.example/dashboard/subscription",
+        country: "OTHER",
+      });
+
+    expect(await isSaspayEnabled(localDb)).toBe(true);
+    await updateSaspayEnabled(admin, false);
+    expect(await isSaspayEnabled(localDb)).toBe(false);
+    await expect(start()).rejects.toThrow("n'est plus proposé");
+
+    await updateSaspayEnabled(admin, true);
+    expect((await start()).payment.provider).toBe("SASPAY");
+
+    await expect(updateSaspayEnabled(member, false)).rejects.toThrow(
+      "Seul un administrateur",
+    );
+  });
 });

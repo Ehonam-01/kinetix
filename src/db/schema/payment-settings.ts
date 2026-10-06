@@ -1,4 +1,11 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { profiles } from "./profiles";
 
 export const paymentProviderEnum = pgEnum("payment_provider", [
@@ -29,6 +36,10 @@ export const paymentSettings = pgTable("payment_settings", {
   // of payment isn't offered: paid there, the account is then activated by
   // an admin ("Accorder un abonnement"). null = not shown.
   alternativePaymentUrl: text("alternative_payment_url"),
+  // "Autre pays / carte bancaire" (SasPay's hosted checkout) offered next
+  // to the active provider — switched on and off by the admin, and only
+  // ever shown when SASPAY_SECRET_KEY is configured too.
+  saspayEnabled: boolean("saspay_enabled").notNull().default(true),
   updatedBy: uuid("updated_by").references(() => profiles.id),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

@@ -1,0 +1,1 @@
+ALTER TABLE "payment_settings" ADD COLUMN "saspay_enabled" boolean DEFAULT true NOT NULL;

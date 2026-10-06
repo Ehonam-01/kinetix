@@ -5,6 +5,7 @@ import {
   getActiveProviderKey,
   getAlternativePaymentUrl,
   getSupportWhatsapp,
+  isSaspayEnabled,
 } from "@/repositories/payment-settings";
 import { findRecentPendingPayment } from "@/repositories/payments";
 import {
@@ -30,6 +31,7 @@ export async function getPaymentOptions(userId: string) {
     alternativePaymentUrl,
     latestPlan,
     ineligibility,
+    saspayEnabled,
   ] = await Promise.all([
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
     getActiveProviderKey(db),
@@ -39,6 +41,7 @@ export async function getPaymentOptions(userId: string) {
     getAlternativePaymentUrl(db),
     getLatestInstallmentPlan(db, userId),
     installmentIneligibility(db, userId),
+    isSaspayEnabled(db),
   ]);
 
   // Paying in several deposits: a first subscription only, never a renewal
@@ -66,8 +69,9 @@ export async function getPaymentOptions(userId: string) {
     price,
     activeProvider,
     installments,
-    // SasPay configured: "Autre pays / carte bancaire" on the form.
-    otherCountries: Boolean(process.env.SASPAY_SECRET_KEY),
+    // "Autre pays / carte bancaire": switched on by the admin, and SasPay
+    // configured on the server.
+    otherCountries: saspayEnabled && Boolean(process.env.SASPAY_SECRET_KEY),
     supportWhatsapp,
     alternativePaymentUrl,
     expiredPlan: latestPlan?.status === "EXPIRED" ? latestPlan : null,

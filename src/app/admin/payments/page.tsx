@@ -4,11 +4,13 @@ import {
   getActiveProviderKey,
   getAlternativePaymentUrl,
   getSupportWhatsapp,
+  isSaspayEnabled,
 } from "@/repositories/payment-settings";
 import { cn } from "@/lib/utils";
 import { ProviderToggle } from "./provider-toggle";
 import { SupportWhatsappForm } from "./support-whatsapp-form";
 import { AlternativePaymentUrlForm } from "./alternative-payment-url-form";
+import { SaspayToggle } from "./saspay-toggle";
 import { ReconcilePaymentButton } from "./reconcile-payment-button";
 import { requireAdmin } from "@/services/auth/current-user";
 
@@ -31,17 +33,27 @@ export default async function AdminPaymentsPage() {
   // re-run on every navigation, so it can't be the only gate (Next.js
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
-  const [payments, activeProvider, supportWhatsapp, alternativePaymentUrl] =
-    await Promise.all([
-      listPayments(db),
-      getActiveProviderKey(db),
-      getSupportWhatsapp(db),
-      getAlternativePaymentUrl(db),
-    ]);
+  const [
+    payments,
+    activeProvider,
+    supportWhatsapp,
+    alternativePaymentUrl,
+    saspayEnabled,
+  ] = await Promise.all([
+    listPayments(db),
+    getActiveProviderKey(db),
+    getSupportWhatsapp(db),
+    getAlternativePaymentUrl(db),
+    isSaspayEnabled(db),
+  ]);
 
   return (
     <div className="space-y-6">
       <ProviderToggle activeProvider={activeProvider} />
+      <SaspayToggle
+        enabled={saspayEnabled}
+        configured={Boolean(process.env.SASPAY_SECRET_KEY)}
+      />
       <SupportWhatsappForm current={supportWhatsapp} />
       <AlternativePaymentUrlForm current={alternativePaymentUrl} />
 
