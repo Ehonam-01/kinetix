@@ -19,10 +19,14 @@ import {
   joinAmbassadorProgram,
 } from "@/services/ambassador/join-program";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { closeOpenInstallmentPlan } from "./close-installment-plan";
 
 type SubscriptionPaymentMetadata = {
   ambassadorUserId?: string | null;
   attributionId?: string | null;
+  // Set when this payment is the completion of an installment plan
+  // (installments.ts).
+  installmentPlanId?: string | null;
 };
 
 // Calendar-year arithmetic, not a fixed 365-day duration: a fixed
@@ -124,6 +128,12 @@ export async function confirmSubscriptionPurchase(
       attributionId,
     })
     .returning();
+
+  // Subscribed some other way than through the member's open installment
+  // plan: that plan can't be completed any more (no renewal by cagnotte).
+  if (!metadata?.installmentPlanId) {
+    await closeOpenInstallmentPlan(tx, payment.beneficiaryUserId);
+  }
 
   // A subscription is now the platform's real paid product (the old
   // paid-registration flow is dormant, migration 0031), so paying for one

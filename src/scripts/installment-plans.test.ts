@@ -298,4 +298,58 @@ describe("installment plans (pglite)", () => {
       1,
     );
   });
+
+  it("never pays a renewal: subscribed another way, the open plan is closed and refunded", async () => {
+    const { grantSubscriptionCredit } =
+      await import("@/services/subscriptions/grant-subscription-credit");
+    const { initiateInstallmentDeposit, installmentIneligibility } =
+      await import("@/services/subscriptions/installments");
+    const admin = await makeProfile("admin2", {
+      role: "ADMIN",
+      status: "ACTIVE",
+    });
+
+    // Deposits already paid: closed like an expired plan, refund owed.
+    const paid = await makeProfile("kofi");
+    const plan = await openPlan(paid);
+    await confirmDeposit(paid, plan.id, 6000);
+    await grantSubscriptionCredit(admin, paid);
+    expect(await planOf(paid)).toMatchObject({
+      status: "EXPIRED",
+      paidAmount: 6000,
+      refundFee: 150,
+      refundAmount: 5850,
+    });
+    expect(await installmentIneligibility(localDb, paid)).toMatch(
+      /première inscription/,
+    );
+    await expect(
+      initiateInstallmentDeposit({
+        buyerUserId: paid,
+        email: "kofi@example.test",
+        fullName: "Kofi Test",
+        returnUrl: "https://kinetix.example/dashboard/subscription",
+        amount: 5000,
+        country: "TG",
+        operator: "TMONEY",
+        phone: "90000000",
+      }),
+    ).rejects.toThrow("première inscription");
+
+    // A late deposit joins the refund instead of completing anything.
+    await confirmDeposit(paid, plan.id, 13500);
+    const after = await planOf(paid);
+    expect(after.status).toBe("EXPIRED");
+    expect(after.paidAmount).toBe(19500);
+    const subscriptions = await localDb.query.subscriptions.findMany({
+      where: eq(schema.subscriptions.userId, paid),
+    });
+    expect(subscriptions).toHaveLength(1);
+
+    // Nothing paid yet: the plan simply goes away.
+    const empty = await makeProfile("esi");
+    await openPlan(empty);
+    await grantSubscriptionCredit(admin, empty);
+    expect(await planOf(empty)).toBeUndefined();
+  });
 });

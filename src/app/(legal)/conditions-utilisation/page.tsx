@@ -177,7 +177,10 @@ export default function ConditionsUtilisationPage() {
           sommes versées sont remboursées sur le compte mobile money du
           dernier versement, déduction faite des frais de retrait en vigueur.
           Après une cagnotte clôturée, l&apos;Abonnement ne peut plus être
-          réglé qu&apos;en une seule fois.
+          réglé qu&apos;en une seule fois. La cagnotte ne peut servir à aucun
+          renouvellement : si l&apos;Abonnement est réglé par un autre moyen
+          alors qu&apos;une cagnotte est en cours, celle-ci est clôturée et
+          remboursée dans les mêmes conditions.
         </p>
       </Section>
 

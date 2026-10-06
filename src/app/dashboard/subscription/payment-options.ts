@@ -45,11 +45,12 @@ export async function getPaymentOptions(userId: string) {
     getWithdrawalFeeSettings(db),
   ]);
 
-  // Paying in several deposits: a first subscription only, through PayDunya
+  // Paying in several deposits: a first subscription only, never a renewal
+  // (installmentIneligibility), through PayDunya
   // (services/subscriptions/installments.ts).
   const openPlan = latestPlan?.status === "OPEN" ? latestPlan : null;
   const installments =
-    activeProvider === "PAYDUNYA" && (openPlan || !ineligibility)
+    activeProvider === "PAYDUNYA" && !ineligibility
       ? {
           plan: openPlan
             ? {

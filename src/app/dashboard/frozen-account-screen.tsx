@@ -77,7 +77,7 @@ export function FrozenAccountScreen({
           <CardContent className="space-y-4">
             {expired && (
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-                Ta cagnotte a expiré sans être complétée :{" "}
+                Ta cagnotte a été clôturée :{" "}
                 {expired.refundedAt
                   ? `ton remboursement de ${(expired.refundAmount ?? 0).toLocaleString("fr-FR")} F a été effectué.`
                   : `ton remboursement de ${(expired.refundAmount ?? 0).toLocaleString("fr-FR")} F (après frais de retrait) est en cours.`}{" "}

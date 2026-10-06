@@ -142,6 +142,10 @@ export async function initiateInstallmentDeposit(input: {
   otp?: string;
   address?: string;
 }) {
+  // Checked even with a plan already open: a member who got their
+  // subscription another way can't keep paying into it.
+  const reason = await installmentIneligibility(db, input.buyerUserId);
+  if (reason) throw new Error(reason);
   let plan = await db.query.installmentPlans.findFirst({
     where: and(
       eq(installmentPlans.userId, input.buyerUserId),
@@ -149,8 +153,6 @@ export async function initiateInstallmentDeposit(input: {
     ),
   });
   if (!plan) {
-    const reason = await installmentIneligibility(db, input.buyerUserId);
-    if (reason) throw new Error(reason);
     const [price, attribution] = await Promise.all([
       getCurrentParameterValue(db, "subscription.price_in_cfa"),
       resolveSaleAttribution(input.buyerUserId, input.visitorToken),

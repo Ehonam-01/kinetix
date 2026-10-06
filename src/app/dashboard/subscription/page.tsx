@@ -55,17 +55,17 @@ export default async function SubscriptionPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PiggyBank className="size-5 text-amber-600" />
-              Cagnotte expirée
+              {status.expiresAt ? "Cagnotte clôturée" : "Cagnotte expirée"}
             </CardTitle>
             <CardDescription>
-              Le délai pour compléter ta cagnotte est dépassé (
-              {expiredPlan.paidAmount.toLocaleString("fr-FR")} F versés sur{" "}
-              {expiredPlan.targetAmount.toLocaleString("fr-FR")} F) : ton
-              inscription n&apos;a pas été activée.{" "}
+              {status.expiresAt
+                ? `Ton abonnement a été réglé autrement : ta cagnotte (${expiredPlan.paidAmount.toLocaleString("fr-FR")} F versés) a été clôturée. `
+                : `Le délai pour compléter ta cagnotte est dépassé (${expiredPlan.paidAmount.toLocaleString("fr-FR")} F versés sur ${expiredPlan.targetAmount.toLocaleString("fr-FR")} F) : ton inscription n'a pas été activée. `}
               {expiredPlan.refundedAt
                 ? `Ton remboursement de ${(expiredPlan.refundAmount ?? 0).toLocaleString("fr-FR")} F a été effectué le ${expiredPlan.refundedAt.toLocaleDateString("fr-FR", { dateStyle: "long" })}.`
-                : `Ton remboursement de ${(expiredPlan.refundAmount ?? 0).toLocaleString("fr-FR")} F (après ${(expiredPlan.refundFee ?? 0).toLocaleString("fr-FR")} F de frais de retrait) est en cours, sur ton compte mobile money.`}{" "}
-              Tu peux toujours t&apos;abonner en payant en une fois.
+                : `Ton remboursement de ${(expiredPlan.refundAmount ?? 0).toLocaleString("fr-FR")} F (après ${(expiredPlan.refundFee ?? 0).toLocaleString("fr-FR")} F de frais de retrait) est en cours, sur ton compte mobile money.`}
+              {!status.expiresAt &&
+                " Tu peux toujours t'abonner en payant en une fois."}
             </CardDescription>
           </CardHeader>
         </Card>
