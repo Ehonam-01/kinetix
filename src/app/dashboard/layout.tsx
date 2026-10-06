@@ -1,9 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
-import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import { getActiveProviderKey } from "@/repositories/payment-settings";
-import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { MobileSidebarProvider } from "@/components/mobile-sidebar-context";
@@ -12,6 +9,7 @@ import { SubscriptionAlertBanner } from "@/components/subscription-alert-banner"
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardTopBar } from "./dashboard-topbar";
 import { FrozenAccountScreen } from "./frozen-account-screen";
+import { getPaymentOptions } from "./subscription/payment-options";
 
 export default async function DashboardLayout({
   children,
@@ -25,16 +23,13 @@ export default async function DashboardLayout({
   // whichever round trip is slower, not the sum of both. The ambassador
   // query still fires even when it'll turn out to be unneeded (frozen
   // admin-exempt path below) — cheap enough to trade for the common case.
-  const [status, ambassador, pendingPayment] = await Promise.all([
+  const [status, ambassador] = await Promise.all([
     profile.role !== "ADMIN"
       ? getSubscriptionStatus(db, profile.id)
       : Promise.resolve(null),
     db.query.ambassadorProfiles.findFirst({
       where: eq(ambassadorProfiles.userId, profile.id),
     }),
-    profile.role !== "ADMIN"
-      ? findRecentPendingPayment(db, profile.id, "SUBSCRIPTION")
-      : Promise.resolve(null),
   ]);
 
   // Payment is mandatory before dashboard access at all (explicit product
@@ -50,19 +45,14 @@ export default async function DashboardLayout({
   // account that already paid and is blocked for an unrelated reason.
   // Admins are exempt, same bypass convention as every other gate here.
   if (profile.role !== "ADMIN" && profile.status === "PENDING_PAYMENT") {
-    const [price, activeProvider] = await Promise.all([
-      getCurrentParameterValue(db, "subscription.price_in_cfa"),
-      getActiveProviderKey(db),
-    ]);
+    const options = await getPaymentOptions(profile.id);
     return (
       <FrozenAccountScreen
         memberName={profile.fullName}
         neverSubscribed
         permanentlyFrozen={false}
-        price={price}
         username={profile.username}
-        activeProvider={activeProvider}
-        pendingPaymentId={pendingPayment?.id}
+        options={options}
       />
     );
   }
@@ -71,18 +61,13 @@ export default async function DashboardLayout({
   // with the same blocked screen (explicit user decision) — admins are
   // exempt, same bypass convention as hasCourseAccess/every other gate.
   if (status?.frozen) {
-    const [price, activeProvider] = await Promise.all([
-      getCurrentParameterValue(db, "subscription.price_in_cfa"),
-      getActiveProviderKey(db),
-    ]);
+    const options = await getPaymentOptions(profile.id);
     return (
       <FrozenAccountScreen
         memberName={profile.fullName}
         permanentlyFrozen={status.permanentlyFrozen}
-        price={price}
         username={profile.username}
-        activeProvider={activeProvider}
-        pendingPaymentId={pendingPayment?.id}
+        options={options}
       />
     );
   }

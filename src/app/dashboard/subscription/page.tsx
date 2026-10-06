@@ -1,23 +1,9 @@
 import { CheckCircle2, PiggyBank, XCircle } from "lucide-react";
 import { db } from "@/db/client";
-import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import {
-  getActiveProviderKey,
-  getAlternativePaymentUrl,
-  getSupportWhatsapp,
-} from "@/repositories/payment-settings";
 import { CountrySupportHint } from "@/components/support/country-support-hint";
-import { findRecentPendingPayment } from "@/repositories/payments";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
-import { getWithdrawalFeeSettings } from "@/repositories/withdrawals";
-import { describeWithdrawalFee } from "@/lib/withdrawal-fee";
-import {
-  INSTALLMENT_MONTHS,
-  depositBounds,
-  getLatestInstallmentPlan,
-  installmentIneligibility,
-} from "@/services/subscriptions/installments";
+import { getPaymentOptions } from "./payment-options";
 import {
   Card,
   CardContent,
@@ -30,52 +16,20 @@ import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
   const { profile } = await requireUser();
-  const [
-    status,
+  const [status, options] = await Promise.all([
+    getSubscriptionStatus(db, profile.id),
+    getPaymentOptions(profile.id),
+  ]);
+  const {
     price,
     activeProvider,
-    pendingPayment,
-    pendingDeposit,
+    installments,
+    otherCountries,
     supportWhatsapp,
-    latestPlan,
-    ineligibility,
-    feeSettings,
     alternativePaymentUrl,
-  ] = await Promise.all([
-    getSubscriptionStatus(db, profile.id),
-    getCurrentParameterValue(db, "subscription.price_in_cfa"),
-    getActiveProviderKey(db),
-    findRecentPendingPayment(db, profile.id, "SUBSCRIPTION"),
-    findRecentPendingPayment(db, profile.id, "INSTALLMENT"),
-    getSupportWhatsapp(db),
-    getLatestInstallmentPlan(db, profile.id),
-    installmentIneligibility(db, profile.id),
-    getWithdrawalFeeSettings(db),
-    getAlternativePaymentUrl(db),
-  ]);
-
-  // Paying in several deposits: a first subscription only, through PayDunya
-  // (services/subscriptions/installments.ts).
-  const openPlan = latestPlan?.status === "OPEN" ? latestPlan : null;
-  const installments =
-    activeProvider === "PAYDUNYA" && (openPlan || !ineligibility)
-      ? {
-          plan: openPlan
-            ? {
-                targetAmount: openPlan.targetAmount,
-                paidAmount: openPlan.paidAmount,
-                deadlineAt: openPlan.deadlineAt?.toISOString() ?? null,
-              }
-            : null,
-          bounds: openPlan
-            ? await depositBounds(db, openPlan)
-            : { min: Math.min(1000, price), max: price },
-          months: INSTALLMENT_MONTHS,
-          feeLabel: describeWithdrawalFee(feeSettings),
-        }
-      : undefined;
-  const expiredPlan = latestPlan?.status === "EXPIRED" ? latestPlan : null;
-  const watchedPayment = pendingPayment ?? pendingDeposit;
+    expiredPlan,
+    watchedPaymentId,
+  } = options;
 
   return (
     <div className="max-w-lg space-y-6">
@@ -92,8 +46,8 @@ export default async function SubscriptionPage() {
           own page and comes back here with no client state left to poll —
           this is what picks the confirmation up automatically instead of
           leaving them stuck on a manual reload (see PendingPaymentWatcher). */}
-      {watchedPayment && (
-        <PendingPaymentWatcher paymentId={watchedPayment.id} />
+      {watchedPaymentId && (
+        <PendingPaymentWatcher paymentId={watchedPaymentId} />
       )}
 
       {expiredPlan && (
@@ -170,7 +124,7 @@ export default async function SubscriptionPage() {
             username={profile.username}
             activeProvider={activeProvider}
             installments={installments}
-            otherCountries={Boolean(process.env.SASPAY_SECRET_KEY)}
+            otherCountries={otherCountries}
           />
           <CountrySupportHint
             whatsapp={supportWhatsapp}

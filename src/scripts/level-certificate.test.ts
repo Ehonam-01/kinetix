@@ -107,7 +107,8 @@ describe("level certificates", () => {
         );
       }
     }
-  });
+    // Embeds three fonts per PDF: slow when the whole suite runs at once.
+  }, 30_000);
 
   it("emails the member once per completed level, retrying a failed send", async () => {
     const { sendLevelCompletedEmails } =
