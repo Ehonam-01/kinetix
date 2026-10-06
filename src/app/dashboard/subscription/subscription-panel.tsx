@@ -31,7 +31,6 @@ export function SubscriptionPanel({
     plan: InstallmentPlanView | null;
     bounds: { min: number; max: number };
     months: number;
-    feeLabel: string | null;
   };
 }) {
   // A member who already started a cagnotte lands back on it.

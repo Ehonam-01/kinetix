@@ -23,14 +23,12 @@ export function InstallmentPanel({
   plan,
   bounds,
   months,
-  feeLabel,
   otherCountries = false,
 }: {
   price: number;
   plan: InstallmentPlanView | null;
   bounds: { min: number; max: number };
   months: number;
-  feeLabel: string | null;
   otherCountries?: boolean;
 }) {
   const target = plan?.targetAmount ?? price;
@@ -54,7 +52,9 @@ export function InstallmentPanel({
       <div className="border-border bg-muted/40 space-y-3 rounded-xl border p-4">
         <p className="flex items-center gap-2 text-sm font-medium">
           <PiggyBank className="text-primary size-4" />
-          {paid > 0 ? "Ta cagnotte" : "Payer en plusieurs fois"}
+          {paid > 0
+            ? "Ta cagnotte"
+            : `Payer en plusieurs fois sur ${months} mois`}
         </p>
         <div>
           <div className="text-muted-foreground mb-1.5 flex justify-between text-xs tabular-nums">
@@ -87,12 +87,6 @@ export function InstallmentPanel({
             <li>
               Ton abonnement s&apos;active automatiquement dès que {fmt(target)}{" "}
               sont atteints.
-            </li>
-            <li>
-              Tu as {months} mois après ton premier versement pour compléter.
-              Sinon, ton inscription est annulée et tes versements te sont
-              remboursés
-              {feeLabel ? `, moins les frais de retrait (${feeLabel})` : ""}.
             </li>
           </ul>
         )}

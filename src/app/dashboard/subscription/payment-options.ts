@@ -1,6 +1,5 @@
 import "server-only";
 import { db } from "@/db/client";
-import { describeWithdrawalFee } from "@/lib/withdrawal-fee";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import {
   getActiveProviderKey,
@@ -8,7 +7,6 @@ import {
   getSupportWhatsapp,
 } from "@/repositories/payment-settings";
 import { findRecentPendingPayment } from "@/repositories/payments";
-import { getWithdrawalFeeSettings } from "@/repositories/withdrawals";
 import {
   INSTALLMENT_MONTHS,
   depositBounds,
@@ -32,7 +30,6 @@ export async function getPaymentOptions(userId: string) {
     alternativePaymentUrl,
     latestPlan,
     ineligibility,
-    feeSettings,
   ] = await Promise.all([
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
     getActiveProviderKey(db),
@@ -42,7 +39,6 @@ export async function getPaymentOptions(userId: string) {
     getAlternativePaymentUrl(db),
     getLatestInstallmentPlan(db, userId),
     installmentIneligibility(db, userId),
-    getWithdrawalFeeSettings(db),
   ]);
 
   // Paying in several deposits: a first subscription only, never a renewal
@@ -63,7 +59,6 @@ export async function getPaymentOptions(userId: string) {
             ? await depositBounds(db, openPlan)
             : { min: Math.min(1000, price), max: price },
           months: INSTALLMENT_MONTHS,
-          feeLabel: describeWithdrawalFee(feeSettings),
         }
       : undefined;
 
