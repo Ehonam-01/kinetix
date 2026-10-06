@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ShoppingBag } from "lucide-react";
 
 // Shown under a payment or withdrawal form, for a member whose country or
 // means of payment isn't offered: the support on WhatsApp and, for a
@@ -40,11 +40,14 @@ export function CountrySupportHint({
 
   if (shopUrl) {
     return (
-      <div className="border-border bg-muted/40 space-y-3 rounded-xl border p-4 text-sm">
+      <div className="border-brand-accent/50 bg-brand-accent/10 space-y-3 rounded-xl border-2 p-4 text-sm shadow-sm">
+        <p className="flex items-center gap-2 text-base font-semibold">
+          <span className="bg-brand-accent text-brand-accent-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
+            <ShoppingBag className="size-4" />
+          </span>
+          Ton moyen de paiement n&apos;est pas proposé ?
+        </p>
         <p>
-          <span className="font-medium">
-            Ton moyen de paiement n&apos;est pas proposé ?
-          </span>{" "}
           <span className="text-muted-foreground">
             Paie ton abonnement sur notre boutique en ligne
             {whatsapp ? (
@@ -64,7 +67,7 @@ export function CountrySupportHint({
             href={shopUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="border-border bg-background hover:bg-muted inline-flex h-9 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold"
+            className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 inline-flex min-h-11 items-center sm:flex-1 justify-center gap-2 rounded-lg px-4 text-sm font-bold shadow-sm transition-colors"
           >
             Payer sur la boutique en ligne
             <ExternalLink className="size-3.5" />
