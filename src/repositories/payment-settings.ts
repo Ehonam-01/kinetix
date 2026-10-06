@@ -33,4 +33,15 @@ export async function getSupportWhatsapp(
   return row?.supportWhatsapp ?? null;
 }
 
+// The outside payment page set by the admin, or null.
+export async function getAlternativePaymentUrl(
+  executor: Executor,
+): Promise<string | null> {
+  const row = await executor.query.paymentSettings.findFirst({
+    where: eq(paymentSettings.id, SETTINGS_ID),
+    columns: { alternativePaymentUrl: true },
+  });
+  return row?.alternativePaymentUrl ?? null;
+}
+
 export const PAYMENT_SETTINGS_ID = SETTINGS_ID;

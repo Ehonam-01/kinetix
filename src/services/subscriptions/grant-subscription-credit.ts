@@ -1,4 +1,5 @@
 import "server-only";
+import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
@@ -22,6 +23,11 @@ export async function grantSubscriptionCredit(
   adminUserId: string,
   beneficiaryUserId: string,
 ) {
+  // Read before the transaction: it uses its own connection.
+  const attribution = await resolveSaleAttribution(
+    beneficiaryUserId,
+    undefined,
+  );
   return db.transaction(async (tx) => {
     const admin = await tx.query.profiles.findFirst({
       where: eq(profiles.id, adminUserId),
@@ -45,6 +51,14 @@ export async function grantSubscriptionCredit(
         amount,
         status: "PENDING",
         idempotencyKey: `ADMIN_CREDIT:SUBSCRIPTION:${beneficiaryUserId}:${randomUUID()}`,
+        // The member's sponsor, as a real payment would carry it — without
+        // it the sponsor's first-subscription commission was silently
+        // skipped (e.g. a member who paid on the outside shop and was
+        // activated here).
+        metadata: {
+          ambassadorUserId: attribution?.ambassadorUserId ?? null,
+          attributionId: attribution?.attributionId ?? null,
+        },
       })
       .returning();
 

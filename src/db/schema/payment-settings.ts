@@ -25,6 +25,10 @@ export const paymentSettings = pgTable("payment_settings", {
   // 22890000000), shown to members whose country isn't in a payment or
   // withdrawal list. null = not set, nothing shown.
   supportWhatsapp: text("support_whatsapp"),
+  // An outside payment page (e.g. a Maketou shop) for members whose means
+  // of payment isn't offered: paid there, the account is then activated by
+  // an admin ("Accorder un abonnement"). null = not shown.
+  alternativePaymentUrl: text("alternative_payment_url"),
   updatedBy: uuid("updated_by").references(() => profiles.id),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()

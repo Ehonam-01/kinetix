@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import {
   getActiveProviderKey,
+  getAlternativePaymentUrl,
   getSupportWhatsapp,
 } from "@/repositories/payment-settings";
 import { CountrySupportHint } from "@/components/support/country-support-hint";
@@ -39,6 +40,7 @@ export default async function SubscriptionPage() {
     latestPlan,
     ineligibility,
     feeSettings,
+    alternativePaymentUrl,
   ] = await Promise.all([
     getSubscriptionStatus(db, profile.id),
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
@@ -49,6 +51,7 @@ export default async function SubscriptionPage() {
     getLatestInstallmentPlan(db, profile.id),
     installmentIneligibility(db, profile.id),
     getWithdrawalFeeSettings(db),
+    getAlternativePaymentUrl(db),
   ]);
 
   // Paying in several deposits: a first subscription only, through PayDunya
@@ -169,7 +172,11 @@ export default async function SubscriptionPage() {
             installments={installments}
             otherCountries={Boolean(process.env.SASPAY_SECRET_KEY)}
           />
-          <CountrySupportHint whatsapp={supportWhatsapp} context="paiement" />
+          <CountrySupportHint
+            whatsapp={supportWhatsapp}
+            context="paiement"
+            alternativePaymentUrl={alternativePaymentUrl}
+          />
         </CardContent>
       </Card>
     </div>
