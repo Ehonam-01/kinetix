@@ -35,8 +35,9 @@ export function SupportWhatsappForm({ current }: { current: string | null }) {
         WhatsApp du support
       </label>
       <p className="text-muted-foreground text-xs">
-        Proposé aux membres dont le pays n&apos;apparaît pas dans la liste des
-        paiements ou des retraits. Numéro international avec l&apos;indicatif,
+        Reçoit les messages du formulaire de contact (page Contact et menu
+        Support des membres), et est proposé aux membres dont le pays
+        n&apos;apparaît pas dans la liste des paiements ou des retraits. Numéro international avec l&apos;indicatif,
         par exemple +228 90 00 00 00. Laissez vide pour ne rien afficher.
       </p>
       <div className="flex max-w-md gap-2 pt-1">

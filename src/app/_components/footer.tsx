@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LEGAL_ENTITY } from "@/config/legal";
 import { SITE_NAME, SITE_TAGLINE } from "@/config/site";
 import { Logo } from "./logo";
 
@@ -35,7 +34,7 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
       links: [
         { label: "Accueil", href: "/" },
         { label: "Notre vision" },
-        { label: "Contact", href: `mailto:${LEGAL_ENTITY.email}` },
+        { label: "Contact", href: "/contact" },
       ],
     },
     {

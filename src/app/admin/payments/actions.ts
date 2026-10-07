@@ -49,6 +49,8 @@ export async function updateSupportWhatsappAction(input: string) {
     revalidatePath("/admin/payments");
     revalidatePath("/dashboard/subscription");
     revalidatePath("/dashboard/withdrawals");
+    revalidatePath("/dashboard/support");
+    revalidatePath("/contact");
     return { number, error: null };
   } catch (err) {
     return {

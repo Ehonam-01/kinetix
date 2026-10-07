@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   MessagesSquare,
   Layers,
+  LifeBuoy,
   Settings,
   Share2,
   type LucideIcon,
@@ -77,6 +78,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: Gift,
     ambassadorOnly: true,
   },
+  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
