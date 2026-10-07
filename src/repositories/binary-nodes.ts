@@ -66,6 +66,8 @@ export type DownlineSearchMatch = {
   userId: string;
   fullName: string;
   username: string;
+  // WhatsApp number (international digits), for the upline to reach them.
+  phone: string | null;
   relativeGeneration: number;
 };
 
@@ -95,6 +97,7 @@ export async function searchDescendantsByUsername(
       bn.user_id AS "userId",
       p.full_name AS "fullName",
       p.username AS "username",
+      p.phone AS "phone",
       (nlevel(bn.path) - nlevel(${nodePath}::ltree)) AS "relativeGeneration"
     FROM binary_nodes bn
     JOIN profiles p ON p.id = bn.user_id

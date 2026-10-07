@@ -12,8 +12,15 @@ import {
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
 
 export async function registerUser(input: RegisterInput) {
-  const { fullName, username, email, password, sponsorUsername, wantsAmbassador } =
-    registerSchema.parse(input);
+  const {
+    fullName,
+    username,
+    email,
+    whatsapp,
+    password,
+    sponsorUsername,
+    wantsAmbassador,
+  } = registerSchema.parse(input);
 
   // Resolved and validated up front so a typo'd sponsor pseudo fails loudly
   // at registration time, instead of silently dropping the attribution
@@ -70,6 +77,7 @@ export async function registerUser(input: RegisterInput) {
         username,
         sponsor_id: sponsorId,
         wants_ambassador: wantsAmbassador ?? false,
+        whatsapp,
       },
       emailRedirectTo: `${origin}/auth/callback`,
     },

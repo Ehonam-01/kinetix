@@ -30,10 +30,10 @@ export default function ConfidentialitePage() {
           Cette politique explique quelles données personnelles nous collectons
           sur la plateforme {SITE_NAME}, pourquoi, avec qui nous les partageons
           et quels sont vos droits, conformément au règlement général sur la
-          protection des données applicable au Royaume-Uni (UK GDPR) et au
-          Data Protection Act 2018. Pour les Membres qui résident au Togo, la
-          loi togolaise n°2019-014 du 29 octobre 2019 relative à la protection
-          des données à caractère personnel s&apos;applique également.
+          protection des données applicable au Royaume-Uni (UK GDPR) et au Data
+          Protection Act 2018. Pour les Membres qui résident au Togo, la loi
+          togolaise n°2019-014 du 29 octobre 2019 relative à la protection des
+          données à caractère personnel s&apos;applique également.
         </p>
       }
     >
@@ -47,13 +47,13 @@ export default function ConfidentialitePage() {
       <Section title="2. Données collectées">
         <List>
           <li>
-            <strong>Compte</strong> : nom complet, pseudo, adresse email, mot de
-            passe (stocké uniquement sous forme chiffrée par notre prestataire
-            d&apos;authentification, jamais lisible par nous).
+            <strong>Compte</strong> : nom complet, pseudo, adresse email, numéro
+            WhatsApp, mot de passe (stocké uniquement sous forme chiffrée par
+            notre prestataire d&apos;authentification, jamais lisible par nous).
           </li>
           <li>
-            <strong>Profil</strong> (facultatif) : téléphone, pays, biographie,
-            objectif, compétences.
+            <strong>Profil</strong> (facultatif) : pays, biographie, objectif,
+            compétences.
           </li>
           <li>
             <strong>Parrainage et réseau</strong> : votre Parrain, votre
@@ -122,10 +122,13 @@ export default function ConfidentialitePage() {
             <strong>Les autres Membres</strong> voient uniquement ce qui est
             nécessaire au fonctionnement du réseau et de la communauté : votre
             pseudo et votre nom apparaissent dans le réseau de vos parrains et
-            filleuls, et votre nom s&apos;affiche lorsqu&apos;une personne
-            saisit votre pseudo pour vous désigner comme parrain ou vous envoyer
-            un transfert. Si vous êtes mentor, votre profil public (nom,
-            domaine, présentation, avis) est visible des Membres.
+            filleuls, et votre numéro WhatsApp est visible des membres situés
+            au-dessus de vous dans le réseau (votre parrain et sa lignée), pour
+            qu&apos;ils puissent vous contacter et vous accompagner ; et votre
+            nom s&apos;affiche lorsqu&apos;une personne saisit votre pseudo pour
+            vous désigner comme parrain ou vous envoyer un transfert. Si vous
+            êtes mentor, votre profil public (nom, domaine, présentation, avis)
+            est visible des Membres.
           </li>
           <li>
             <strong>Les Membres qui suivent la même formation</strong> voient
@@ -170,8 +173,8 @@ export default function ConfidentialitePage() {
         <p>
           Nos prestataires techniques hébergent des données en dehors du
           Royaume-Uni, notamment aux États-Unis. Ces transferts sont limités à
-          ce qui est nécessaire au service et encadrés par les garanties
-          prévues par le UK GDPR, en particulier les clauses contractuelles de
+          ce qui est nécessaire au service et encadrés par les garanties prévues
+          par le UK GDPR, en particulier les clauses contractuelles de
           protection des données conclues avec ces prestataires.
         </p>
       </Section>
@@ -186,8 +189,8 @@ export default function ConfidentialitePage() {
           <li>
             <strong>Historique financier</strong> (paiements, commissions,
             transferts, retraits) : 6 ans après la fin de l&apos;exercice
-            concerné, durée de conservation des documents comptables exigée
-            au Royaume-Uni, sous forme anonymisée après suppression du compte.
+            concerné, durée de conservation des documents comptables exigée au
+            Royaume-Uni, sous forme anonymisée après suppression du compte.
           </li>
           <li>
             <strong>Codes de confirmation</strong> : stockés uniquement sous
@@ -240,18 +243,17 @@ export default function ConfidentialitePage() {
         <p>
           Vous disposez d&apos;un droit d&apos;accès, de rectification, de
           suppression, de limitation et d&apos;opposition au traitement de vos
-          données, ainsi que d&apos;un droit à la portabilité de celles que
-          vous nous avez fournies. Vous
-          pouvez modifier votre profil et supprimer votre compte directement
-          depuis vos paramètres, ou exercer vos droits en écrivant à {mail}.
-          Nous répondons dans un délai d&apos;un mois.
+          données, ainsi que d&apos;un droit à la portabilité de celles que vous
+          nous avez fournies. Vous pouvez modifier votre profil et supprimer
+          votre compte directement depuis vos paramètres, ou exercer vos droits
+          en écrivant à {mail}. Nous répondons dans un délai d&apos;un mois.
         </p>
         <p>
           Vous pouvez également introduire une réclamation auprès de
           l&apos;Information Commissioner&apos;s Office (ICO), l&apos;autorité
           britannique de protection des données (ico.org.uk), ou, si vous
-          résidez au Togo, auprès de l&apos;Instance de Protection des Données
-          à Caractère Personnel (IPDCP).
+          résidez au Togo, auprès de l&apos;Instance de Protection des Données à
+          Caractère Personnel (IPDCP).
         </p>
       </Section>
 

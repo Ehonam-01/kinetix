@@ -7,6 +7,7 @@ import {
   insertProfileIfMissing,
 } from "@/repositories/profiles";
 import { registerSchema, usernameSchema } from "@/schemas/auth";
+import { toWhatsappDigits } from "@/lib/whatsapp";
 import { assignSponsor } from "@/services/genealogy/assign-sponsor";
 
 const sponsorIdSchema = z.string().uuid();
@@ -35,6 +36,12 @@ export async function ensureProfile(user: User) {
   );
   const parsedUsername = usernameSchema.safeParse(user.user_metadata?.username);
   const wantsAmbassador = user.user_metadata?.wants_ambassador === true;
+  // Re-checked: user_metadata is user-controlled (see above).
+  const phone = toWhatsappDigits(
+    typeof user.user_metadata?.whatsapp === "string"
+      ? user.user_metadata.whatsapp
+      : null,
+  );
 
   const profile = await insertProfileIfMissing({
     id: user.id,
@@ -43,6 +50,7 @@ export async function ensureProfile(user: User) {
       ? parsedUsername.data
       : `membre_${user.id.slice(0, 8)}`,
     wantsAmbassador,
+    phone,
   });
 
   const parsedSponsorId = sponsorIdSchema.safeParse(

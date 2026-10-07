@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { toWhatsappDigits } from "@/lib/whatsapp";
 import { requireUser } from "@/services/auth/current-user";
 import {
   Card,
@@ -39,7 +40,11 @@ export default async function SettingsPage() {
           <ProfileForm
             fullName={profile.fullName}
             username={profile.username}
-            phone={profile.phone ?? ""}
+            phone={
+              toWhatsappDigits(profile.phone)
+                ? `+${profile.phone}`
+                : (profile.phone ?? "")
+            }
             country={profile.country ?? ""}
           />
         </CardContent>

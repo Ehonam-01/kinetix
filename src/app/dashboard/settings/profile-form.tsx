@@ -60,9 +60,12 @@ export function ProfileForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Téléphone</Label>
+          <Label htmlFor="phone">Numéro WhatsApp</Label>
           <Input
             id="phone"
+            type="tel"
+            inputMode="tel"
+            placeholder="+228 90 00 00 00"
             value={values.phone}
             onChange={(e) =>
               setValues((v) => ({ ...v, phone: e.target.value }))

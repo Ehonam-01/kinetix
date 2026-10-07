@@ -157,6 +157,7 @@ export type DownlineSearchResult = {
   userId: string;
   fullName: string;
   username: string;
+  phone: string | null;
   relativeGeneration: number;
   currentLevelCode: number | null;
 };

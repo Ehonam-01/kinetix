@@ -156,6 +156,26 @@ export function RegisterForm({
             )}
           </div>
           <div className="space-y-2">
+            <Label htmlFor="whatsapp">Numéro WhatsApp</Label>
+            <Input
+              id="whatsapp"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+228 90 00 00 00"
+              {...register("whatsapp")}
+            />
+            <p className="text-muted-foreground text-xs">
+              Avec l&apos;indicatif du pays. Ton parrain pourra te contacter sur
+              WhatsApp pour t&apos;accompagner.
+            </p>
+            {errors.whatsapp && (
+              <p className="text-destructive text-sm">
+                {errors.whatsapp.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
             <PasswordInput
               id="password"

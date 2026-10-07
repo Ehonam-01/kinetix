@@ -12,6 +12,7 @@ describe("registerSchema", () => {
       fullName: "Ama Koffi",
       username: "ama_k",
       email: "ama@example.com",
+      whatsapp: "+228 90 00 00 00",
       password: "supersecret1",
       sponsorUsername: "papa",
     });
@@ -23,6 +24,7 @@ describe("registerSchema", () => {
       fullName: "  Ama Koffi  ",
       username: "  Ama_K  ",
       email: "  ama@example.com  ",
+      whatsapp: "+228 90 00 00 00",
       password: "supersecret1",
       sponsorUsername: "papa",
     });

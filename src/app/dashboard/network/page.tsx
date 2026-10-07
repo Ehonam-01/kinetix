@@ -13,6 +13,7 @@ import {
 import { requireUser } from "@/services/auth/current-user";
 import { GenealogyTree } from "./genealogy-tree";
 import { LevelSelector } from "./level-selector";
+import { MemberContact } from "./member-contact";
 
 export default async function NetworkPage(
   props: PageProps<"/dashboard/network">,
@@ -92,13 +93,14 @@ export default async function NetworkPage(
               {searchResults.map((r) => (
                 <div
                   key={r.userId}
-                  className="flex items-center justify-between px-4 py-3 text-sm"
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div>
+                  <div className="min-w-0 space-y-1">
                     <p className="font-medium">{r.username}</p>
                     <p className="text-muted-foreground text-xs">
                       {r.fullName} · génération {r.relativeGeneration}
                     </p>
+                    <MemberContact phone={r.phone} memberName={r.fullName} />
                   </div>
                   <span className="text-muted-foreground text-xs">
                     {r.currentLevelCode
@@ -114,13 +116,17 @@ export default async function NetworkPage(
 
       {searchedMember && searchedMemberNetwork ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-2xl border px-4 py-3 text-sm">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm">
+            <div className="min-w-0 space-y-1">
               <p className="font-medium">{searchedMember.username}</p>
               <p className="text-muted-foreground text-xs">
                 {searchedMember.fullName} · génération{" "}
                 {searchedMember.relativeGeneration} par rapport à vous
               </p>
+              <MemberContact
+                phone={searchedMember.phone}
+                memberName={searchedMember.fullName}
+              />
             </div>
             <span className="text-muted-foreground text-xs">
               {searchedMember.currentLevelCode

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toWhatsappDigits, WHATSAPP_FORMAT_ERROR } from "@/lib/whatsapp";
 
 export const usernameSchema = z
   .string()
@@ -12,6 +13,16 @@ export const registerSchema = z.object({
   fullName: z.string().trim().min(2, "Nom trop court").max(120),
   username: usernameSchema,
   email: z.string().trim().email("Email invalide"),
+  // Stored as international digits (lib/whatsapp.ts); shown to the
+  // member's upline so their sponsors can reach them.
+  whatsapp: z.string().transform((value, ctx) => {
+    const digits = toWhatsappDigits(value);
+    if (!digits) {
+      ctx.addIssue({ code: "custom", message: WHATSAPP_FORMAT_ERROR });
+      return z.NEVER;
+    }
+    return digits;
+  }),
   password: z.string().min(8, "8 caractères minimum").max(72),
   // Mandatory — business decision: every new member must be sponsored by an
   // existing one, no organic/unsponsored signups (the platform's own root
