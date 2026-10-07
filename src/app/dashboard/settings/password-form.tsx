@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { changePasswordAction } from "./actions";
 
@@ -42,9 +43,8 @@ export function PasswordForm() {
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
       <div className="space-y-2">
         <Label htmlFor="current-password">Mot de passe actuel</Label>
-        <Input
+        <PasswordInput
           id="current-password"
-          type="password"
           autoComplete="current-password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
@@ -52,18 +52,16 @@ export function PasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Nouveau mot de passe</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirm">Confirmer le mot de passe</Label>
-        <Input
+        <PasswordInput
           id="confirm"
-          type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />

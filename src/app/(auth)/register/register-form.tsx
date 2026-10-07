@@ -10,6 +10,7 @@ import { lookupSponsorAction, registerAction } from "./actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -156,9 +157,8 @@ export function RegisterForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               {...register("password")}
             />

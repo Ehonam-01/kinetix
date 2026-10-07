@@ -3,17 +3,16 @@
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/schemas/auth";
 import { loginAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -46,31 +45,11 @@ export function LoginForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Mot de passe</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            className="pr-8"
-            {...register("password")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            aria-label={
-              showPassword
-                ? "Masquer le mot de passe"
-                : "Afficher le mot de passe"
-            }
-            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
-          >
-            {showPassword ? (
-              <EyeOff className="size-4" />
-            ) : (
-              <Eye className="size-4" />
-            )}
-          </button>
-        </div>
+        <PasswordInput
+          id="password"
+          autoComplete="current-password"
+          {...register("password")}
+        />
         {errors.password && (
           <p className="text-destructive text-sm">{errors.password.message}</p>
         )}

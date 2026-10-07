@@ -8,6 +8,7 @@ import { resetPasswordSchema } from "@/schemas/auth";
 import { resetPasswordAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 const formSchema = resetPasswordSchema
@@ -42,9 +43,8 @@ export function ResetPasswordForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="password">Nouveau mot de passe</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="new-password"
           {...register("password")}
         />
@@ -54,9 +54,8 @@ export function ResetPasswordForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
-          type="password"
           autoComplete="new-password"
           {...register("confirmPassword")}
         />
