@@ -204,4 +204,54 @@ describe("admin course tools (pglite, no shared DB touched)", () => {
       updateCourseDetails(member, course.id, { title: "X", description: null }),
     ).rejects.toThrow("Seul un administrateur peut modifier un cours.");
   });
+
+  it("a coming-soon course stays listed but can't be opened by a member", async () => {
+    const { updateCourseAvailability } =
+      await import("@/services/lms/update-course-availability");
+    const { hasCourseAccess, listCoursesForUser } =
+      await import("@/repositories/courses");
+    const c = await makeCourse();
+    await localDb
+      .update(schema.courses)
+      .set({ status: "PUBLISHED" })
+      .where(eq(schema.courses.id, c.courseId));
+    const member = await makeProfile("USER");
+    const [payment] = await localDb
+      .insert(schema.payments)
+      .values({
+        beneficiaryUserId: member,
+        purpose: "SUBSCRIPTION",
+        method: "ADMIN_CREDIT",
+        amount: 15000,
+        status: "CONFIRMED",
+        idempotencyKey: `TEST:${randomUUID()}`,
+      })
+      .returning();
+    await localDb.insert(schema.subscriptions).values({
+      userId: member,
+      paymentId: payment.id,
+      expiresAt: new Date(Date.now() + 200 * 86_400_000),
+      pricePaid: 15000,
+      businessVolume: 15,
+    });
+    expect(await hasCourseAccess(localDb, member, c.courseId)).toBe(true);
+
+    await updateCourseAvailability(admin, c.courseId, true);
+    expect(await hasCourseAccess(localDb, member, c.courseId)).toBe(false);
+    expect(await hasCourseAccess(localDb, admin, c.courseId)).toBe(true);
+    const listed = (await listCoursesForUser(localDb, member)).find(
+      (course: { id: string }) => course.id === c.courseId,
+    );
+    expect(listed).toMatchObject({ comingSoon: true, accessible: false });
+    const forAdmin = (await listCoursesForUser(localDb, admin)).find(
+      (course: { id: string }) => course.id === c.courseId,
+    );
+    expect(forAdmin).toMatchObject({ comingSoon: false, accessible: true });
+
+    await updateCourseAvailability(admin, c.courseId, false);
+    expect(await hasCourseAccess(localDb, member, c.courseId)).toBe(true);
+    await expect(
+      updateCourseAvailability(member, c.courseId, true),
+    ).rejects.toThrow("Seul un administrateur");
+  });
 });

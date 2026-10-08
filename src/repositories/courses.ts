@@ -44,6 +44,8 @@ export async function hasCourseAccess(
     where: eq(courses.id, courseId),
   });
   if (!isCourseVisible(course)) return false;
+  // Announced but not open yet: visible, never openable by a member.
+  if (course!.comingSoon) return false;
 
   if (await hasActiveSubscription(executor, userId)) return true;
 
@@ -243,6 +245,8 @@ export type CourseSummary = {
   category: string | null;
   thumbnailUrl: string | null;
   accessible: boolean;
+  // Announced but not open yet for this viewer (never for an admin).
+  comingSoon: boolean;
   totalLessons: number;
   completedLessons: number;
 };
@@ -280,7 +284,8 @@ export async function listCoursesForUser(
       description: course.description,
       category: course.category,
       thumbnailUrl: course.thumbnailUrl,
-      accessible: true,
+      accessible: isAdmin || !course.comingSoon,
+      comingSoon: !isAdmin && course.comingSoon,
       ...progressList[i],
     }));
   }
@@ -330,7 +335,8 @@ export async function listCoursesForUser(
     description: course.description,
     category: course.category,
     thumbnailUrl: course.thumbnailUrl,
-    accessible: purchasedCourseIds.has(course.id),
+    accessible: purchasedCourseIds.has(course.id) && !course.comingSoon,
+    comingSoon: course.comingSoon,
     ...progressList[i],
   }));
 }

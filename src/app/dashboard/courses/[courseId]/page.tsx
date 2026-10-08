@@ -48,6 +48,8 @@ export default async function CourseDetailPage(
     notFound();
   }
   const { course } = content;
+  // Announced but not open yet (set by the admin): admins still get in.
+  const comingSoon = course.comingSoon && profile.role !== "ADMIN";
 
   // Every course requires an active annual subscription now (explicit
   // user decision, "remplacement complet" — see db/schema/subscriptions.ts):
@@ -117,7 +119,18 @@ export default async function CourseDetailPage(
             )}
           </div>
 
-          {access ? (
+          {comingSoon ? (
+            <div className="border-brand-accent/40 bg-brand-accent/10 space-y-1 rounded-xl border p-4">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <Clock className="text-brand-accent size-4" />
+                Disponible bientôt
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Cette formation est en cours de préparation. Elle sera
+                accessible ici dès son ouverture, avec ton abonnement.
+              </p>
+            </div>
+          ) : access ? (
             lessons.length > 0 && (
               <div className="space-y-4">
                 <div>

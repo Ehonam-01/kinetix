@@ -50,6 +50,10 @@ export const courses = pgTable(
     durationMinutes: integer("duration_minutes"),
     status: courseStatusEnum("status").notNull().default("PUBLISHED"),
     isActive: boolean("is_active").notNull().default(true),
+    // Shown everywhere (homepage, catalog) but not open yet: members see
+    // "Disponible bientôt" and can't open its lessons; admins still can, to
+    // prepare it. Set by the admin on the course page.
+    comingSoon: boolean("coming_soon").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

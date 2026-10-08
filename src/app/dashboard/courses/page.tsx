@@ -16,6 +16,7 @@ function percentOf(course: CourseSummary) {
 }
 
 function actionLabel(course: CourseSummary) {
+  if (course.comingSoon) return "Disponible bientôt";
   if (!course.accessible) return "Voir la formation";
   if (course.totalLessons > 0 && course.completedLessons === course.totalLessons)
     return "Revoir";
@@ -121,6 +122,11 @@ export default async function CoursesPage(
                       {course.category}
                     </span>
                   )}
+                  {course.comingSoon && (
+                    <span className="bg-brand-accent text-brand-accent-foreground absolute top-3 right-3 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm">
+                      Disponible bientôt
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <h2 className="leading-snug font-semibold">{course.title}</h2>
@@ -130,7 +136,11 @@ export default async function CoursesPage(
                     </p>
                   )}
                   <div className="mt-auto pt-4">
-                    {course.accessible ? (
+                    {course.comingSoon ? (
+                      <p className="text-brand-accent text-xs font-medium">
+                        Cette formation ouvre bientôt.
+                      </p>
+                    ) : course.accessible ? (
                       <>
                         <div className="text-muted-foreground mb-1.5 flex justify-between text-xs">
                           <span>
@@ -154,6 +164,7 @@ export default async function CoursesPage(
                           variant: course.accessible ? "default" : "outline",
                         }),
                         "mt-4 w-full",
+                        course.comingSoon && "opacity-70",
                       )}
                     >
                       {actionLabel(course)}

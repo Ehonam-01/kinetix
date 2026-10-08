@@ -18,6 +18,7 @@ import { CourseStatsCard } from "./course-stats-card";
 import { CourseStatusForm } from "./course-status-form";
 import { EditModuleForm } from "./edit-module-form";
 import { EditDetailsForm } from "./edit-details-form";
+import { AvailabilityToggle } from "./availability-toggle";
 import { EditPricingForm } from "./edit-pricing-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
 import { MoveButtons } from "./move-buttons";
@@ -66,6 +67,23 @@ export default async function AdminCourseDetailPage(
       </div>
 
       {stats && <CourseStatsCard stats={stats} />}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Disponibilité pour les membres</CardTitle>
+          <CardDescription>
+            Un cours « bientôt disponible » reste affiché sur la page
+            d&apos;accueil et dans le catalogue, mais ne peut pas encore être
+            suivi.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AvailabilityToggle
+            courseId={courseId}
+            comingSoon={content.course.comingSoon}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
