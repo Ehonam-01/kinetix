@@ -16,6 +16,10 @@ export async function createDirectSaleRuleAction(input: {
   try {
     await createDirectSaleCommissionRule(profile.id, input);
     revalidatePath("/admin/commission-rules");
+    // The public pages show the commission rates (businessplan,
+    // programme-ambassadeur): refreshed right away, not within 10 minutes.
+    revalidatePath("/businessplan");
+    revalidatePath("/programme-ambassadeur");
     return { error: null };
   } catch (err) {
     return {
@@ -37,6 +41,10 @@ export async function createGenerationRuleAction(input: {
   try {
     await createGenerationCommissionRule(profile.id, input);
     revalidatePath("/admin/commission-rules");
+    // The public pages show the commission rates (businessplan,
+    // programme-ambassadeur): refreshed right away, not within 10 minutes.
+    revalidatePath("/businessplan");
+    revalidatePath("/programme-ambassadeur");
     return { error: null };
   } catch (err) {
     return {
