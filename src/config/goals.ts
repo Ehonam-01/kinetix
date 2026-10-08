@@ -20,3 +20,11 @@ export function goalLabel(value: string | null): string | null {
   if (!value) return null;
   return GOAL_OPTIONS.find((g) => g.value === value)?.label ?? null;
 }
+
+export function isGoalValue(value: unknown): value is GoalValue {
+  return GOAL_OPTIONS.some((g) => g.value === value);
+}
+
+// A visitor who picks a goal on the homepage before having an account
+// (app/orientation/route.ts): remembered until they sign up or sign in.
+export const GOAL_COOKIE_NAME = "kx_goal";

@@ -1,8 +1,13 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { GOAL_COOKIE_NAME, isGoalValue } from "@/config/goals";
 import { isIpRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { registerSchema } from "@/schemas/auth";
-import { lookupSponsorByUsername, registerUser } from "@/services/auth/register";
+import {
+  lookupSponsorByUsername,
+  registerUser,
+} from "@/services/auth/register";
 
 export async function registerAction(input: unknown) {
   const parsed = registerSchema.safeParse(input);
@@ -10,7 +15,16 @@ export async function registerAction(input: unknown) {
     return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
   if (await isIpRateLimited("signupByIp")) return { error: RATE_LIMIT_MESSAGE };
-  return registerUser(parsed.data);
+
+  // A goal picked on the homepage before signing up (app/orientation):
+  // stored on the new profile, so the dashboard can follow up on it.
+  const cookieStore = await cookies();
+  const rawGoal = cookieStore.get(GOAL_COOKIE_NAME)?.value;
+  const goal = isGoalValue(rawGoal) ? rawGoal : null;
+
+  const result = await registerUser(parsed.data, { goal });
+  if (!result.error && goal) cookieStore.delete(GOAL_COOKIE_NAME);
+  return result;
 }
 
 // Reachable without a session — capped per IP so the pseudo -> full name

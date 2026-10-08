@@ -10,8 +10,12 @@ import {
   findProfileByUsername,
 } from "@/repositories/profiles";
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
+import type { GoalValue } from "@/config/goals";
 
-export async function registerUser(input: RegisterInput) {
+export async function registerUser(
+  input: RegisterInput,
+  extra: { goal?: GoalValue | null } = {},
+) {
   const {
     fullName,
     username,
@@ -78,6 +82,7 @@ export async function registerUser(input: RegisterInput) {
         sponsor_id: sponsorId,
         wants_ambassador: wantsAmbassador ?? false,
         whatsapp,
+        ...(extra.goal ? { goal: extra.goal } : {}),
       },
       emailRedirectTo: `${origin}/auth/callback`,
     },

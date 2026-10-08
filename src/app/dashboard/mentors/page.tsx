@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { Compass } from "lucide-react";
+import { goalLabel } from "@/config/goals";
 import { db } from "@/db/client";
-import { listApprovedMentors, listDistinctMentorCategories } from "@/repositories/mentors";
+import {
+  listApprovedMentors,
+  listDistinctMentorCategories,
+} from "@/repositories/mentors";
 import {
   listMenteeReviewsByMentorship,
   listMentorRatings,
@@ -19,6 +24,7 @@ export default async function MentorsPage(
 ) {
   const { profile } = await requireUser();
   if (profile.status === "SUSPENDED") return null;
+  const goal = goalLabel(profile.goal);
 
   const { category } = await props.searchParams;
   const categoryFilter =
@@ -31,11 +37,14 @@ export default async function MentorsPage(
   ]);
 
   const [ratings, myReviews, recentReviewsByMentor] = await Promise.all([
-    listMentorRatings(db, mentors.map((m) => m.userId)),
+    listMentorRatings(
+      db,
+      mentors.map((m) => m.userId),
+    ),
     listMenteeReviewsByMentorship(db, profile.id),
-    Promise.all(
-      mentors.map((m) => listMentorReviews(db, m.userId, 2)),
-    ).then((lists) => new Map(mentors.map((m, i) => [m.userId, lists[i]]))),
+    Promise.all(mentors.map((m) => listMentorReviews(db, m.userId, 2))).then(
+      (lists) => new Map(mentors.map((m, i) => [m.userId, lists[i]])),
+    ),
   ]);
 
   return (
@@ -54,6 +63,31 @@ export default async function MentorsPage(
           className={cn(buttonVariants({ variant: "outline" }))}
         >
           Devenir mentor
+        </Link>
+      </div>
+
+      {/* Where the homepage's "Que veux-tu accomplir ?" cards lead a member
+          (app/orientation/route.ts). */}
+      <div className="border-brand-accent/30 bg-brand-accent/10 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex gap-3">
+          <Compass className="text-brand-accent mt-0.5 size-5 shrink-0" />
+          <div className="text-sm">
+            {goal && goal !== "Je ne sais pas encore" ? (
+              <p className="font-semibold">Ton objectif : {goal}</p>
+            ) : (
+              <p className="font-semibold">Pas encore sûr de ta direction ?</p>
+            )}
+            <p className="text-muted-foreground mt-0.5">
+              Choisis un mentor ci-dessous, ou réponds au questionnaire
+              d&apos;orientation : l&apos;équipe te conseille sur WhatsApp.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/mentors/orientation"
+          className={cn(buttonVariants({ size: "sm" }), "shrink-0")}
+        >
+          Questionnaire d&apos;orientation
         </Link>
       </div>
 
@@ -86,10 +120,11 @@ export default async function MentorsPage(
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {mentors.map((mentor) => {
             const rating = ratings.get(mentor.userId);
-            const recentReviews = recentReviewsByMentor.get(mentor.userId) ?? [];
+            const recentReviews =
+              recentReviewsByMentor.get(mentor.userId) ?? [];
             const mentorship = mentorships.get(mentor.userId) ?? null;
             const myReview = mentorship
-              ? myReviews.get(mentorship.id) ?? null
+              ? (myReviews.get(mentorship.id) ?? null)
               : null;
             const isSelf = mentor.userId === profile.id;
 

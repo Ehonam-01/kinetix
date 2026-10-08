@@ -34,4 +34,5 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   TEST_SUBSCRIPTION_DELETED: "Abonnement de test supprimé",
   MENTOR_REQUEST_APPROVED: "Mentor validé",
   MENTOR_REQUEST_REJECTED: "Demande de mentorat refusée",
+  ORIENTATION_REQUEST_HANDLED: "Demande d'orientation traitée",
 };

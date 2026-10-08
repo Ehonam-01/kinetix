@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { GOAL_COOKIE_NAME, isGoalValue } from "@/config/goals";
 import {
   isIpRateLimited,
   isRateLimited,
@@ -26,6 +28,10 @@ export async function loginAction(input: unknown) {
 
   const { error } = await loginUser(parsed.data);
   if (error) return { error };
+
+  // A goal picked on the homepage before signing in (app/orientation).
+  const goal = (await cookies()).get(GOAL_COOKIE_NAME)?.value;
+  if (isGoalValue(goal)) redirect(`/orientation?objectif=${goal}`);
 
   redirect("/dashboard");
 }

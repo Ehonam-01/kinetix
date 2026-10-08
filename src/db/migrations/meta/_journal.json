@@ -463,6 +463,13 @@
       "when": 1791462513543,
       "tag": "0065_course_coming_soon",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1791469840140,
+      "tag": "0066_orientation_requests",
+      "breakpoints": true
     }
   ]
 }

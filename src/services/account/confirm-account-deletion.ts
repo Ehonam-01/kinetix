@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { accountDeletionRequests } from "@/db/schema/account-deletion-requests";
+import { orientationRequests } from "@/db/schema/orientation-requests";
 import { profiles } from "@/db/schema/profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
 import { MAX_OTP_ATTEMPTS, verifyOtpCode } from "@/services/wallet/otp";
@@ -109,6 +110,10 @@ export async function confirmAccountDeletion(
     if (!updated) {
       throw new Error("Membre introuvable.");
     }
+    // Free text the member wrote about themselves: removed, not kept.
+    await tx
+      .delete(orientationRequests)
+      .where(eq(orientationRequests.userId, request.targetUserId));
 
     await logAdminAction(tx, {
       actorUserId: requesterUserId,

@@ -8,6 +8,7 @@ import {
 } from "@/repositories/profiles";
 import { registerSchema, usernameSchema } from "@/schemas/auth";
 import { toWhatsappDigits } from "@/lib/whatsapp";
+import { isGoalValue } from "@/config/goals";
 import { assignSponsor } from "@/services/genealogy/assign-sponsor";
 
 const sponsorIdSchema = z.string().uuid();
@@ -51,6 +52,9 @@ export async function ensureProfile(user: User) {
       : `membre_${user.id.slice(0, 8)}`,
     wantsAmbassador,
     phone,
+    goal: isGoalValue(user.user_metadata?.goal)
+      ? user.user_metadata.goal
+      : null,
   });
 
   const parsedSponsorId = sponsorIdSchema.safeParse(

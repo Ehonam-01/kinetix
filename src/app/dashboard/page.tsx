@@ -25,6 +25,8 @@ import {
   listSubscriptionsForAmbassador,
 } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
+import { getLatestOrientationRequest } from "@/services/orientation/orientation-requests";
+import { goalLabel } from "@/config/goals";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -36,6 +38,7 @@ import {
 } from "@/components/ui/card";
 import { StatCard } from "@/components/stat-card";
 import { BalanceEvolutionChart } from "@/components/balance-evolution-chart";
+import { OrientationPrompt } from "./orientation-prompt";
 
 // A plain customer never sees the MLM tree, commissions, generations,
 // level, or ambassador balance (section 23 of the master prompt) — only
@@ -58,9 +61,15 @@ export default async function DashboardPage() {
     );
   }
 
-  const ambassador = await db.query.ambassadorProfiles.findFirst({
-    where: eq(ambassadorProfiles.userId, profile.id),
-  });
+  const goal = goalLabel(profile.goal);
+  const [ambassador, orientationRequest] = await Promise.all([
+    db.query.ambassadorProfiles.findFirst({
+      where: eq(ambassadorProfiles.userId, profile.id),
+    }),
+    goal ? getLatestOrientationRequest(profile.id) : Promise.resolve(null),
+  ]);
+  const orientationPrompt =
+    goal && !orientationRequest ? <OrientationPrompt goal={goal} /> : null;
 
   if (!ambassador) {
     const [courses, subscription] = await Promise.all([
@@ -72,6 +81,7 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
+        {orientationPrompt}
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
@@ -182,6 +192,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
+      {orientationPrompt}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard

@@ -29,6 +29,7 @@ export async function insertProfileIfMissing(values: {
   username: string;
   wantsAmbassador?: boolean;
   phone?: string | null;
+  goal?: string | null;
 }) {
   // Availability was already checked at registration time
   // (services/auth/register.ts), but profile creation is deferred until
