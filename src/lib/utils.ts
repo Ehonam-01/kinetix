@@ -30,3 +30,14 @@ export function formatDuration(minutes: number): string {
   const m = minutes % 60;
   return m ? `${h} h ${String(m).padStart(2, "0")}` : `${h} h`;
 }
+
+// An id from the URL or a client call, checked before it reaches a uuid
+// column (Postgres rejects a malformed one with an error, not "no row").
+export function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  );
+}

@@ -31,3 +31,4 @@ export * from "./mentorships";
 export * from "./lesson-discussions";
 export * from "./installment-plans";
 export * from "./orientation-requests";
+export * from "./support-tickets";

@@ -5,6 +5,7 @@ import {
   CalendarClock,
   Gift,
   HandCoins,
+  LifeBuoy,
   Layers,
   Sparkles,
   TrendingUp,
@@ -26,6 +27,7 @@ import {
 } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { getLatestOrientationRequest } from "@/services/orientation/orientation-requests";
+import { countTicketsWithNewReply } from "@/services/support/support-tickets";
 import { goalLabel } from "@/config/goals";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -62,14 +64,34 @@ export default async function DashboardPage() {
   }
 
   const goal = goalLabel(profile.goal);
-  const [ambassador, orientationRequest] = await Promise.all([
-    db.query.ambassadorProfiles.findFirst({
-      where: eq(ambassadorProfiles.userId, profile.id),
-    }),
-    goal ? getLatestOrientationRequest(profile.id) : Promise.resolve(null),
-  ]);
-  const orientationPrompt =
-    goal && !orientationRequest ? <OrientationPrompt goal={goal} /> : null;
+  const [ambassador, orientationRequest, newSupportReplies] = await Promise.all(
+    [
+      db.query.ambassadorProfiles.findFirst({
+        where: eq(ambassadorProfiles.userId, profile.id),
+      }),
+      goal ? getLatestOrientationRequest(profile.id) : Promise.resolve(null),
+      countTicketsWithNewReply(profile.id),
+    ],
+  );
+  const topNotices = (
+    <>
+      {newSupportReplies > 0 && (
+        <Link
+          href="/dashboard/support"
+          className="border-brand-accent/30 bg-brand-accent/10 hover:bg-brand-accent/15 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors"
+        >
+          <LifeBuoy className="text-brand-accent size-5 shrink-0" />
+          <span className="font-medium">
+            {newSupportReplies > 1
+              ? `Le support a répondu à ${newSupportReplies} de tes tickets.`
+              : "Le support a répondu à ton ticket."}
+          </span>
+          <span className="text-muted-foreground ml-auto">Lire →</span>
+        </Link>
+      )}
+      {goal && !orientationRequest && <OrientationPrompt goal={goal} />}
+    </>
+  );
 
   if (!ambassador) {
     const [courses, subscription] = await Promise.all([
@@ -81,7 +103,7 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
-        {orientationPrompt}
+        {topNotices}
 
         <div className="grid grid-cols-2 gap-3">
           <StatCard
@@ -192,7 +214,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Bonjour, {profile.username}</h1>
-      {orientationPrompt}
+      {topNotices}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatCard

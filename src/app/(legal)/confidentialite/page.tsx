@@ -62,6 +62,10 @@ export default function ConfidentialitePage() {
             conseiller, et effacées si vous supprimez votre compte.
           </li>
           <li>
+            <strong>Tickets de support</strong> : vos demandes et nos réponses,
+            conservées pour le suivi et effacées si vous supprimez votre compte.
+          </li>
+          <li>
             <strong>Parrainage et réseau</strong> : votre Parrain, votre
             position dans le réseau, et, si vous arrivez par un lien de
             parrainage, un identifiant de visite anonyme, la date et la page

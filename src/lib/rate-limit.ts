@@ -36,6 +36,8 @@ const LIMITS = {
   referralClick: { tokens: 30, window: "1 m" },
   // Questions and answers under lessons, per member.
   lessonPost: { tokens: 5, window: "1 m" },
+  // Support tickets and replies, per member.
+  supportMessage: { tokens: 10, window: "15 m" },
 } as const satisfies Record<
   string,
   { tokens: number; window: `${number} ${"s" | "m" | "h"}` }

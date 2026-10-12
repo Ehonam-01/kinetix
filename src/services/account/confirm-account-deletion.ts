@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { accountDeletionRequests } from "@/db/schema/account-deletion-requests";
 import { orientationRequests } from "@/db/schema/orientation-requests";
 import { profiles } from "@/db/schema/profiles";
+import { supportTickets } from "@/db/schema/support-tickets";
 import { logAdminAction } from "@/services/admin/audit-log";
 import { MAX_OTP_ATTEMPTS, verifyOtpCode } from "@/services/wallet/otp";
 import { lockAuthAccount } from "./lock-auth-account";
@@ -114,6 +115,10 @@ export async function confirmAccountDeletion(
     await tx
       .delete(orientationRequests)
       .where(eq(orientationRequests.userId, request.targetUserId));
+    // Their support tickets too (messages go with them, ON DELETE CASCADE).
+    await tx
+      .delete(supportTickets)
+      .where(eq(supportTickets.userId, request.targetUserId));
 
     await logAdminAction(tx, {
       actorUserId: requesterUserId,

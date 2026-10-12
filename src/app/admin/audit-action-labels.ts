@@ -35,4 +35,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   MENTOR_REQUEST_APPROVED: "Mentor validé",
   MENTOR_REQUEST_REJECTED: "Demande de mentorat refusée",
   ORIENTATION_REQUEST_HANDLED: "Demande d'orientation traitée",
+  SUPPORT_TICKET_REPLIED: "Réponse à un ticket support",
+  SUPPORT_TICKET_CLOSED: "Ticket support fermé",
+  SUPPORT_TICKET_REOPENED: "Ticket support rouvert",
 };
