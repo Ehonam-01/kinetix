@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { db } from "@/db/client";
 import { listPublishedCoursesForMarketing } from "@/repositories/courses";
-import {
-  getCurrentParameterValue,
-  getCurrentParameterValueOrNull,
-} from "@/repositories/parameter-versions";
+import { getLaunchOffer } from "@/services/pricing/launch-offer";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
@@ -55,10 +52,9 @@ export const metadata: Metadata = {
 export const revalidate = 600;
 
 export default async function HomePage() {
-  const [courses, subscriptionPrice, regularPrice] = await Promise.all([
+  const [courses, launchOffer] = await Promise.all([
     listPublishedCoursesForMarketing(db, 6),
-    getCurrentParameterValue(db, "subscription.price_in_cfa"),
-    getCurrentParameterValueOrNull(db, "subscription.regular_price_in_cfa"),
+    getLaunchOffer(db),
   ]);
 
   return (
@@ -74,7 +70,7 @@ export default async function HomePage() {
         <CommunityMentorshipSection />
         <ProjectsOpportunitiesSection />
         <HowItWorks />
-        <PricingSection price={subscriptionPrice} regularPrice={regularPrice} />
+        <PricingSection offer={launchOffer} />
         <LearnerAmbassadorSection />
         <AmbassadorSection />
         <FaqSection />

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, lte, or, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { parameterVersions } from "@/db/schema/parameter-versions";
 
@@ -76,4 +76,22 @@ export async function listCurrentParameters(executor: Executor) {
   return [...currentByKey.values()].sort((a, b) =>
     a.parameterKey.localeCompare(b.parameterKey),
   );
+}
+
+// The next value already programmed for a parameter (a version whose
+// effective_from is still in the future), or null — e.g. the price after
+// the launch offer (services/pricing/launch-offer.ts). getCurrentParameterValue
+// switches to it on its own once that date passes.
+export async function getScheduledParameterVersion(
+  executor: Executor,
+  key: string,
+) {
+  const row = await executor.query.parameterVersions.findFirst({
+    where: and(
+      eq(parameterVersions.parameterKey, key),
+      sql`${parameterVersions.effectiveFrom} > now()`,
+    ),
+    orderBy: asc(parameterVersions.effectiveFrom),
+  });
+  return row ? { value: row.value, effectiveFrom: row.effectiveFrom } : null;
 }

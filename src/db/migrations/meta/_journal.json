@@ -477,6 +477,13 @@
       "when": 1791802647750,
       "tag": "0067_support_tickets",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1791805760840,
+      "tag": "0068_launch_offer_reminders",
+      "breakpoints": true
     }
   ]
 }

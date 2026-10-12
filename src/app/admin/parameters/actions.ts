@@ -3,6 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/services/auth/current-user";
 import { updateParameter } from "@/services/admin/update-parameter";
+import {
+  cancelScheduledPriceChange,
+  scheduleSubscriptionPriceChange,
+} from "@/services/admin/schedule-price-change";
+
+function revalidatePricePages() {
+  revalidatePath("/admin/parameters");
+  revalidatePath("/");
+  revalidatePath("/programme-ambassadeur");
+  revalidatePath("/businessplan");
+}
 
 // {error}-return, not a bare throw: an out-of-bounds value (e.g. a
 // subscription price outside 100-1 000 000 F, services/admin/
@@ -26,5 +37,34 @@ export async function updateParameterAction(
   revalidatePath("/");
   revalidatePath("/programme-ambassadeur");
   revalidatePath("/businessplan");
+  return { error: null };
+}
+
+export async function scheduleSubscriptionPriceChangeAction(
+  newPrice: number,
+  startDate: string,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await scheduleSubscriptionPriceChange(profile.id, { newPrice, startDate });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePricePages();
+  return { error: null };
+}
+
+export async function cancelScheduledPriceChangeAction() {
+  const { profile } = await requireAdmin();
+  try {
+    await cancelScheduledPriceChange(profile.id);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePricePages();
   return { error: null };
 }

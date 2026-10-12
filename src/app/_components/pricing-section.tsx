@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  lastLaunchDayLabel,
+  type LaunchOffer,
+} from "@/services/pricing/launch-offer";
+import { LaunchCountdown } from "@/components/launch-countdown";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "./reveal";
@@ -19,19 +24,13 @@ const INCLUDED = [
 // section 3) — it simply ends unless the member renews it. It is not a
 // promise of a refund mid-year (terms, section 5).
 //
-// regularPrice (subscription.regular_price_in_cfa) is the price announced
-// for after the launch: shown struck through with "Prix de lancement" only
-// while it's above the current price, so setting it to 0 in the admin
-// ends the launch offer on the page.
-export function PricingSection({
-  price,
-  regularPrice,
-}: {
-  price: number;
-  regularPrice: number | null;
-}) {
+// The launch offer (services/pricing/launch-offer.ts): the price announced
+// for after the launch, struck through, and — once the admin has
+// programmed the end date — the last day, a countdown and the amount saved.
+export function PricingSection({ offer }: { offer: LaunchOffer }) {
+  const { price, nextPrice: regularPrice, endsAt, savings } = offer;
   const perMonth = Math.round(price / 12);
-  const launchOffer = regularPrice !== null && regularPrice > price;
+  const launchOffer = regularPrice !== null;
   return (
     <section id="tarif" className="bg-muted/40 scroll-mt-16 py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -73,7 +72,31 @@ export function PricingSection({
                 Soit environ {perMonth.toLocaleString("fr-FR")} F par mois, payé
                 en une fois par mobile money.
               </p>
-              {launchOffer && (
+              {launchOffer && endsAt && (
+                <div className="border-brand-accent/40 bg-background/70 space-y-3 rounded-2xl border p-4 text-center">
+                  <p className="flex items-center justify-center gap-1.5 text-sm font-semibold">
+                    <Clock className="text-brand-accent size-4" />
+                    Prix de lancement jusqu&apos;au {lastLaunchDayLabel(endsAt)}
+                  </p>
+                  <LaunchCountdown
+                    endsAt={endsAt}
+                    boxClassName="bg-brand-accent/15"
+                    labelClassName="text-muted-foreground"
+                  />
+                  <p className="text-sm">
+                    Ensuite :{" "}
+                    <strong>
+                      {regularPrice.toLocaleString("fr-FR")} F / an
+                    </strong>
+                    . En t&apos;inscrivant maintenant, tu économises{" "}
+                    <strong className="text-brand-accent">
+                      {savings?.toLocaleString("fr-FR")} F
+                    </strong>
+                    .
+                  </p>
+                </div>
+              )}
+              {launchOffer && !endsAt && (
                 <p className="text-sm font-medium">
                   Le tarif passera bientôt à{" "}
                   <strong>{regularPrice.toLocaleString("fr-FR")} F / an</strong>

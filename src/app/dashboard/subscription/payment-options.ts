@@ -9,6 +9,10 @@ import {
 } from "@/repositories/payment-settings";
 import { findRecentPendingPayment } from "@/repositories/payments";
 import {
+  getLaunchOffer,
+  lastLaunchDayLabel,
+} from "@/services/pricing/launch-offer";
+import {
   INSTALLMENT_MONTHS,
   depositBounds,
   getLatestInstallmentPlan,
@@ -32,6 +36,7 @@ export async function getPaymentOptions(userId: string) {
     latestPlan,
     ineligibility,
     saspayEnabled,
+    offer,
   ] = await Promise.all([
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
     getActiveProviderKey(db),
@@ -42,6 +47,7 @@ export async function getPaymentOptions(userId: string) {
     getLatestInstallmentPlan(db, userId),
     installmentIneligibility(db, userId),
     isSaspayEnabled(db),
+    getLaunchOffer(db),
   ]);
 
   // Paying in several deposits: a first subscription only, never a renewal
@@ -67,6 +73,18 @@ export async function getPaymentOptions(userId: string) {
 
   return {
     price,
+    // The programmed end of the launch price, shown above the methods.
+    launchOffer:
+      offer.endsAt && offer.nextPrice
+        ? {
+            price,
+            nextPrice: offer.nextPrice,
+            endsAt: offer.endsAt,
+            lastDayLabel: lastLaunchDayLabel(offer.endsAt),
+            // Only a member still able to open a cagnotte.
+            withInstallments: !!installments && !openPlan,
+          }
+        : null,
     activeProvider,
     installments,
     // "Autre pays / carte bancaire": switched on by the admin, and SasPay

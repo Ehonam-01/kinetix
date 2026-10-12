@@ -5,6 +5,7 @@ import {
   Briefcase,
   Camera,
   Check,
+  Clock,
   GraduationCap,
   Layers,
   Megaphone,
@@ -22,9 +23,10 @@ import { SITE_NAME } from "@/config/site";
 import { getSiteEnv } from "@/config/env.site";
 import { listActiveLevels } from "@/repositories/member-levels";
 import {
-  getCurrentParameterValue,
-  getCurrentParameterValueOrNull,
-} from "@/repositories/parameter-versions";
+  getLaunchOffer,
+  lastLaunchDayLabel,
+} from "@/services/pricing/launch-offer";
+import { LaunchCountdown } from "@/components/launch-countdown";
 import { getCompensationData } from "@/app/programme-ambassadeur/data";
 import { Logo } from "@/app/_components/logo";
 import { Reveal } from "@/app/_components/reveal";
@@ -72,11 +74,10 @@ const H2 =
 const DISCLAIMER = "text-xs leading-relaxed text-[#8d9bbd]";
 
 async function getPlan() {
-  const [compensation, levels, price, regularPrice] = await Promise.all([
+  const [compensation, levels, offer] = await Promise.all([
     getCompensationData(db),
     listActiveLevels(db),
-    getCurrentParameterValue(db, "subscription.price_in_cfa"),
-    getCurrentParameterValueOrNull(db, "subscription.regular_price_in_cfa"),
+    getLaunchOffer(db),
   ]);
   const plan = levels.map((level) => {
     const sizes = level.config.generationSizes;
@@ -93,9 +94,10 @@ async function getPlan() {
     };
   });
   return {
-    price,
-    regularPrice:
-      regularPrice !== null && regularPrice > price ? regularPrice : null,
+    price: offer.price,
+    regularPrice: offer.nextPrice,
+    launchEndsAt: offer.endsAt,
+    savings: offer.savings,
     directRate: compensation.directRatePercent,
     directExample: compensation.example?.commission ?? null,
     levels: plan,
@@ -225,6 +227,40 @@ function PriceTag({ plan, large = false }: { plan: Plan; large?: boolean }) {
   );
 }
 
+// The programmed end of the launch price: last day, countdown, savings.
+function LaunchDeadline({
+  plan,
+  align,
+}: {
+  plan: Plan;
+  align: "start" | "center";
+}) {
+  if (!plan.launchEndsAt || !plan.regularPrice) return null;
+  return (
+    <div
+      className={`space-y-3 rounded-2xl border border-[#f5a524]/30 bg-[#f5a524]/5 p-4 ${align === "center" ? "text-center" : ""}`}
+    >
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-white">
+        <Clock className="size-4 text-[#f5a524]" />
+        Tarif de lancement jusqu&apos;au {lastLaunchDayLabel(plan.launchEndsAt)}
+        , puis {F(plan.regularPrice)}
+      </p>
+      <LaunchCountdown
+        endsAt={plan.launchEndsAt}
+        className={align === "start" ? "justify-start" : undefined}
+        boxClassName="bg-white/10 text-white"
+        labelClassName="text-[#8d9bbd]"
+      />
+      {plan.savings && (
+        <p className="text-sm text-[#b7c3e0]">
+          En rejoignant maintenant, tu économises{" "}
+          <strong className="text-[#f5a524]">{F(plan.savings)}</strong>.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function LaunchBadge({ label = "Tarif de lancement" }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-[#f5a524]/40 bg-[#f5a524]/10 px-3 py-1 text-xs font-bold tracking-widest text-[#f5a524] uppercase">
@@ -263,6 +299,7 @@ function Hero({ plan, siteUrl }: { plan: Plan; siteUrl: string }) {
           <div className="space-y-3">
             {plan.regularPrice && <LaunchBadge />}
             <PriceTag plan={plan} large />
+            <LaunchDeadline plan={plan} align="start" />
             <p className="text-sm text-[#8d9bbd]">
               Abonnement annuel, sans renouvellement automatique. Payable en une
               fois ou en plusieurs versements.
@@ -888,12 +925,13 @@ function Offer({ plan, siteUrl }: { plan: Plan; siteUrl: string }) {
             <div className="flex justify-center">
               <PriceTag plan={plan} large />
             </div>
-            {plan.regularPrice && (
+            {plan.regularPrice && !plan.launchEndsAt && (
               <p className="text-[#b7c3e0]">
                 Le tarif passera à {F(plan.regularPrice)} à la fin de la période
                 de lancement.
               </p>
             )}
+            <LaunchDeadline plan={plan} align="center" />
             <ul className="mx-auto grid max-w-md gap-2 text-left text-sm">
               {[
                 "Abonnement annuel, sans renouvellement automatique",
@@ -942,7 +980,9 @@ function buildFaqs(plan: Plan): FaqItem[] {
     {
       q: `Pourquoi le tarif est-il de ${F(plan.price)} ?`,
       a: plan.regularPrice
-        ? `C'est le tarif de lancement. Le tarif annoncé après la période de lancement est de ${F(plan.regularPrice)}.`
+        ? plan.launchEndsAt
+          ? `C'est le tarif de lancement, valable jusqu'au ${lastLaunchDayLabel(plan.launchEndsAt)}. Ensuite, l'abonnement passe à ${F(plan.regularPrice)}.`
+          : `C'est le tarif de lancement. Le tarif annoncé après la période de lancement est de ${F(plan.regularPrice)}.`
         : "C'est le tarif actuel de l'abonnement annuel, qui donne accès à toute la plateforme.",
     },
     {

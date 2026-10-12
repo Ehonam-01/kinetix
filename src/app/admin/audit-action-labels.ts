@@ -38,4 +38,6 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SUPPORT_TICKET_REPLIED: "Réponse à un ticket support",
   SUPPORT_TICKET_CLOSED: "Ticket support fermé",
   SUPPORT_TICKET_REOPENED: "Ticket support rouvert",
+  PRICE_CHANGE_SCHEDULED: "Changement de prix programmé",
+  PRICE_CHANGE_CANCELLED: "Changement de prix annulé",
 };

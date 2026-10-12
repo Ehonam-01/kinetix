@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PendingPaymentWatcher } from "./pending-payment-watcher";
+import { LaunchOfferNotice } from "./launch-offer-notice";
 import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
@@ -29,6 +30,7 @@ export default async function SubscriptionPage() {
     alternativePaymentUrl,
     expiredPlan,
     watchedPaymentId,
+    launchOffer,
   } = options;
 
   return (
@@ -119,6 +121,7 @@ export default async function SubscriptionPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {launchOffer && <LaunchOfferNotice offer={launchOffer} />}
           <SubscriptionPanel
             price={price}
             username={profile.username}

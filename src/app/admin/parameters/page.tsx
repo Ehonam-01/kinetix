@@ -1,5 +1,15 @@
 import { db } from "@/db/client";
-import { listCurrentParameters } from "@/repositories/parameter-versions";
+import {
+  getCurrentParameterValueOrNull,
+  getScheduledParameterVersion,
+  listCurrentParameters,
+} from "@/repositories/parameter-versions";
+import {
+  lastLaunchDayLabel,
+  PRICE_KEY,
+  REGULAR_PRICE_KEY,
+} from "@/services/pricing/launch-offer";
+import { LaunchEndForm } from "./launch-end-form";
 import {
   Card,
   CardContent,
@@ -43,7 +53,21 @@ export default async function AdminParametersPage() {
   // re-run on every navigation, so it can't be the only gate (Next.js
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
-  const parameters = await listCurrentParameters(db);
+  const [parameters, scheduled, regularPrice] = await Promise.all([
+    listCurrentParameters(db),
+    getScheduledParameterVersion(db, PRICE_KEY),
+    getCurrentParameterValueOrNull(db, REGULAR_PRICE_KEY),
+  ]);
+  const scheduledEnd = scheduled
+    ? {
+        value: scheduled.value,
+        // The last day at the current price: the day before the new one.
+        lastDay: new Date(scheduled.effectiveFrom.getTime() - 1)
+          .toISOString()
+          .slice(0, 10),
+        lastDayLabel: lastLaunchDayLabel(scheduled.effectiveFrom.toISOString()),
+      }
+    : null;
 
   return (
     <div className="space-y-6">
@@ -52,6 +76,26 @@ export default async function AdminParametersPage() {
         aucune commission déjà versée n&apos;est recalculée (non-rétroactivité,
         voir MLM_RULES.md).
       </p>
+
+      <Card className="border-brand-accent/40">
+        <CardHeader>
+          <CardTitle>Fin du prix de lancement</CardTitle>
+          <CardDescription>
+            Le prix change tout seul le lendemain du dernier jour, à minuit
+            (GMT). D&apos;ici là, la page d&apos;accueil, la page Business Plan
+            et l&apos;écran de paiement affichent un compte à rebours et
+            l&apos;économie réalisée, et les inscrits non payés ainsi que les
+            ambassadeurs reçoivent un rappel par email 7 jours, 3 jours et le
+            dernier jour.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LaunchEndForm
+            defaultPrice={regularPrice && regularPrice > 0 ? regularPrice : 0}
+            scheduled={scheduledEnd}
+          />
+        </CardContent>
+      </Card>
 
       <div className="space-y-3">
         {parameters.map((param) => (

@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCronEnv } from "@/config/env.cron";
 import { sendCommissionEmails } from "@/services/notifications/commission-emails";
+import { sendLaunchOfferReminders } from "@/services/notifications/launch-offer-emails";
 import { sendLevelCompletedEmails } from "@/services/notifications/level-completed-emails";
 import { sendExpiryReminders } from "@/services/subscriptions/send-expiry-reminders";
 import { processInstallmentDeadlines } from "@/services/subscriptions/installments";
@@ -37,8 +38,12 @@ export async function GET(request: Request) {
   const saspay = process.env.SASPAY_SECRET_KEY
     ? await reconcilePendingSaspayPayments()
     : null;
+  // End of the launch price, when its date is programmed: reminders 7
+  // days, 3 days and the last day before.
+  const launchOffer = await sendLaunchOfferReminders();
   return NextResponse.json({
     ...result,
+    launchOffer,
     levelEmails,
     commissionEmails,
     installments,

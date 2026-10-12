@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { CountrySupportHint } from "@/components/support/country-support-hint";
 import { PendingPaymentWatcher } from "./subscription/pending-payment-watcher";
+import { LaunchOfferNotice } from "./subscription/launch-offer-notice";
 import { SubscriptionPanel } from "./subscription/subscription-panel";
 import type { PaymentOptions } from "./subscription/payment-options";
 import { LogoutButton } from "./logout-button";
@@ -45,13 +46,16 @@ export function FrozenAccountScreen({
   options: PaymentOptions;
 }) {
   const panel = (
-    <SubscriptionPanel
-      price={options.price}
-      username={username}
-      activeProvider={options.activeProvider}
-      installments={options.installments}
-      otherCountries={options.otherCountries}
-    />
+    <div className="space-y-4">
+      {options.launchOffer && <LaunchOfferNotice offer={options.launchOffer} />}
+      <SubscriptionPanel
+        price={options.price}
+        username={username}
+        activeProvider={options.activeProvider}
+        installments={options.installments}
+        otherCountries={options.otherCountries}
+      />
+    </div>
   );
   const expired = options.expiredPlan;
 
