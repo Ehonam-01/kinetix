@@ -58,3 +58,16 @@ export const recoveryCookieOptions = {
   path: "/",
   maxAge: RECOVERY_TTL_MS / 1000,
 };
+
+// Set when a reset link is asked for (forgot-password), in the browser that
+// will open it — the link itself comes back to the plain /auth/callback
+// (the redirect URL Supabase already accepts; with "?next=..." it fell back
+// to the site's root and the member never reached the reset form). The
+// callback reads this to send that browser to /reset-password. Not a proof
+// on its own: the proof above still requires exchanging the code from the
+// email. One hour, Supabase's default lifetime for the link.
+export const RECOVERY_REQUEST_COOKIE_NAME = "kx_pw_reset_requested";
+export const recoveryRequestCookieOptions = {
+  ...recoveryCookieOptions,
+  maxAge: 60 * 60,
+};

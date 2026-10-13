@@ -15,7 +15,28 @@ function businessPlanRewrite(request: NextRequest) {
   return null;
 }
 
+// Supabase sends an email link back to the site's root (?code=...) when
+// the redirect URL it was given isn't in its allow list (Authentication →
+// URL Configuration). Such a link would otherwise land on the homepage
+// with nothing done: it's handed to auth/callback, which finishes the
+// sign-in (and the password reset, see password-recovery.ts).
+const AUTH_CODE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function strayAuthCode(request: NextRequest) {
+  if (request.nextUrl.pathname !== "/") return null;
+  const code = request.nextUrl.searchParams.get("code");
+  if (!code || !AUTH_CODE.test(code)) return null;
+  const url = request.nextUrl.clone();
+  url.pathname = "/auth/callback";
+  url.search = `?code=${encodeURIComponent(code)}`;
+  return NextResponse.redirect(url);
+}
+
 export async function proxy(request: NextRequest) {
+  const authCode = strayAuthCode(request);
+  if (authCode) return authCode;
+
   const rewrite = businessPlanRewrite(request);
   if (rewrite) return rewrite;
 

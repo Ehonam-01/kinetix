@@ -9,7 +9,7 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
   const origin = await getTrustedOrigin();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    redirectTo: `${origin}/auth/callback`,
   });
 
   if (!error) return { error: null };

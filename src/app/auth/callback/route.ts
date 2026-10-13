@@ -1,9 +1,11 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/services/auth/ensure-profile";
 import {
   createRecoveryProof,
   RECOVERY_COOKIE_NAME,
+  RECOVERY_REQUEST_COOKIE_NAME,
   recoveryCookieOptions,
 } from "@/services/auth/password-recovery";
 
@@ -28,11 +30,20 @@ export async function GET(request: Request) {
       // subscription payment is confirmed.
       await ensureProfile(data.user);
 
-      const response = NextResponse.redirect(`${origin}${next}`);
+      // A reset link opened in the browser that asked for it (the request
+      // cookie), or an old link still carrying next=/reset-password.
+      const cookieStore = await cookies();
+      const isRecovery =
+        next === "/reset-password" ||
+        cookieStore.has(RECOVERY_REQUEST_COOKIE_NAME);
+      const response = NextResponse.redirect(
+        `${origin}${isRecovery ? "/reset-password" : next}`,
+      );
       // Coming from a password-recovery email: the reset form will only
       // accept a new password with this proof (services/auth/
       // password-recovery.ts, security audit SEC-03).
-      if (next === "/reset-password") {
+      if (isRecovery) {
+        response.cookies.delete(RECOVERY_REQUEST_COOKIE_NAME);
         try {
           response.cookies.set(
             RECOVERY_COOKIE_NAME,
