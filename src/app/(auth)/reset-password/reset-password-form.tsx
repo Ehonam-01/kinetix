@@ -23,6 +23,10 @@ type FormInput = z.infer<typeof formSchema>;
 export function ResetPasswordForm() {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  // Accounts with two-factor authentication: the 6-digit code is asked
+  // once the server says it's needed.
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
   const {
     register,
     handleSubmit,
@@ -32,7 +36,11 @@ export function ResetPasswordForm() {
   function onSubmit(values: FormInput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await resetPasswordAction({ password: values.password });
+      const result = await resetPasswordAction(
+        { password: values.password },
+        needsMfa ? mfaCode : undefined,
+      );
+      if (result?.needsMfa) setNeedsMfa(true);
       if (result?.error) {
         setServerError(result.error);
       }
@@ -65,6 +73,26 @@ export function ResetPasswordForm() {
           </p>
         )}
       </div>
+      {needsMfa && (
+        <div className="space-y-2">
+          <Label htmlFor="mfaCode">Code de double authentification</Label>
+          <Input
+            id="mfaCode"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            placeholder="123456"
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+            className="tracking-[0.3em]"
+            autoFocus
+          />
+          <p className="text-muted-foreground text-xs">
+            Le code affiché par votre application d&apos;authentification
+            (Google Authenticator, Authy…).
+          </p>
+        </div>
+      )}
       {serverError && <p className="text-destructive text-sm">{serverError}</p>}
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Mise à jour..." : "Mettre à jour le mot de passe"}

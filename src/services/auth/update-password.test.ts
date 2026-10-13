@@ -7,15 +7,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const session = {
   updateUser: vi.fn(),
   signOut: vi.fn(async () => ({ error: null })),
+  mfa: { challengeAndVerify: vi.fn() },
 };
 const cookieJar = new Map<string, string>();
-let currentUser: { id: string } | null = null;
+type TestUser = {
+  id: string;
+  factors?: { id: string; factor_type: string; status: string }[];
+};
+let currentUser: TestUser | null = null;
+let sessionAal = "aal1";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: session }),
 }));
-vi.mock("./session", () => ({ getAuthUser: async () => currentUser }));
+vi.mock("./session", () => ({
+  getAuthUser: async () => currentUser,
+  getVerifiedSessionClaims: async () => ({ aal: sessionAal }),
+}));
 vi.mock("next/headers", () => ({
   cookies: async () => ({
     get: (name: string) =>
@@ -47,7 +56,9 @@ describe("updatePassword (recovery link)", () => {
     vi.clearAllMocks();
     cookieJar.clear();
     currentUser = { id: MEMBER };
+    sessionAal = "aal1";
     session.updateUser.mockResolvedValue({ error: null });
+    session.mfa.challengeAndVerify.mockResolvedValue({ error: null });
   });
 
   it("refuses a signed-in session that didn't come through the email link", async () => {
@@ -112,5 +123,69 @@ describe("updatePassword (recovery link)", () => {
     });
     const { error } = await updatePassword(input);
     expect(error).not.toContain("internal db detail");
+  });
+
+  describe("account with two-factor authentication (admin)", () => {
+    const withFactor = () => {
+      currentUser = {
+        id: MEMBER,
+        factors: [{ id: "factor-1", factor_type: "totp", status: "verified" }],
+      };
+    };
+
+    it("asks for the 6-digit code before changing anything", async () => {
+      const { updatePassword } = await import("./update-password");
+      const { createRecoveryProof, RECOVERY_COOKIE_NAME } =
+        await import("./password-recovery");
+      withFactor();
+      cookieJar.set(RECOVERY_COOKIE_NAME, createRecoveryProof(MEMBER));
+
+      const result = await updatePassword(input);
+      expect(result.needsMfa).toBe(true);
+      expect(session.updateUser).not.toHaveBeenCalled();
+    });
+
+    it("refuses a wrong code", async () => {
+      const { updatePassword } = await import("./update-password");
+      const { createRecoveryProof, RECOVERY_COOKIE_NAME } =
+        await import("./password-recovery");
+      withFactor();
+      cookieJar.set(RECOVERY_COOKIE_NAME, createRecoveryProof(MEMBER));
+      session.mfa.challengeAndVerify.mockResolvedValue({
+        error: { code: "mfa_verification_failed" },
+      });
+
+      const result = await updatePassword(input, "000000");
+      expect(result).toMatchObject({ needsMfa: true });
+      expect(result.error).toContain("incorrect");
+      expect(session.updateUser).not.toHaveBeenCalled();
+    });
+
+    it("verifies the code, then changes the password", async () => {
+      const { updatePassword } = await import("./update-password");
+      const { createRecoveryProof, RECOVERY_COOKIE_NAME } =
+        await import("./password-recovery");
+      withFactor();
+      cookieJar.set(RECOVERY_COOKIE_NAME, createRecoveryProof(MEMBER));
+
+      expect(await updatePassword(input, "123456")).toEqual({ error: null });
+      expect(session.mfa.challengeAndVerify).toHaveBeenCalledWith({
+        factorId: "factor-1",
+        code: "123456",
+      });
+      expect(session.updateUser).toHaveBeenCalled();
+    });
+
+    it("doesn't ask again for a session already verified (aal2)", async () => {
+      const { updatePassword } = await import("./update-password");
+      const { createRecoveryProof, RECOVERY_COOKIE_NAME } =
+        await import("./password-recovery");
+      withFactor();
+      sessionAal = "aal2";
+      cookieJar.set(RECOVERY_COOKIE_NAME, createRecoveryProof(MEMBER));
+
+      expect(await updatePassword(input)).toEqual({ error: null });
+      expect(session.mfa.challengeAndVerify).not.toHaveBeenCalled();
+    });
   });
 });
