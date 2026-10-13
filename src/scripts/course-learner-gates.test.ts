@@ -4,6 +4,7 @@
 // completed out of order, and a lesson with a quiz is only completed by
 // passing the quiz — never by calling the "mark complete" action directly.
 import { randomUUID } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as schema from "@/db/schema";
 import {
@@ -123,12 +124,10 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
   }, 120_000);
 
   it("hides a draft course from members but not from admins", async () => {
-    const { hasCourseAccess, listCoursesForUser } = await import(
-      "@/repositories/courses"
-    );
-    const { markLessonComplete } = await import(
-      "@/services/lms/mark-lesson-complete"
-    );
+    const { hasCourseAccess, listCoursesForUser } =
+      await import("@/repositories/courses");
+    const { markLessonComplete } =
+      await import("@/services/lms/mark-lesson-complete");
     const member = await makeSubscribedMember("draft");
     const admin = await makeProfile("admin", "ADMIN");
     const draft = await makeCourse("DRAFT");
@@ -152,12 +151,10 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
   });
 
   it("only completes a quiz lesson through the quiz, and keeps order", async () => {
-    const { markLessonComplete } = await import(
-      "@/services/lms/mark-lesson-complete"
-    );
-    const { submitQuizAttempt } = await import(
-      "@/services/lms/submit-quiz-attempt"
-    );
+    const { markLessonComplete } =
+      await import("@/services/lms/mark-lesson-complete");
+    const { submitQuizAttempt } =
+      await import("@/services/lms/submit-quiz-attempt");
     const { getCourseContent } = await import("@/repositories/courses");
     const member = await makeSubscribedMember("quiz");
     const c = await makeCourse("PUBLISHED");
@@ -179,7 +176,7 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
     const failed = await submitQuizAttempt(member, l2, {
       [c.questionId]: c.bad,
     });
-    expect(failed.passed).toBe(false);
+    expect(failed).toMatchObject({ limited: false, passed: false });
     await expect(markLessonComplete(member, l3)).rejects.toThrow(
       "Cette leçon est verrouillée.",
     );
@@ -187,7 +184,7 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
     const passed = await submitQuizAttempt(member, l2, {
       [c.questionId]: c.good,
     });
-    expect(passed.passed).toBe(true);
+    expect(passed).toMatchObject({ limited: false, passed: true });
     await markLessonComplete(member, l3);
 
     const content = await getCourseContent(localDb, c.courseId, member);
@@ -195,5 +192,48 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
       .flatMap((m: { lessons: { completed: boolean }[] }) => m.lessons)
       .map((l: { completed: boolean }) => l.completed);
     expect(done).toEqual([true, true, true]);
+  });
+
+  it("never reveals the answers of a failed attempt, and caps failed attempts", async () => {
+    const { submitQuizAttempt, QUIZ_MAX_FAILED_ATTEMPTS } =
+      await import("@/services/lms/submit-quiz-attempt");
+    const { markLessonComplete } =
+      await import("@/services/lms/mark-lesson-complete");
+    const member = await makeSubscribedMember("quizlimit");
+    const c = await makeCourse("PUBLISHED");
+    const [l1, l2] = c.lessonIds;
+    await markLessonComplete(member, l1);
+
+    for (let i = 0; i < QUIZ_MAX_FAILED_ATTEMPTS; i++) {
+      const failed = await submitQuizAttempt(member, l2, {
+        [c.questionId]: c.bad,
+      });
+      expect(failed.limited).toBe(false);
+      if (failed.limited) return;
+      expect(failed.passed).toBe(false);
+      // Which question was wrong, never which option was right.
+      expect(failed.results).toEqual([
+        { questionId: c.questionId, correct: false, correctOptionId: null },
+      ]);
+      expect(failed.attemptsLeft).toBe(QUIZ_MAX_FAILED_ATTEMPTS - i - 1);
+    }
+
+    // One more, even with the right answer: refused for the hour.
+    const blocked = await submitQuizAttempt(member, l2, {
+      [c.questionId]: c.good,
+    });
+    expect(blocked).toMatchObject({ limited: true });
+
+    // An hour later, the right answer passes and the answers are shown.
+    await localDb.execute(
+      sql`UPDATE quiz_attempts SET created_at = created_at - interval '61 minutes' WHERE user_id = ${member}`,
+    );
+    const passed = await submitQuizAttempt(member, l2, {
+      [c.questionId]: c.good,
+    });
+    expect(passed).toMatchObject({ limited: false, passed: true });
+    if (!passed.limited) {
+      expect(passed.results[0].correctOptionId).toBe(c.good);
+    }
   });
 });

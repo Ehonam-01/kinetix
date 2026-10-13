@@ -3,6 +3,7 @@ import { db } from "@/db/client";
 import { findPaymentByProviderReference } from "@/repositories/payments";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 import { paydunyaProvider } from "@/services/payments/paydunya";
+import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
 
 // URL passed as invoice.actions.callback_url on every checkout-invoice
 // creation call (services/payments/paydunya.ts) — set per-request, not a
@@ -41,7 +42,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
   if (verified.status === "CONFIRMED" && verified.amount !== payment.amount) {
-    console.error("PayDunya : montant confirmé incohérent", {
+    alertAmountMismatch({
+      source: "PayDunya (notification IPN)",
       paymentId: payment.id,
       expected: payment.amount,
       got: verified.amount,

@@ -16,6 +16,7 @@ import { resolveSaleAttribution } from "@/services/attribution/resolve-referral"
 import { resendEmailProvider } from "@/services/notifications/resend-email";
 import { confirmSubscriptionPurchase } from "./confirm-subscription-payment";
 import { initiateSubscriptionPayment } from "./initiate-subscription-payment";
+import { alertAdmins } from "@/services/notifications/admin-alerts";
 
 // Paying the first annual subscription in several deposits — the
 // "cagnotte" (db/schema/installment-plans.ts). Rules (explicit user
@@ -270,9 +271,14 @@ export async function applyInstallmentDeposit(tx: Executor, paymentId: string) {
     return;
   }
   if (plan.status === "COMPLETED") {
-    console.error(
-      `Versement reçu sur une cagnotte déjà complète (${plan.id}), à rembourser manuellement :`,
-      paymentId,
+    alertAdmins(
+      `installment-overpaid:${paymentId}`,
+      "Versement reçu sur une cagnotte déjà complète",
+      [
+        `Cagnotte : ${plan.id}`,
+        `Versement : ${paymentId} (${payment.amount} F)`,
+        "L'abonnement est déjà activé : ce versement est à rembourser manuellement au membre.",
+      ],
     );
     return;
   }

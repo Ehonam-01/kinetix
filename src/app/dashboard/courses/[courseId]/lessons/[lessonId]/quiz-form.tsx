@@ -17,7 +17,13 @@ type QuizResult = {
   score: number;
   passed: boolean;
   passingScore: number;
-  results: { questionId: string; correct: boolean; correctOptionId: string }[];
+  // correctOptionId only once passed (services/lms/submit-quiz-attempt.ts).
+  results: {
+    questionId: string;
+    correct: boolean;
+    correctOptionId: string | null;
+  }[];
+  attemptsLeft: number;
 };
 
 export function QuizForm({
@@ -48,6 +54,12 @@ export function QuizForm({
     startTransition(async () => {
       try {
         const res = await submitQuizAttemptAction(courseId, lessonId, answers);
+        if (res.limited) {
+          setError(
+            `Tu as utilisé tes ${res.maxAttempts} essais. Relis la leçon, puis réessaie dans ${res.retryInMinutes} minute${res.retryInMinutes > 1 ? "s" : ""}.`,
+          );
+          return;
+        }
         setResult(res);
       } catch (err) {
         setError(
@@ -91,6 +103,12 @@ export function QuizForm({
             Score : {result.score}% — il faut au moins {result.passingScore}%
             pour valider cette leçon.
           </p>
+          <p className="text-muted-foreground mt-1.5 text-xs">
+            Les questions en rouge sont à revoir.{" "}
+            {result.attemptsLeft > 0
+              ? `Encore ${result.attemptsLeft} essai${result.attemptsLeft > 1 ? "s" : ""} possible${result.attemptsLeft > 1 ? "s" : ""} dans l'heure.`
+              : "C'était ton dernier essai pour l'heure : relis la leçon avant de réessayer."}
+          </p>
         </div>
       )}
 
@@ -108,8 +126,11 @@ export function QuizForm({
               {q.options.map((option) => {
                 const selected = answers[q.id] === option.id;
                 const showFeedback = !!questionResult;
-                const isCorrectOption =
-                  questionResult?.correctOptionId === option.id;
+                // Passed: the right option of each question. Failed: only
+                // whether the chosen one was right — never the answer.
+                const isCorrectOption = questionResult?.correctOptionId
+                  ? questionResult.correctOptionId === option.id
+                  : selected && !!questionResult?.correct;
                 return (
                   <label
                     key={option.id}

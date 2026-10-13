@@ -1,4 +1,5 @@
 import "server-only";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { lessonProgress } from "@/db/schema/lesson-progress";
@@ -17,11 +18,33 @@ const quizAnswersSchema = z
     message: "Trop de réponses.",
   });
 
+// Answering at random until the quiz passes used to be free: every attempt
+// sent back the right option of each question, with no limit (security
+// audit SEC-11). Now at most QUIZ_MAX_FAILED_ATTEMPTS failed attempts per
+// quiz within QUIZ_ATTEMPT_WINDOW_MINUTES, and the right options are only
+// shown once the quiz is passed — a failed attempt says which questions
+// were wrong, not what the answer was.
+export const QUIZ_MAX_FAILED_ATTEMPTS = 3;
+export const QUIZ_ATTEMPT_WINDOW_MINUTES = 60;
+
 export type QuestionResult = {
   questionId: string;
   correct: boolean;
-  correctOptionId: string;
+  // Only once passed; null on a failed attempt.
+  correctOptionId: string | null;
 };
+
+export type QuizAttemptOutcome =
+  | {
+      limited: false;
+      score: number;
+      passed: boolean;
+      passingScore: number;
+      results: QuestionResult[];
+      // Failed attempts still allowed in the current window.
+      attemptsLeft: number;
+    }
+  | { limited: true; retryInMinutes: number; maxAttempts: number };
 
 // Scores a submitted attempt, records it (every attempt kept, never
 // overwritten — see quizzes.ts), and on a pass also marks the lesson
@@ -32,7 +55,7 @@ export async function submitQuizAttempt(
   userId: string,
   lessonId: string,
   rawAnswers: Record<string, string>,
-) {
+): Promise<QuizAttemptOutcome> {
   // Stored as-is in quiz_attempts.answers — bounded to question/option ids
   // only, so a hand-crafted call can't persist an arbitrarily large payload
   // (security audit L5).
@@ -70,17 +93,46 @@ export async function submitQuizAttempt(
       throw new Error("Cette leçon n'a pas de quiz.");
     }
 
+    // One attempt at a time per member and quiz, so parallel submissions
+    // can't all slip under the limit.
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`quiz:${userId}:${quiz.id}`}))`,
+    );
+    const windowStart = sql`now() - make_interval(mins => ${QUIZ_ATTEMPT_WINDOW_MINUTES})`;
+    const recentFailures = await tx
+      .select({ createdAt: quizAttempts.createdAt })
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.userId, userId),
+          eq(quizAttempts.quizId, quiz.id),
+          eq(quizAttempts.passed, false),
+          gt(quizAttempts.createdAt, windowStart),
+        ),
+      )
+      .orderBy(asc(quizAttempts.createdAt));
+    if (recentFailures.length >= QUIZ_MAX_FAILED_ATTEMPTS) {
+      const freedAt =
+        recentFailures[0].createdAt.getTime() +
+        QUIZ_ATTEMPT_WINDOW_MINUTES * 60 * 1000;
+      return {
+        limited: true,
+        retryInMinutes: Math.max(1, Math.ceil((freedAt - Date.now()) / 60000)),
+        maxAttempts: QUIZ_MAX_FAILED_ATTEMPTS,
+      };
+    }
+
     const questions = await findQuizQuestions(tx, quiz.id);
-    const results: QuestionResult[] = questions.map((q) => {
+    const graded = questions.map((q) => {
       const correctOption = q.options.find((o) => o.isCorrect);
       return {
         questionId: q.id,
         correct: correctOption?.id === answers[q.id],
-        correctOptionId: correctOption?.id ?? "",
+        correctOptionId: correctOption?.id ?? null,
       };
     });
 
-    const correctCount = results.filter((r) => r.correct).length;
+    const correctCount = graded.filter((r) => r.correct).length;
     const score = questions.length
       ? Math.round((correctCount / questions.length) * 100)
       : 0;
@@ -103,6 +155,18 @@ export async function submitQuizAttempt(
         });
     }
 
-    return { score, passed, passingScore: quiz.passingScore, results };
+    const results: QuestionResult[] = passed
+      ? graded
+      : graded.map((r) => ({ ...r, correctOptionId: null }));
+    return {
+      limited: false,
+      score,
+      passed,
+      passingScore: quiz.passingScore,
+      results,
+      attemptsLeft: passed
+        ? QUIZ_MAX_FAILED_ATTEMPTS
+        : QUIZ_MAX_FAILED_ATTEMPTS - recentFailures.length - 1,
+    };
   });
 }

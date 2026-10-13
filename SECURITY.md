@@ -91,9 +91,10 @@ membre-à-membre (`services/wallet/`, voir `ARCHITECTURE.md` pour le détail des
 
 - **Limitation de débit** : en place (`lib/rate-limit.ts`, Upstash) sur la connexion (par IP et par
   email), l'inscription, le mot de passe oublié, les codes OTP, les paiements, les recherches de
-  pseudo, les messages (leçons, support). **Elle se désactive si Upstash est absent ou ne répond
-  pas** (choix « fail-open », voir SEC-05 ci-dessous) : vérifier que `UPSTASH_REDIS_REST_URL` et
-  `UPSTASH_REDIS_REST_TOKEN` sont bien définis sur Vercel.
+  pseudo, les messages (leçons, support). Si Upstash est absent ou ne répond pas en production,
+  codes OTP, liens de réinitialisation et changements de mot de passe sont refusés, le reste passe,
+  et les admins reçoivent une alerte (SEC-05 ci-dessous) : vérifier que `UPSTASH_REDIS_REST_URL`
+  et `UPSTASH_REDIS_REST_TOKEN` sont bien définis sur Vercel.
 - **CSRF** : Next.js protège nativement les Server Actions par une vérification d'origine
   (`Origin`/`Referer`) sur les requêtes de mutation — aucune protection supplémentaire ajoutée ici,
   aucune n'a semblé nécessaire au-delà de ce que le framework fournit déjà.
@@ -113,18 +114,18 @@ pour `anon`/`authenticated`). Tests : `src/scripts/security-hardening.test.ts`,
 | SEC-02 | Moyenne | Next.js 16.3.6 : 6 avis publiés (dont SSRF de l'optimisation d'images). | Corrigé : 16.3.8 ; `npm audit --omit=dev` : 0 vulnérabilité. |
 | SEC-03 | Moyenne | Le formulaire de réinitialisation acceptait n'importe quelle session (changement de mot de passe sans l'actuel). | Corrigé : preuve signée posée par `auth/callback` au retour du lien email, valable 15 min (`services/auth/password-recovery.ts`). |
 | SEC-04 | Moyenne | Les autres sessions restaient ouvertes après un changement de mot de passe. | Corrigé : `signOut({ scope: "others" })` après changement et réinitialisation. |
-| SEC-05 | Moyenne | Limitation de débit désactivée silencieusement sans Upstash. | En attente d'une décision (fail-closed pour OTP/réinitialisation ?). |
+| SEC-05 | Moyenne | Limitation de débit désactivée silencieusement sans Upstash. | Corrigé : en production, si Upstash est absent ou ne répond pas, codes OTP, liens de réinitialisation et changements de mot de passe sont refusés ; la connexion et le reste passent ; les admins reçoivent une alerte. |
 | SEC-06 | Moyenne | Webhooks Bictorys/Moneroo (dormants) : statut appliqué sans comparer le montant. | Corrigé : une confirmation d'un autre montant n'est jamais appliquée. Routes gardées actives (paiements anciens encore en attente). |
 | SEC-07 | Moyenne | Un événement d'échec pouvait repasser un paiement confirmé en FAILED. | Corrigé : seul un paiement PENDING peut échouer. |
-| SEC-08 | Faible | CSP minimale (pas de `script-src`). | En attente : déployer d'abord en Report-Only. |
+| SEC-08 | Faible | CSP minimale (pas de `script-src`). | En observation : politique complète en `Content-Security-Policy-Report-Only` (next.config.ts), rapports dans les logs Vercel via `/api/csp-report`. Seul signalement connu : `eval` testé par Zod sur les formulaires d'authentification (Zod s'en passe si bloqué). À rendre bloquante une fois les rapports propres. |
 | SEC-09 | Faible | Messages d'erreur bruts de Supabase renvoyés à l'utilisateur. | Corrigé (inscription, mot de passe oublié, réinitialisation). |
 | SEC-10 | Faible | JSON-LD de /businessplan sans échappement de `<`. | Corrigé. |
-| SEC-11 | Faible | Quiz : bonnes réponses renvoyées, tentatives illimitées. | En attente d'une décision produit. |
+| SEC-11 | Faible | Quiz : bonnes réponses renvoyées, tentatives illimitées. | Corrigé : 3 essais ratés par heure et par quiz ; un essai raté indique les questions fausses, jamais la bonne réponse (montrée seulement une fois le quiz réussi). |
 | SEC-12 | Faible | `wallet-payment.ts` (dormant) : débit non atomique. | Corrigé : débit `WHERE available_balance >= amount`. |
 | SEC-13 | Faible | `GET /orientation` modifie le profil (objectif). | Accepté : impact négligeable. |
 | SEC-14 | Faible | `shadcn` (CLI) dans les dépendances de production. | Corrigé : déplacé en `devDependencies`. |
 | SEC-15 | Faible | Policies Storage `is_admin()` sans exigence aal2. | Accepté : pas de client Supabase navigateur, cookies HttpOnly. |
-| SEC-16 | Faible | Pas d'alerte sur les événements de paiement incohérents ; ce document était obsolète. | Document mis à jour ; alertes en attente d'une décision. |
+| SEC-16 | Faible | Pas d'alerte sur les événements de paiement incohérents ; ce document était obsolète. | Corrigé : email aux comptes admin (`services/notifications/admin-alerts.ts`, au plus un par heure et par sujet) pour un montant confirmé incohérent, un versement sur une cagnotte déjà complète, une limitation de débit indisponible. |
 
 Restent à vérifier hors du code : réglages Supabase Auth (« Secure password change », « Leaked
 password protection », durée des sessions, limites par IP — toutes les connexions partent des IP

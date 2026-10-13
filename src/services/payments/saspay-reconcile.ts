@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { processWebhookEvent } from "./process-webhook-event";
 import { saspayProvider } from "./saspay";
+import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
 
 // How far back a pending SasPay payment is still worth checking: a
 // checkout session left unpaid that long won't be paid any more.
@@ -44,7 +45,8 @@ export async function reconcilePendingSaspayPayments(): Promise<{
         verified.status === "CONFIRMED" &&
         verified.amount !== payment.amount
       ) {
-        console.error("SasPay : montant confirmé incohérent", {
+        alertAmountMismatch({
+          source: "SasPay (rapprochement)",
           paymentId: payment.id,
           expected: payment.amount,
           got: verified.amount,

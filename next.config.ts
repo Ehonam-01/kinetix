@@ -28,6 +28,41 @@ const securityHeaders = [
   },
 ];
 
+// The full policy, observed before enforced (security audit SEC-08): sent
+// as Content-Security-Policy-Report-Only, so it never blocks anything — the
+// browser reports what it would have blocked to /api/csp-report, logged on
+// Vercel. Once the reports are clean, it can move to the enforced header
+// above. 'unsafe-inline' scripts stay allowed until nonces are in place (the
+// inline theme/PWA scripts in app/layout.tsx); everything else names its
+// sources: the Supabase project (images, storage) and the video players
+// lessons embed (lib/video-embed.ts). Production only — the dev server's
+// own tooling would only add noise.
+const supabaseOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "https://*.supabase.co";
+  }
+})();
+
+const reportOnlyCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${supabaseOrigin}`,
+  "font-src 'self' data:",
+  `connect-src 'self' ${supabaseOrigin}`,
+  `media-src 'self' ${supabaseOrigin}`,
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com https://docs.google.com",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "report-uri /api/csp-report",
+].join("; ");
+
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
@@ -49,7 +84,19 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/:path*",
+        headers:
+          process.env.NODE_ENV === "production"
+            ? [
+                ...securityHeaders,
+                {
+                  key: "Content-Security-Policy-Report-Only",
+                  value: reportOnlyCsp,
+                },
+              ]
+            : securityHeaders,
+      },
       // The service worker (public/sw.js) must never be served from a cache,
       // or a fix to it wouldn't reach installed apps (Next.js PWA guide).
       {

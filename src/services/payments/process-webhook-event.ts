@@ -6,6 +6,7 @@ import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-su
 import { applyInstallmentDeposit } from "@/services/subscriptions/installments";
 import { activateRegistration } from "./activate-registration";
 import type { WebhookEvent } from "./provider";
+import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
 
 // Shared by the real webhook route (app/api/webhooks/moneroo/route.ts) and
 // verification scripts/tests — dedupes via payment_events.dedupe_key
@@ -62,7 +63,8 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
     event.amount !== undefined &&
     event.amount !== payment.amount
   ) {
-    console.error("Webhook : montant confirmé incohérent", {
+    alertAmountMismatch({
+      source: `${payment.provider ?? "fournisseur"} (webhook)`,
       paymentId: payment.id,
       expected: payment.amount,
       got: event.amount,

@@ -17,7 +17,7 @@ export async function submitQuizAttemptAction(
 ) {
   const { profile } = await requireActiveMember();
   const result = await submitQuizAttempt(profile.id, lessonId, answers);
-  if (result.passed) {
+  if (!result.limited && result.passed) {
     // "layout" also refreshes every lesson page under this course — the
     // next lesson may just have been unlocked.
     revalidatePath(`/dashboard/courses/${courseId}`, "layout");

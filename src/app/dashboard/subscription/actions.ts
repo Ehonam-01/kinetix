@@ -24,6 +24,7 @@ import {
 } from "@/services/payments/paydunya";
 import { getPaymentProviderByName } from "@/services/payments/provider-selector";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
+import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
 
 // {error}-return convention, same as every other action here: a payment
 // provider rejecting the request (bad/placeholder credentials, a network
@@ -236,7 +237,8 @@ export async function confirmWizallPaymentAction(
     };
   }
   if (verified.amount !== payment.amount) {
-    console.error("Wizall : montant confirmé incohérent", {
+    alertAmountMismatch({
+      source: "PayDunya Wizall (confirmation par le membre)",
       paymentId,
       expected: payment.amount,
       got: verified.amount,
@@ -302,9 +304,9 @@ export async function checkSubscriptionConfirmedAction(
   // never auto-applied — left PENDING for an admin to look at (security
   // audit M7).
   if (verified.status === "CONFIRMED" && verified.amount !== payment.amount) {
-    console.error("Paiement : montant confirmé incohérent", {
+    alertAmountMismatch({
+      source: `${payment.provider} (vérification depuis la page du membre)`,
       paymentId: payment.id,
-      provider: payment.provider,
       expected: payment.amount,
       got: verified.amount,
     });
