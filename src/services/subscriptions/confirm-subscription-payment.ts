@@ -65,9 +65,14 @@ export async function confirmSubscriptionPurchase(
   tx: Executor,
   paymentId: string,
 ) {
-  const payment = await tx.query.payments.findFirst({
-    where: eq(payments.id, paymentId),
-  });
+  // Locked: every caller (webhooks, polling, wallet, admin grant,
+  // installments) goes through here, and two of them confirming the same
+  // payment at once must not both see it PENDING (security audit SEC-01).
+  const [payment] = await tx
+    .select()
+    .from(payments)
+    .where(eq(payments.id, paymentId))
+    .for("update");
   if (!payment) {
     throw new Error(`Paiement introuvable : ${paymentId}`);
   }

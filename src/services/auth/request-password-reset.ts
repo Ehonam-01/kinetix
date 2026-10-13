@@ -12,5 +12,13 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
     redirectTo: `${origin}/auth/callback?next=/reset-password`,
   });
 
-  return { error: error?.message ?? null };
+  if (!error) return { error: null };
+  // Supabase's own wording stays in the log (security audit M8, SEC-09).
+  console.error("Envoi du lien de réinitialisation impossible :", error.code);
+  return {
+    error:
+      error.status === 429
+        ? "Trop de demandes. Patientez quelques minutes avant de réessayer."
+        : "Impossible d'envoyer le lien pour le moment. Réessayez dans un instant.",
+  };
 }

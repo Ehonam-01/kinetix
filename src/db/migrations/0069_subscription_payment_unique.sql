@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "subscriptions_payment_unique" ON "subscriptions" USING btree ("payment_id");

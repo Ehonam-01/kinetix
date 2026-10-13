@@ -218,9 +218,13 @@ export async function initiateInstallmentDeposit(input: {
 // no-op. Reaching the target creates and confirms the real SUBSCRIPTION
 // payment in this same transaction.
 export async function applyInstallmentDeposit(tx: Executor, paymentId: string) {
-  const payment = await tx.query.payments.findFirst({
-    where: eq(payments.id, paymentId),
-  });
+  // Locked, so a deposit confirmed by two paths at once is counted once
+  // (security audit SEC-01).
+  const [payment] = await tx
+    .select()
+    .from(payments)
+    .where(eq(payments.id, paymentId))
+    .for("update");
   if (!payment || payment.status === "CONFIRMED") return;
 
   await tx

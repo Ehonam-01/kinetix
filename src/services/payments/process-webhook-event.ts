@@ -1,8 +1,7 @@
 import "server-only";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { paymentEvents, payments } from "@/db/schema/payments";
-import { findPaymentByProviderReference } from "@/repositories/payments";
 import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
 import { applyInstallmentDeposit } from "@/services/subscriptions/installments";
 import { activateRegistration } from "./activate-registration";
@@ -20,11 +19,20 @@ import type { WebhookEvent } from "./provider";
 // per-course flow — see db/schema/subscriptions.ts). One webhook route, one
 // payments table, two independent outcomes — never assume every confirmed
 // payment is a registration.
+//
+// The payment row is locked first (FOR UPDATE): the same payment can be
+// confirmed by several paths — the provider's webhook, the member's own
+// status check, SasPay reconciliation, an admin reconcile — each with its
+// own dedupe key. Without the lock, two of them landing together both saw
+// it PENDING and both confirmed it: two subscriptions, two sponsor
+// commissions, an installment deposit counted twice (security audit
+// SEC-01). With it, the second waits, then sees CONFIRMED and does nothing.
 export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
-  const payment = await findPaymentByProviderReference(
-    tx,
-    event.providerReference,
-  );
+  const [payment] = await tx
+    .select()
+    .from(payments)
+    .where(eq(payments.providerReference, event.providerReference))
+    .for("update");
 
   const [inserted] = await tx
     .insert(paymentEvents)
@@ -46,6 +54,22 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
     .set({ processedAt: sql`now()` })
     .where(eq(paymentEvents.id, inserted.id));
 
+  // A confirmation reporting another amount than the one charged is never
+  // applied — left PENDING for an admin to look at, same rule as the
+  // PayDunya and polling paths (security audit M7, SEC-06).
+  if (
+    event.status === "CONFIRMED" &&
+    event.amount !== undefined &&
+    event.amount !== payment.amount
+  ) {
+    console.error("Webhook : montant confirmé incohérent", {
+      paymentId: payment.id,
+      expected: payment.amount,
+      got: event.amount,
+    });
+    return { processed: false as const };
+  }
+
   if (event.status === "CONFIRMED") {
     if (payment.purpose === "SUBSCRIPTION") {
       await confirmSubscriptionPurchase(tx, payment.id);
@@ -57,10 +81,13 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
       await activateRegistration(tx, payment.id);
     }
   } else if (event.status === "FAILED") {
+    // Only a payment still waiting can fail: a late "failed"/"reversed"
+    // event must never turn a confirmed payment — whose subscription was
+    // granted — into a FAILED one (security audit SEC-07).
     await tx
       .update(payments)
       .set({ status: "FAILED" })
-      .where(eq(payments.id, payment.id));
+      .where(and(eq(payments.id, payment.id), eq(payments.status, "PENDING")));
   }
 
   return { processed: true as const };

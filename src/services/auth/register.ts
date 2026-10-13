@@ -88,7 +88,40 @@ export async function registerUser(
     },
   });
 
-  return { error: error?.message ?? null };
+  if (!error) return { error: null };
+  // Supabase's own wording stays in the log (security audit M8, SEC-09).
+  console.error("Inscription refusée par Supabase :", error.code);
+  switch (error.code) {
+    case "weak_password":
+      return {
+        error:
+          "Ce mot de passe est trop faible : choisissez-en un plus long ou plus varié.",
+      };
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return {
+        error:
+          "Trop de demandes. Patientez quelques minutes avant de réessayer.",
+      };
+    // Same information Supabase's raw message gave before (only reported
+    // when email confirmation is off, Supabase otherwise answers as if
+    // the account were new).
+    case "user_already_exists":
+    case "email_exists":
+      return {
+        error:
+          "Un compte existe déjà avec cette adresse. Connectez-vous ou utilisez « Mot de passe oublié ».",
+      };
+    case "email_address_invalid":
+      return { error: "Cette adresse email n'est pas valide." };
+    case "signup_disabled":
+      return { error: "Les inscriptions sont momentanément fermées." };
+    default:
+      return {
+        error:
+          "Impossible de créer le compte pour le moment. Réessayez dans un instant.",
+      };
+  }
 }
 
 // Live "who am I about to name as sponsor?" preview on the registration

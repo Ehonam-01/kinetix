@@ -117,6 +117,8 @@ export default async function BusinessPlanPage() {
     <div className="bg-[#070b17] pb-24 text-[#dbe3f5] md:pb-0">
       <script
         type="application/ld+json"
+        // "<" escaped so text from the database (level names) can never
+        // close the script tag (security audit SEC-10).
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
@@ -126,7 +128,7 @@ export default async function BusinessPlanPage() {
               name: f.q,
               acceptedAnswer: { "@type": "Answer", text: f.a },
             })),
-          }),
+          }).replace(/</g, "\\u003c"),
         }}
       />
 

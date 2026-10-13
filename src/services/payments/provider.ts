@@ -67,6 +67,10 @@ export type WebhookEvent = {
   // see moneroo.ts, which has no official unique event id to rely on.
   dedupeKey: string;
   raw: unknown;
+  // The amount the event itself reports, when it carries one (Bictorys,
+  // Moneroo): a confirmation for any other amount than the payment's is
+  // never applied (process-webhook-event.ts).
+  amount?: number;
 };
 
 export type RefundResult = {

@@ -44,8 +44,7 @@ type BictorysMobilePaymentResponse = {
 };
 
 type BictorysChargeResponse =
-  | BictorysCheckoutLinkResponse
-  | BictorysMobilePaymentResponse;
+  BictorysCheckoutLinkResponse | BictorysMobilePaymentResponse;
 
 type BictorysTransactionResponse = {
   id: string;
@@ -105,10 +104,7 @@ function toPaymentStatus(bictorysStatus: string): PaymentStatus {
   }
 }
 
-async function bictorysRequest<T>(
-  path: string,
-  init: RequestInit,
-): Promise<T> {
+async function bictorysRequest<T>(path: string, init: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -125,7 +121,9 @@ async function bictorysRequest<T>(
     // in the server log only (security audit M8, same fix as paydunya.ts).
     const body = await response.text();
     console.error(`Bictorys ${path} a répondu ${response.status} :`, body);
-    throw new Error("Le service de paiement a refusé la requête. Veuillez réessayer.");
+    throw new Error(
+      "Le service de paiement a refusé la requête. Veuillez réessayer.",
+    );
   }
 
   if (response.status === 202 && !response.headers.get("content-length")) {
@@ -147,7 +145,8 @@ export const bictorysProvider: PaymentProvider = {
   // the same PaymentIntent shape; checkoutUrl null signals the direct case
   // to every caller without them needing to know which mode was requested.
   async createPayment(input: CreatePaymentInput): Promise<PaymentIntent> {
-    const fullName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+    const fullName =
+      `${input.customer.firstName} ${input.customer.lastName}`.trim();
     const paymentType = input.operator
       ? OPERATOR_TO_BICTORYS_PAYMENT_TYPE[
           input.operator as keyof typeof OPERATOR_TO_BICTORYS_PAYMENT_TYPE
@@ -230,6 +229,7 @@ export const bictorysProvider: PaymentProvider = {
       // a redelivery of the same status is deduped.
       dedupeKey: `${payload.id}:${payload.status}`,
       raw: payload,
+      amount: payload.amount,
     };
   },
 

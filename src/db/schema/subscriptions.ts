@@ -1,4 +1,11 @@
-import { index, integer, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { payments } from "./payments";
 import { profiles } from "./profiles";
 import { referralClicks } from "./referral-clicks";
@@ -53,5 +60,10 @@ export const subscriptions = pgTable(
     index("subscriptions_user_idx").on(table.userId),
     index("subscriptions_user_expires_idx").on(table.userId, table.expiresAt),
     index("subscriptions_ambassador_idx").on(table.ambassadorUserId),
+    // One subscription per payment, enforced by the database too: the
+    // last line of defense against a payment confirmed twice (security
+    // audit SEC-01) — a second insert fails and rolls its whole
+    // confirmation back, commission included.
+    uniqueIndex("subscriptions_payment_unique").on(table.paymentId),
   ],
 );

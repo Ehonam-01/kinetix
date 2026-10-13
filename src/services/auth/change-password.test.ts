@@ -9,6 +9,7 @@ const session = {
   getUser: vi.fn(),
   signInWithPassword: vi.fn(),
   updateUser: vi.fn(),
+  signOut: vi.fn(async () => ({ error: null })),
 };
 const throwaway = {
   signInWithPassword: vi.fn(),
@@ -61,6 +62,8 @@ describe("changePassword", () => {
     expect(session.updateUser).toHaveBeenCalledWith({
       password: "nouveauMotDePasse2",
     });
+    // Every other session of the account is signed out (SEC-04).
+    expect(session.signOut).toHaveBeenCalledWith({ scope: "others" });
   });
 
   it("refuses a wrong current password without changing anything", async () => {

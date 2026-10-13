@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { financialTransactions } from "@/db/schema/financial-transactions";
 import { payments } from "@/db/schema/payments";
@@ -50,13 +50,27 @@ export async function payRegistrationFromWallet(
       })
       .returning();
 
-    await tx
+    // Atomic debit, same guard as every other balance debit: two
+    // concurrent payments can't both pass the read above and overdraw the
+    // balance (security audit SEC-12 — this flow is dormant, but kept safe).
+    const [debited] = await tx
       .update(userBalances)
       .set({
         availableBalance: sql`${userBalances.availableBalance} - ${amount}`,
         updatedAt: sql`now()`,
       })
-      .where(eq(userBalances.userId, payerUserId));
+      .where(
+        and(
+          eq(userBalances.userId, payerUserId),
+          sql`${userBalances.availableBalance} >= ${amount}`,
+        ),
+      )
+      .returning();
+    if (!debited) {
+      throw new Error(
+        "Solde disponible insuffisant pour financer cette inscription.",
+      );
+    }
 
     await tx.insert(financialTransactions).values({
       userId: payerUserId,
