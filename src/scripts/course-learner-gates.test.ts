@@ -123,7 +123,7 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
     await seedBaselineParameters(db);
   }, 120_000);
 
-  it("hides a draft course from members but not from admins", async () => {
+  it("lists a draft as coming soon for members, never opens it", async () => {
     const { hasCourseAccess, listCoursesForUser } =
       await import("@/repositories/courses");
     const { markLessonComplete } =
@@ -139,11 +139,23 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
     );
     expect(await hasCourseAccess(localDb, admin, draft.courseId)).toBe(true);
 
-    const listed = (await listCoursesForUser(localDb, member)).map(
-      (c: { id: string }) => c.id,
-    );
-    expect(listed).toContain(published.courseId);
-    expect(listed).not.toContain(draft.courseId);
+    const listed = await listCoursesForUser(localDb, member);
+    const byId = new Map(listed.map((c: { id: string }) => [c.id, c] as const));
+    expect(byId.get(published.courseId)).toMatchObject({
+      accessible: true,
+      comingSoon: false,
+    });
+    // Shown in the catalog as "Disponible bientôt", not openable.
+    expect(byId.get(draft.courseId)).toMatchObject({
+      accessible: false,
+      comingSoon: true,
+    });
+
+    // An admin still opens it to review it.
+    const forAdmin = await listCoursesForUser(localDb, admin);
+    expect(
+      forAdmin.find((c: { id: string }) => c.id === draft.courseId),
+    ).toMatchObject({ accessible: true, comingSoon: false });
 
     await expect(
       markLessonComplete(member, draft.lessonIds[0]),

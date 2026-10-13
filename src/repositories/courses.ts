@@ -27,6 +27,16 @@ export function isCourseVisible(
   return !!course && course.isActive && course.status === "PUBLISHED";
 }
 
+// A draft the admin hasn't published yet: listed in the members' catalog
+// as "Disponible bientôt" (its card and its page), never opened — no
+// lessons, no programme (hasCourseAccess still refuses it, since it isn't
+// visible). Archived or deactivated courses stay hidden.
+export function isCourseUpcoming(
+  course: { status: string; isActive: boolean } | null | undefined,
+) {
+  return !!course && course.isActive && course.status === "DRAFT";
+}
+
 export async function hasCourseAccess(
   executor: Executor,
   userId: string,
@@ -265,11 +275,13 @@ export async function listCoursesForUser(
   const isAdmin = profile?.role === "ADMIN";
   const subscribed = await hasActiveSubscription(executor, userId);
 
-  // Only what's published: a draft or archived course never shows up in a
-  // member's catalog (it used to — only isActive was checked here, unlike
-  // the homepage's listPublishedCoursesForMarketing).
+  // What's published, plus the drafts shown as "Disponible bientôt"
+  // (isCourseUpcoming); an archived or deactivated course never shows up.
   const activeCourses = await executor.query.courses.findMany({
-    where: and(eq(courses.isActive, true), eq(courses.status, "PUBLISHED")),
+    where: and(
+      eq(courses.isActive, true),
+      inArray(courses.status, ["PUBLISHED", "DRAFT"]),
+    ),
     orderBy: desc(courses.createdAt),
   });
   if (activeCourses.length === 0) return [];
@@ -284,8 +296,8 @@ export async function listCoursesForUser(
       description: course.description,
       category: course.category,
       thumbnailUrl: course.thumbnailUrl,
-      accessible: isAdmin || !course.comingSoon,
-      comingSoon: !isAdmin && course.comingSoon,
+      accessible: isAdmin || (!course.comingSoon && !isCourseUpcoming(course)),
+      comingSoon: !isAdmin && (course.comingSoon || isCourseUpcoming(course)),
       ...progressList[i],
     }));
   }
@@ -335,8 +347,11 @@ export async function listCoursesForUser(
     description: course.description,
     category: course.category,
     thumbnailUrl: course.thumbnailUrl,
-    accessible: purchasedCourseIds.has(course.id) && !course.comingSoon,
-    comingSoon: course.comingSoon,
+    accessible:
+      purchasedCourseIds.has(course.id) &&
+      !course.comingSoon &&
+      !isCourseUpcoming(course),
+    comingSoon: course.comingSoon || isCourseUpcoming(course),
     ...progressList[i],
   }));
 }

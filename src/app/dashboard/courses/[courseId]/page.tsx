@@ -15,6 +15,7 @@ import { getSiteEnv } from "@/config/env.site";
 import {
   getCourseContent,
   hasCourseAccess,
+  isCourseUpcoming,
   isCourseVisible,
 } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
@@ -40,16 +41,22 @@ export default async function CourseDetailPage(
   if (profile.status === "SUSPENDED") redirect("/dashboard");
 
   const content = await getCourseContent(db, courseId, profile.id);
-  // A draft is only reachable by an admin reviewing it.
+  // Members see a published course, or a draft as "Disponible bientôt";
+  // an archived or deactivated one only exists for an admin.
   if (
     !content ||
-    (profile.role !== "ADMIN" && !isCourseVisible(content.course))
+    (profile.role !== "ADMIN" &&
+      !isCourseVisible(content.course) &&
+      !isCourseUpcoming(content.course))
   ) {
     notFound();
   }
   const { course } = content;
-  // Announced but not open yet (set by the admin): admins still get in.
-  const comingSoon = course.comingSoon && profile.role !== "ADMIN";
+  // Announced but not open yet (set by the admin), or still a draft:
+  // admins still get in.
+  const upcomingDraft = isCourseUpcoming(course) && profile.role !== "ADMIN";
+  const comingSoon =
+    (course.comingSoon || upcomingDraft) && profile.role !== "ADMIN";
 
   // Every course requires an active annual subscription now (explicit
   // user decision, "remplacement complet" — see db/schema/subscriptions.ts):
@@ -106,18 +113,21 @@ export default async function CourseDetailPage(
             )}
           </div>
 
-          <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-sm">
-            <span className="flex items-center gap-1.5">
-              <Layers className="size-4" />
-              {content.modules.length} module(s) · {lessons.length} leçon(s)
-            </span>
-            {course.durationMinutes != null && course.durationMinutes > 0 && (
+          {/* A draft's content may still change: no counts, no programme. */}
+          {!upcomingDraft && (
+            <div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-sm">
               <span className="flex items-center gap-1.5">
-                <Clock className="size-4" />
-                {formatDuration(course.durationMinutes)}
+                <Layers className="size-4" />
+                {content.modules.length} module(s) · {lessons.length} leçon(s)
               </span>
-            )}
-          </div>
+              {course.durationMinutes != null && course.durationMinutes > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="size-4" />
+                  {formatDuration(course.durationMinutes)}
+                </span>
+              )}
+            </div>
+          )}
 
           {comingSoon ? (
             <div className="border-brand-accent/40 bg-brand-accent/10 space-y-1 rounded-xl border p-4">
@@ -224,22 +234,24 @@ export default async function CourseDetailPage(
         </div>
       )}
 
-      <section className="border-border bg-card rounded-2xl border p-5 sm:p-6">
-        <h2 className="mb-4 font-semibold">Programme</h2>
-        {lessons.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            Aucune leçon pour le moment.
-          </p>
-        ) : access ? (
-          <CourseOutline courseId={courseId} lessons={lessons} />
-        ) : (
-          <CourseOutline
-            courseId={courseId}
-            lessons={lessons.map((l) => ({ ...l, locked: false }))}
-            preview
-          />
-        )}
-      </section>
+      {!upcomingDraft && (
+        <section className="border-border bg-card rounded-2xl border p-5 sm:p-6">
+          <h2 className="mb-4 font-semibold">Programme</h2>
+          {lessons.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Aucune leçon pour le moment.
+            </p>
+          ) : access ? (
+            <CourseOutline courseId={courseId} lessons={lessons} />
+          ) : (
+            <CourseOutline
+              courseId={courseId}
+              lessons={lessons.map((l) => ({ ...l, locked: false }))}
+              preview
+            />
+          )}
+        </section>
+      )}
 
       {access && (
         <Link
