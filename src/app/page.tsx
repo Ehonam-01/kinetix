@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { db } from "@/db/client";
 import { listPublishedCoursesForMarketing } from "@/repositories/courses";
-import { getLaunchOffer } from "@/services/pricing/launch-offer";
+import {
+  getLaunchOffer,
+  lastLaunchDayLabel,
+} from "@/services/pricing/launch-offer";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
@@ -13,6 +16,7 @@ import { AiSection } from "./_components/ai-section";
 import { CommunityMentorshipSection } from "./_components/community-mentorship-section";
 import { ProjectsOpportunitiesSection } from "./_components/projects-opportunities-section";
 import { HowItWorks } from "./_components/how-it-works";
+import { LaunchOfferPopup } from "./_components/launch-offer-popup";
 import { PricingSection } from "./_components/pricing-section";
 import { LearnerAmbassadorSection } from "./_components/learner-ambassador-section";
 import { AmbassadorSection } from "./_components/ambassador-section";
@@ -77,6 +81,16 @@ export default async function HomePage() {
         <FinalCta />
       </main>
       <Footer />
+      {launchOffer.nextPrice !== null && (
+        <LaunchOfferPopup
+          price={launchOffer.price}
+          nextPrice={launchOffer.nextPrice}
+          endsAt={launchOffer.endsAt}
+          lastDayLabel={
+            launchOffer.endsAt ? lastLaunchDayLabel(launchOffer.endsAt) : null
+          }
+        />
+      )}
     </>
   );
 }
