@@ -100,7 +100,7 @@ export function RegisterForm({
             <Input
               id="sponsorUsername"
               autoComplete="off"
-              placeholder="kofi_mensah"
+              placeholder="kofi"
               required
               {...register("sponsorUsername")}
             />
@@ -141,7 +141,7 @@ export function RegisterForm({
             <Input
               id="username"
               autoComplete="off"
-              placeholder="ama_mensah"
+              placeholder="ama"
               {...register("username")}
             />
             {errors.username && (
