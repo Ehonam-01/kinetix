@@ -100,6 +100,7 @@ export function RegisterForm({
             <Input
               id="sponsorUsername"
               autoComplete="off"
+              placeholder="kofi_mensah"
               required
               {...register("sponsorUsername")}
             />
@@ -126,6 +127,7 @@ export function RegisterForm({
             <Input
               id="fullName"
               autoComplete="name"
+              placeholder="Ama Kossiwa Mensah"
               {...register("fullName")}
             />
             {errors.fullName && (
@@ -136,7 +138,12 @@ export function RegisterForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="username">Pseudo</Label>
-            <Input id="username" autoComplete="off" {...register("username")} />
+            <Input
+              id="username"
+              autoComplete="off"
+              placeholder="ama_mensah"
+              {...register("username")}
+            />
             {errors.username && (
               <p className="text-destructive text-sm">
                 {errors.username.message}
@@ -149,6 +156,7 @@ export function RegisterForm({
               id="email"
               type="email"
               autoComplete="email"
+              placeholder="ama.mensah@gmail.com"
               {...register("email")}
             />
             {errors.email && (
@@ -180,6 +188,7 @@ export function RegisterForm({
             <PasswordInput
               id="password"
               autoComplete="new-password"
+              placeholder="8 caractères minimum"
               {...register("password")}
             />
             {errors.password && (
