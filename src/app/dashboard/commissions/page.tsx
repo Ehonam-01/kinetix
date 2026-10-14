@@ -10,13 +10,16 @@ import { listSubscriptionsForAmbassador } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { getSiteEnv } from "@/config/env.site";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
-import { ReferralLinkCard } from "./referral-link-card";
+import Link from "next/link";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card";
+  ArrowDownToLine,
+  ArrowLeftRight,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ReferralLinkCard } from "./referral-link-card";
 
 const TYPE_LABEL: Record<string, string> = {
   DIRECT_COMMISSION: "Commission directe",
@@ -72,31 +75,74 @@ export default async function CommissionsPage() {
         />
       )}
 
-      <div className="grid grid-cols-3 gap-3">
-        <Card size="sm">
-          <CardContent className="space-y-1">
-            <CardDescription>Solde disponible</CardDescription>
-            <CardTitle className="text-lg">
-              {balance.availableBalance.toLocaleString("fr-FR")} F
-            </CardTitle>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent className="space-y-1">
-            <CardDescription>Total retiré</CardDescription>
-            <CardTitle className="text-lg">
-              {balance.withdrawnBalance.toLocaleString("fr-FR")} F
-            </CardTitle>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent className="space-y-1">
-            <CardDescription>Gains cumulés</CardDescription>
-            <CardTitle className="text-lg">
-              {balance.lifetimeEarnings.toLocaleString("fr-FR")} F
-            </CardTitle>
-          </CardContent>
-        </Card>
+      {/* The available balance first and large — it's what the member can
+          withdraw or transfer now — the two totals beside it. */}
+      <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+        <div className="from-primary to-primary/75 text-primary-foreground relative overflow-hidden rounded-2xl bg-linear-to-br p-5 shadow-lg sm:p-6">
+          <div
+            aria-hidden="true"
+            className="bg-brand-accent/30 absolute -top-10 -right-10 size-40 rounded-full blur-2xl"
+          />
+          <div className="relative">
+            <p className="flex items-center gap-2 text-sm font-medium text-white/80">
+              <Wallet className="size-4" />
+              Solde disponible
+            </p>
+            <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums sm:text-5xl">
+              {balance.availableBalance.toLocaleString("fr-FR")}
+              <span className="ml-1.5 text-2xl font-semibold text-white/80">
+                F
+              </span>
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                href="/dashboard/withdrawals"
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "bg-background text-foreground hover:bg-background/90",
+                )}
+              >
+                <ArrowDownToLine className="size-4" />
+                Retirer
+              </Link>
+              <Link
+                href="/dashboard/transfer"
+                className={cn(
+                  buttonVariants({ size: "sm", variant: "outline" }),
+                  "border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white",
+                )}
+              >
+                <ArrowLeftRight className="size-4" />
+                Transférer
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <ArrowDownToLine className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-xs">Total retiré</p>
+              <p className="text-xl font-bold wrap-break-word tabular-nums">
+                {balance.withdrawnBalance.toLocaleString("fr-FR")} F
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <TrendingUp className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-xs">Gains cumulés</p>
+              <p className="text-xl font-bold wrap-break-word tabular-nums">
+                {balance.lifetimeEarnings.toLocaleString("fr-FR")} F
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {transactions.length === 0 ? (
