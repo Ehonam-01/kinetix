@@ -7,6 +7,7 @@ import { setMemberStatus } from "@/services/admin/set-member-status";
 import { confirmAccountDeletion } from "@/services/account/confirm-account-deletion";
 import { requestAccountDeletion } from "@/services/account/request-account-deletion";
 import { grantSubscriptionCredit } from "@/services/subscriptions/grant-subscription-credit";
+import { sendSubscriptionReminder } from "@/services/admin/send-subscription-reminder";
 
 export async function setMemberStatusAction(
   userId: string,
@@ -62,5 +63,20 @@ export async function confirmMemberDeletionAction(
   }
   revalidatePath(`/admin/members/${userId}`);
   revalidatePath("/admin/members");
+  return { error: null };
+}
+
+// Email nudge to pay the subscription (services/admin/
+// send-subscription-reminder.ts — once a day per member at most).
+export async function sendSubscriptionReminderAction(userId: string) {
+  const { profile } = await requireAdmin();
+  try {
+    await sendSubscriptionReminder(profile.id, userId);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePath(`/admin/members/${userId}`);
   return { error: null };
 }

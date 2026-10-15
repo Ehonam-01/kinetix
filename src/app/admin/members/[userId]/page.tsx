@@ -21,6 +21,14 @@ import {
 } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
+import { SubscriptionReminder } from "./subscription-reminder";
+import {
+  getLastSubscriptionReminder,
+  reminderKindFor,
+  subscriptionReminderText,
+} from "@/services/admin/send-subscription-reminder";
+import { getLaunchOffer } from "@/services/pricing/launch-offer";
+import { whatsappHref } from "@/lib/whatsapp";
 import { StatusActionButton } from "./status-action-button";
 import { requireAdmin } from "@/services/auth/current-user";
 
@@ -67,6 +75,35 @@ export default async function AdminMemberDetailPage(
     getNetworkView(db, userId, 2),
     getSubscriptionStatus(db, userId),
   ]);
+
+  // "Relancer": only for a member who can still pay by themselves.
+  const reminderKind = await reminderKindFor(userId);
+  const reminder =
+    reminderKind && member.status !== "DELETED"
+      ? await (async () => {
+          const [last, offer] = await Promise.all([
+            getLastSubscriptionReminder(userId),
+            getLaunchOffer(db),
+          ]);
+          const firstName = member.fullName.trim().split(/\s+/)[0] ?? "";
+          return {
+            lastLabel: last
+              ? last.toLocaleString("fr-FR", {
+                  dateStyle: "long",
+                  timeStyle: "short",
+                })
+              : null,
+            whatsappUrl: member.phone
+              ? whatsappHref(
+                  member.phone,
+                  subscriptionReminderText(firstName, reminderKind, offer).join(
+                    "\n\n",
+                  ),
+                )
+              : null,
+          };
+        })()
+      : null;
 
   const currentLevel = levelProgress
     .filter((l) => l.status !== "LOCKED")
@@ -162,6 +199,15 @@ export default async function AdminMemberDetailPage(
             <GrantSubscriptionButton userId={member.id} />
           )}
         </CardHeader>
+        {reminder && (
+          <CardContent>
+            <SubscriptionReminder
+              userId={member.id}
+              whatsappUrl={reminder.whatsappUrl}
+              lastReminderLabel={reminder.lastLabel}
+            />
+          </CardContent>
+        )}
       </Card>
 
       {network && (

@@ -33,11 +33,7 @@ export function DeleteAccountButton({ userId }: { userId: string }) {
     setError(null);
     if (!requestId) return;
     startTransition(async () => {
-      const result = await confirmMemberDeletionAction(
-        userId,
-        requestId,
-        code,
-      );
+      const result = await confirmMemberDeletionAction(userId, requestId, code);
       if (result.error) setError(result.error);
     });
   }
@@ -45,7 +41,11 @@ export function DeleteAccountButton({ userId }: { userId: string }) {
   if (step === "idle") {
     return (
       <div className="space-y-2">
-        <Button variant="destructive" disabled={pending} onClick={handleRequest}>
+        <Button
+          variant="destructive"
+          disabled={pending}
+          onClick={handleRequest}
+        >
           {pending ? "Envoi..." : "Supprimer ce compte"}
         </Button>
         {error && <p className="text-destructive text-sm">{error}</p>}

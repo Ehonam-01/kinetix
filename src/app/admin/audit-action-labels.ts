@@ -40,4 +40,5 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SUPPORT_TICKET_REOPENED: "Ticket support rouvert",
   PRICE_CHANGE_SCHEDULED: "Changement de prix programmé",
   PRICE_CHANGE_CANCELLED: "Changement de prix annulé",
+  SUBSCRIPTION_REMINDER_SENT: "Relance d'abonnement envoyée (email)",
 };
