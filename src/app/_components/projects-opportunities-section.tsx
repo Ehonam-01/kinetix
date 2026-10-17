@@ -1,4 +1,4 @@
-import { FolderKanban, Target } from "lucide-react";
+import { ArrowUpRight, Briefcase, FolderKanban, Target } from "lucide-react";
 import { ComingSoonSection } from "./coming-soon-section";
 
 export function ProjectsOpportunitiesSection() {
@@ -33,6 +33,30 @@ export function ProjectsOpportunitiesSection() {
             brief:
               "Photo évoquant une mission, un stage ou une collaboration réelle décrochée via Kinetix.",
           },
+          // What's learned on Kinetix can be sold as a freelancer on
+          // Edossimé, the pan-African freelance marketplace.
+          extra: (
+            <div className="border-brand-accent/30 bg-brand-accent/10 mt-5 w-full rounded-2xl border p-4 text-left">
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <Briefcase className="text-brand-accent size-4 shrink-0" />
+                Vends tes compétences en freelance
+              </p>
+              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+                Les compétences acquises sur Kinetix, tu peux les proposer à des
+                clients comme freelance sur Edossimé, la marketplace freelance
+                panafricaine.
+              </p>
+              <a
+                href="https://www.edossime.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand-accent mt-2 inline-flex items-center gap-1 text-sm font-semibold hover:underline"
+              >
+                Découvrir Edossimé
+                <ArrowUpRight className="size-4" />
+              </a>
+            </div>
+          ),
         },
       ]}
     />

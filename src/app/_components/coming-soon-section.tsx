@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,6 +16,9 @@ export type ComingSoonCard = {
   // until the file exists in /public, see media-slot.tsx). Optional: a
   // card with no image keeps the icon-only layout.
   image?: { src: string; alt: string; brief: string };
+  // Shown under the description (e.g. a link to a partner site). Only on a
+  // card without href: a link can't contain another link.
+  extra?: ReactNode;
 };
 
 // Shared shell for the two "vision" sections (Communauté/Mentorat,
@@ -83,6 +87,7 @@ export function ComingSoonSection({
                   <p className="text-muted-foreground mt-3 text-base leading-relaxed">
                     {card.description}
                   </p>
+                  {card.extra}
                 </>
               );
               const className =
