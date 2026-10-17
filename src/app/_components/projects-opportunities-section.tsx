@@ -29,7 +29,7 @@ export function ProjectsOpportunitiesSection() {
             "Missions, freelancing, stages et collaborations proposés au sein de la communauté Kinetix.",
           image: {
             src: "/opportunities-photo.jpg",
-            alt: "Une opportunité concrétisée via Kinetix",
+            alt: "Edossimé, la marketplace freelance panafricaine où proposer ses compétences",
             brief:
               "Photo évoquant une mission, un stage ou une collaboration réelle décrochée via Kinetix.",
           },
