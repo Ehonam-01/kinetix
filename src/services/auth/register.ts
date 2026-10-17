@@ -23,7 +23,7 @@ async function findPlatformSponsor() {
 
 export async function registerUser(
   input: RegisterInput,
-  extra: { goal?: GoalValue | null } = {},
+  extra: { goal?: GoalValue | null; marketingVisitId?: string | null } = {},
 ) {
   const {
     fullName,
@@ -106,6 +106,11 @@ export async function registerUser(
         // Kept with the account: the new member declared having no sponsor
         // (the answer to a member claiming them later).
         ...(declaredNoSponsor ? { declared_no_sponsor: true } : {}),
+        // The campaign visit the sign-up came from (copied to
+        // signup_sources when the profile is created).
+        ...(extra.marketingVisitId
+          ? { mkt_visit: extra.marketingVisitId }
+          : {}),
       },
       emailRedirectTo: `${origin}/auth/callback`,
     },

@@ -40,6 +40,8 @@ const LIMITS = {
   lessonPost: { tokens: 5, window: "1 m" },
   // Browsers reporting CSP violations (app/api/csp-report), per IP.
   cspReport: { tokens: 20, window: "1 m" },
+  // Campaign arrivals recorded (app/api/marketing/visit), per IP.
+  marketingVisit: { tokens: 20, window: "1 m" },
   // Support tickets and replies, per member.
   supportMessage: { tokens: 10, window: "15 m" },
 } as const satisfies Record<

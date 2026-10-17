@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  BarChart3,
   BookOpen,
   CalendarClock,
   Compass,
@@ -33,6 +34,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin/members", label: "Membres", icon: Users },
   { href: "/admin/recharge", label: "Recharger un compte", icon: HandCoins },
   { href: "/admin/payments", label: "Paiements", icon: CreditCard },
+  { href: "/admin/marketing", label: "Marketing", icon: BarChart3 },
   {
     href: "/admin/subscriptions",
     label: "Abonnements",

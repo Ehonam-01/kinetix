@@ -41,4 +41,5 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PRICE_CHANGE_SCHEDULED: "Changement de prix programmé",
   PRICE_CHANGE_CANCELLED: "Changement de prix annulé",
   SUBSCRIPTION_REMINDER_SENT: "Relance d'abonnement envoyée (email)",
+  META_PIXEL_UPDATED: "Pixel Meta modifié",
 };

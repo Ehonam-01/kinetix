@@ -8,6 +8,10 @@ import {
   lookupSponsorByUsername,
   registerUser,
 } from "@/services/auth/register";
+import {
+  MARKETING_COOKIE_NAME,
+  parseMarketingCookie,
+} from "@/services/marketing/campaign-tracking";
 
 export async function registerAction(input: unknown) {
   const parsed = registerSchema.safeParse(input);
@@ -22,7 +26,12 @@ export async function registerAction(input: unknown) {
   const rawGoal = cookieStore.get(GOAL_COOKIE_NAME)?.value;
   const goal = isGoalValue(rawGoal) ? rawGoal : null;
 
-  const result = await registerUser(parsed.data, { goal });
+  // The campaign this visitor came from, if any (Admin → Marketing).
+  const marketingVisitId =
+    parseMarketingCookie(cookieStore.get(MARKETING_COOKIE_NAME)?.value)
+      ?.firstVisitId ?? null;
+
+  const result = await registerUser(parsed.data, { goal, marketingVisitId });
   if (!result.error && goal) cookieStore.delete(GOAL_COOKIE_NAME);
   return result;
 }

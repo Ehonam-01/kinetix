@@ -10,6 +10,8 @@ import {
 import { ThemeProvider } from "@/components/theme-provider";
 import { SITE_NAME } from "@/config/site";
 import "./globals.css";
+import { CampaignTracker } from "@/components/marketing/campaign-tracker";
+import { MarketingConsent } from "@/components/marketing/marketing-consent";
 
 // Sets the .dark class on <html> before the browser paints, matching the
 // storage key theme-provider.tsx reads/writes — see InlineScript for why
@@ -73,6 +75,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>{children}</ThemeProvider>
         <ServiceWorkerRegister />
         <LaunchScreen />
+        <CampaignTracker />
+        <MarketingConsent />
       </body>
     </html>
   );

@@ -213,6 +213,9 @@ export default function ConfidentialitePage() {
           <li>
             <strong>Cookie de parrainage</strong> : 180 jours au maximum.
           </li>
+          <li>
+            <strong>Cookie de campagne</strong> : 30 jours.
+          </li>
         </List>
       </Section>
 
@@ -227,10 +230,7 @@ export default function ConfidentialitePage() {
       </Section>
 
       <Section title="8. Cookies et stockage local">
-        <p>
-          Nous n&apos;utilisons ni cookie publicitaire ni outil de mesure
-          d&apos;audience. Nous utilisons uniquement :
-        </p>
+        <p>Nous utilisons :</p>
         <List>
           <li>des cookies de session, indispensables pour rester connecté ;</li>
           <li>
@@ -239,8 +239,24 @@ export default function ConfidentialitePage() {
             souscription ;
           </li>
           <li>
+            un cookie de campagne, déposé lorsque vous arrivez par l&apos;une de
+            nos publicités ou depuis un autre site, pour savoir quelle campagne
+            vous a fait découvrir Kinetix Africa (nom de la campagne, page
+            d&apos;arrivée, site d&apos;origine — rien qui vous identifie
+            directement) ; il est rattaché à votre compte si vous vous inscrivez
+            ;
+          </li>
+          <li>
+            <strong>le pixel de Meta (Facebook)</strong>, uniquement si vous
+            l&apos;acceptez dans le bandeau qui s&apos;affiche à votre première
+            visite : il mesure l&apos;efficacité de nos publicités (pages vues,
+            inscription terminée, abonnement payé) et transmet ces informations
+            à Meta. Vous pouvez le refuser sans que cela change quoi que ce soit
+            à votre utilisation du site ;
+          </li>
+          <li>
             un stockage local dans votre navigateur pour mémoriser le thème
-            clair ou sombre.
+            clair ou sombre et votre choix concernant le pixel.
           </li>
         </List>
         <p>
