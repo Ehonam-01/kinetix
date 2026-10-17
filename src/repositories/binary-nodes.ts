@@ -108,3 +108,18 @@ export async function searchDescendantsByUsername(
     LIMIT ${limit}
   `);
 }
+
+// The member at the top of the network — the platform's own account. New
+// members who sign up without a sponsor pseudo are attached to it
+// (services/auth/register.ts).
+export async function findNetworkRootUserId(
+  executor: Executor,
+): Promise<string | null> {
+  const rows = await executor.execute<{ userId: string }>(sql`
+    SELECT user_id AS "userId" FROM binary_nodes
+    WHERE nlevel(path) = 1
+    ORDER BY placed_at
+    LIMIT 1
+  `);
+  return rows[0]?.userId ?? null;
+}

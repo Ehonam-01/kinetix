@@ -9,34 +9,48 @@ export const usernameSchema = z
   .max(20, "20 caractères maximum")
   .regex(/^[a-z0-9_]+$/, "Lettres minuscules, chiffres et _ uniquement");
 
-export const registerSchema = z.object({
-  fullName: z.string().trim().min(2, "Nom trop court").max(120),
-  username: usernameSchema,
-  email: z.string().trim().email("Email invalide"),
-  // Stored as international digits (lib/whatsapp.ts); shown to the
-  // member's upline so their sponsors can reach them.
-  whatsapp: z.string().transform((value, ctx) => {
-    const digits = toWhatsappDigits(value);
-    if (!digits) {
-      ctx.addIssue({ code: "custom", message: WHATSAPP_FORMAT_ERROR });
-      return z.NEVER;
+export const registerSchema = z
+  .object({
+    fullName: z.string().trim().min(2, "Nom trop court").max(120),
+    username: usernameSchema,
+    email: z.string().trim().email("Email invalide"),
+    // Stored as international digits (lib/whatsapp.ts); shown to the
+    // member's upline so their sponsors can reach them.
+    whatsapp: z.string().transform((value, ctx) => {
+      const digits = toWhatsappDigits(value);
+      if (!digits) {
+        ctx.addIssue({ code: "custom", message: WHATSAPP_FORMAT_ERROR });
+        return z.NEVER;
+      }
+      return digits;
+    }),
+    password: z.string().min(8, "8 caractères minimum").max(72),
+    // The sponsor's pseudo — or, for someone who came to the site on their
+    // own, the explicit "Je n'ai pas de parrain" box (noSponsor): they're
+    // then attached to the platform's own account, the root of the network
+    // (services/auth/register.ts). One of the two is required (refine below):
+    // an empty field alone isn't enough, so a member can't later claim a
+    // signup they forgot to tell their contact to name them in — the new
+    // member declared having no sponsor. It used to be mandatory, which left
+    // those visitors writing to support just to get a pseudo.
+    sponsorUsername: usernameSchema.optional().or(z.literal("")),
+    noSponsor: z.boolean().optional(),
+    // "Devenir ambassadeur" checkbox (register-form.tsx) — an intent captured
+    // now, acted on later once the subscription payment actually confirms
+    // (services/subscriptions/confirm-subscription-payment.ts): payment is
+    // mandatory before anyone can join the program.
+    wantsAmbassador: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.sponsorUsername && !data.noSponsor) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sponsorUsername"],
+        message:
+          "Indique le pseudo de ton parrain, ou coche « Je n'ai pas de parrain ».",
+      });
     }
-    return digits;
-  }),
-  password: z.string().min(8, "8 caractères minimum").max(72),
-  // Mandatory — business decision: every new member must be sponsored by an
-  // existing one, no organic/unsponsored signups (the platform's own root
-  // account predates this rule and isn't affected). Identified by pseudo,
-  // not email (section: registration form) — the same handle a referral
-  // link already uses, and the one a new member is actually likely to know
-  // off the top of their head.
-  sponsorUsername: usernameSchema,
-  // "Devenir ambassadeur" checkbox (register-form.tsx) — an intent captured
-  // now, acted on later once the subscription payment actually confirms
-  // (services/subscriptions/confirm-subscription-payment.ts): payment is
-  // mandatory before anyone can join the program.
-  wantsAmbassador: z.boolean().optional(),
-});
+  });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({

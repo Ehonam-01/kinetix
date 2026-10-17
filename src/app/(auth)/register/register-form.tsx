@@ -36,6 +36,7 @@ export function RegisterForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -43,6 +44,7 @@ export function RegisterForm({
   });
 
   const sponsorUsername = watch("sponsorUsername");
+  const noSponsor = watch("noSponsor") ?? false;
   const [sponsorName, setSponsorName] = useState<string | null>(null);
   // Which trimmed pseudo sponsorName actually answers — lets the render
   // below tell "no match for the current input" apart from "haven't
@@ -101,7 +103,7 @@ export function RegisterForm({
               id="sponsorUsername"
               autoComplete="off"
               placeholder="kofi"
-              required
+              disabled={noSponsor}
               {...register("sponsorUsername")}
             />
             {errors.sponsorUsername && (
@@ -122,6 +124,34 @@ export function RegisterForm({
                 </p>
               ))}
           </div>
+          {/* Coming on their own: an explicit choice, never just an empty
+              field (schemas/auth.ts). */}
+          {!defaultSponsorUsername && (
+            <label className="border-border flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm">
+              <input
+                type="checkbox"
+                className="accent-primary mt-0.5 size-4"
+                checked={noSponsor}
+                onChange={(e) => {
+                  setValue("noSponsor", e.target.checked, {
+                    shouldValidate: true,
+                  });
+                  if (e.target.checked) {
+                    setValue("sponsorUsername", "", { shouldValidate: true });
+                  }
+                }}
+              />
+              <span>
+                <span className="font-medium">Je n&apos;ai pas de parrain</span>
+                <span className="text-muted-foreground mt-0.5 block text-xs">
+                  Personne ne m&apos;a recommandé Kinetix : je serai
+                  accompagné(e) directement par l&apos;équipe Kinetix Africa.{" "}
+                  <strong>Ce choix ne pourra pas être modifié</strong> après
+                  l&apos;inscription.
+                </span>
+              </span>
+            </label>
+          )}
           <div className="space-y-2">
             <Label htmlFor="fullName">Nom complet</Label>
             <Input
@@ -203,8 +233,8 @@ export function RegisterForm({
             </legend>
             <p className="text-muted-foreground text-xs">
               Gratuit, sans obligation d&apos;achat ni de recrutement. Activé
-              automatiquement dès que l&apos;abonnement est payé (un pseudo de
-              parrain ambassadeur actif est alors requis ci-dessus).
+              automatiquement dès que l&apos;abonnement est payé (si tu indiques
+              un parrain, il doit être lui-même ambassadeur actif).
             </p>
             <div className="flex gap-4 text-sm">
               <label className="flex items-center gap-2">

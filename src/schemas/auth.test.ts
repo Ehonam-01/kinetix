@@ -88,23 +88,37 @@ describe("registerSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects a registration with no sponsor pseudo — mandatory, no organic signups", () => {
-    const result = registerSchema.safeParse({
+  it("requires a sponsor pseudo or the explicit no-sponsor box", () => {
+    const base = {
       fullName: "Ama Koffi",
       username: "ama_k",
       email: "ama@example.com",
+      whatsapp: "+228 90 00 00 00",
       password: "supersecret1",
-    });
-    expect(result.success).toBe(false);
+    };
+    // An empty field alone isn't a choice.
+    expect(registerSchema.safeParse(base).success).toBe(false);
+    expect(
+      registerSchema.safeParse({ ...base, sponsorUsername: "" }).success,
+    ).toBe(false);
+    // "Je n'ai pas de parrain" ticked: accepted, attached to the platform.
+    expect(
+      registerSchema.safeParse({
+        ...base,
+        sponsorUsername: "",
+        noSponsor: true,
+      }).success,
+    ).toBe(true);
   });
 
-  it("rejects an empty sponsor pseudo", () => {
+  it("still rejects a sponsor pseudo that isn't a valid pseudo", () => {
     const result = registerSchema.safeParse({
       fullName: "Ama Koffi",
       username: "ama_k",
       email: "ama@example.com",
+      whatsapp: "+228 90 00 00 00",
       password: "supersecret1",
-      sponsorUsername: "",
+      sponsorUsername: "pa pa!",
     });
     expect(result.success).toBe(false);
   });

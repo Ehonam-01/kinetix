@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getTrustedOrigin } from "@/lib/trusted-origin";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { profiles } from "@/db/schema/profiles";
 import { isPasswordPwned, PWNED_PASSWORD_MESSAGE } from "@/lib/pwned-password";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -10,7 +11,15 @@ import {
   findProfileByUsername,
 } from "@/repositories/profiles";
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
+import { findNetworkRootUserId } from "@/repositories/binary-nodes";
 import type { GoalValue } from "@/config/goals";
+
+// The platform's own account: the root of the network.
+async function findPlatformSponsor() {
+  const rootId = await findNetworkRootUserId(db);
+  if (!rootId) return null;
+  return db.query.profiles.findFirst({ where: eq(profiles.id, rootId) });
+}
 
 export async function registerUser(
   input: RegisterInput,
@@ -23,6 +32,7 @@ export async function registerUser(
     whatsapp,
     password,
     sponsorUsername,
+    noSponsor,
     wantsAmbassador,
   } = registerSchema.parse(input);
 
@@ -33,9 +43,19 @@ export async function registerUser(
   // through this form names an existing member, no "no sponsor" case left
   // to handle here (the platform's own root account was created before
   // this rule existed).
-  const sponsorProfile = await findProfileByUsername(sponsorUsername);
+  // No pseudo, "Je n'ai pas de parrain" ticked (the schema requires one or
+  // the other): the visitor came on their own, and is attached to the
+  // platform's own account — the root of the network.
+  const sponsorProfile = sponsorUsername
+    ? await findProfileByUsername(sponsorUsername)
+    : await findPlatformSponsor();
+  const declaredNoSponsor = !sponsorUsername && noSponsor === true;
   if (!sponsorProfile) {
-    return { error: "Pseudo de parrain introuvable." };
+    return {
+      error: sponsorUsername
+        ? "Pseudo de parrain introuvable."
+        : "Inscription momentanément impossible. Réessayez dans un instant ou contactez-nous.",
+    };
   }
   const sponsorId = sponsorProfile.id;
 
@@ -83,6 +103,9 @@ export async function registerUser(
         wants_ambassador: wantsAmbassador ?? false,
         whatsapp,
         ...(extra.goal ? { goal: extra.goal } : {}),
+        // Kept with the account: the new member declared having no sponsor
+        // (the answer to a member claiming them later).
+        ...(declaredNoSponsor ? { declared_no_sponsor: true } : {}),
       },
       emailRedirectTo: `${origin}/auth/callback`,
     },
