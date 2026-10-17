@@ -14,10 +14,10 @@ export function ProjectsOpportunitiesSection() {
           icon: FolderKanban,
           title: "Projets",
           description:
-            "Présenter un projet, rechercher des compétences précises (développement, design, marketing) et trouver des collaborateurs.",
+            "Des ateliers pratiques de vibe coding pour les membres : de l'idée à ton premier SaaS avec l'IA, accompagné pas à pas. Présente ton projet, trouve les compétences qui te manquent et des collaborateurs.",
           image: {
             src: "/projects-photo.jpg",
-            alt: "Membres Kinetix travaillant sur un projet",
+            alt: "Atelier pratique de vibe coding Kinetix Africa : des membres créent leur SaaS avec l'IA",
             brief:
               "Photo ou capture d'écran : un vrai projet en cours, des membres qui construisent ensemble.",
           },
