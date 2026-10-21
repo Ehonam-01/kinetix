@@ -498,6 +498,13 @@
       "when": 1792232791878,
       "tag": "0070_marketing",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1792578259268,
+      "tag": "0071_trainer_profiles",
+      "breakpoints": true
     }
   ]
 }

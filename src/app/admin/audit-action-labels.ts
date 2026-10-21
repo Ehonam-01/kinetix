@@ -42,4 +42,6 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PRICE_CHANGE_CANCELLED: "Changement de prix annulé",
   SUBSCRIPTION_REMINDER_SENT: "Relance d'abonnement envoyée (email)",
   META_PIXEL_UPDATED: "Pixel Meta modifié",
+  TRAINER_REQUEST_APPROVED: "Formateur validé",
+  TRAINER_REQUEST_REJECTED: "Candidature de formateur refusée",
 };

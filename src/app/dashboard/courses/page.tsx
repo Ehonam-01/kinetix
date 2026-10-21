@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, PlayCircle } from "lucide-react";
+import { ArrowRight, PlayCircle, Presentation } from "lucide-react";
 import { db } from "@/db/client";
 import { listCoursesForUser, type CourseSummary } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
@@ -18,7 +18,10 @@ function percentOf(course: CourseSummary) {
 function actionLabel(course: CourseSummary) {
   if (course.comingSoon) return "Disponible bientôt";
   if (!course.accessible) return "Voir la formation";
-  if (course.totalLessons > 0 && course.completedLessons === course.totalLessons)
+  if (
+    course.totalLessons > 0 &&
+    course.completedLessons === course.totalLessons
+  )
     return "Revoir";
   return course.completedLessons > 0 ? "Reprendre" : "Commencer";
 }
@@ -176,6 +179,25 @@ export default async function CoursesPage(
           })}
         </div>
       )}
+      {/* Members with something to teach: become a trainer. */}
+      <Link
+        href="/dashboard/become-trainer"
+        className="border-brand-accent/30 bg-brand-accent/5 hover:bg-brand-accent/10 flex items-center gap-4 rounded-2xl border p-5 transition-colors"
+      >
+        <div className="bg-brand-accent/15 text-brand-accent flex size-11 shrink-0 items-center justify-center rounded-xl">
+          <Presentation className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">
+            Tu maîtrises un sujet ? Deviens formateur
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Propose ta formation : l&apos;équipe t&apos;accompagne pour la
+            préparer et la mettre en ligne.
+          </p>
+        </div>
+        <ArrowRight className="text-muted-foreground size-4 shrink-0" />
+      </Link>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { accountDeletionRequests } from "@/db/schema/account-deletion-requests";
 import { orientationRequests } from "@/db/schema/orientation-requests";
 import { profiles } from "@/db/schema/profiles";
 import { supportTickets } from "@/db/schema/support-tickets";
+import { trainerProfiles } from "@/db/schema/trainer-profiles";
 import { logAdminAction } from "@/services/admin/audit-log";
 import { MAX_OTP_ATTEMPTS, verifyOtpCode } from "@/services/wallet/otp";
 import { lockAuthAccount } from "./lock-auth-account";
@@ -119,6 +120,10 @@ export async function confirmAccountDeletion(
     await tx
       .delete(supportTickets)
       .where(eq(supportTickets.userId, request.targetUserId));
+    // And their trainer application (course proposal, experience).
+    await tx
+      .delete(trainerProfiles)
+      .where(eq(trainerProfiles.userId, request.targetUserId));
 
     await logAdminAction(tx, {
       actorUserId: requesterUserId,

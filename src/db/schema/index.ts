@@ -34,3 +34,4 @@ export * from "./orientation-requests";
 export * from "./support-tickets";
 export * from "./launch-offer-reminders";
 export * from "./marketing";
+export * from "./trainer-profiles";
