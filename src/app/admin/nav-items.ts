@@ -19,6 +19,7 @@ import {
   ReceiptText,
   ScrollText,
   SlidersHorizontal,
+  Star,
   TrendingUp,
   Users,
   type LucideIcon,
@@ -59,6 +60,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/courses", label: "Cours", icon: BookOpen },
   { href: "/admin/discussions", label: "Discussions", icon: MessagesSquare },
+  { href: "/admin/reviews", label: "Avis des formations", icon: Star },
   { href: "/admin/parameters", label: "Paramètres", icon: SlidersHorizontal },
   { href: "/admin/audit-logs", label: "Journal d'audit", icon: ScrollText },
 ];

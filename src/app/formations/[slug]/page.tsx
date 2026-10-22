@@ -5,6 +5,10 @@ import { getPublicCourse } from "@/repositories/courses";
 import { SITE_NAME } from "@/config/site";
 import { getSiteEnv } from "@/config/env.site";
 import { PublicCourseView } from "./public-course-view";
+import {
+  getRatingSummaries,
+  listCourseReviews,
+} from "@/services/lms/course-reviews";
 
 // Every page is generated on its first visit, then served statically and
 // refreshed at most every 10 minutes (ISR) — same window as the homepage
@@ -63,10 +67,17 @@ export default async function PublicCoursePage(
     permanentRedirect(`/formations/${course.slug}`);
   }
 
+  const [ratings, reviews] = await Promise.all([
+    getRatingSummaries(db, [course.id]),
+    listCourseReviews(db, course.id, 10),
+  ]);
+
   return (
     <PublicCourseView
       content={content}
       shareUrl={`${getSiteEnv().SITE_URL}/formations/${course.slug ?? course.id}`}
+      rating={ratings.get(course.id) ?? null}
+      reviews={reviews}
     />
   );
 }

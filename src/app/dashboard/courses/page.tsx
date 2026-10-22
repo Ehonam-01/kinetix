@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, PlayCircle, Presentation } from "lucide-react";
+import { ArrowRight, PlayCircle, Presentation, Star } from "lucide-react";
+import { getRatingSummaries } from "@/services/lms/course-reviews";
 import { db } from "@/db/client";
 import { listCoursesForUser, type CourseSummary } from "@/repositories/courses";
 import { requireUser } from "@/services/auth/current-user";
@@ -41,6 +42,11 @@ export default async function CoursesPage(
   const query = typeof q === "string" ? q.trim().toLowerCase() : "";
 
   const allCourses = await listCoursesForUser(db, profile.id);
+  // Learners' average rating per course (shown once a course has reviews).
+  const ratings = await getRatingSummaries(
+    db,
+    allCourses.map((c) => c.id),
+  );
   const courses = query
     ? allCourses.filter(
         (c) =>
@@ -133,6 +139,21 @@ export default async function CoursesPage(
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <h2 className="leading-snug font-semibold">{course.title}</h2>
+                  {ratings.get(course.id) && (
+                    <p className="mt-1 flex items-center gap-1 text-xs">
+                      <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                      <span className="font-semibold tabular-nums">
+                        {ratings
+                          .get(course.id)!
+                          .average.toLocaleString("fr-FR", {
+                            maximumFractionDigits: 1,
+                          })}
+                      </span>
+                      <span className="text-muted-foreground">
+                        ({ratings.get(course.id)!.count} avis)
+                      </span>
+                    </p>
+                  )}
                   {course.description && (
                     <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
                       {course.description}

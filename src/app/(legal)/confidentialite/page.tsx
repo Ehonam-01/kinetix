@@ -62,6 +62,12 @@ export default function ConfidentialitePage() {
             conseiller, et effacées si vous supprimez votre compte.
           </li>
           <li>
+            <strong>Avis sur les formations</strong> (facultatif) : votre note
+            et votre commentaire, affichés avec votre prénom sur la page de la
+            formation, y compris sa page publique. Vous pouvez les modifier ou
+            les supprimer à tout moment.
+          </li>
+          <li>
             <strong>Tickets de support</strong> : vos demandes et nos réponses,
             conservées pour le suivi et effacées si vous supprimez votre compte.
           </li>

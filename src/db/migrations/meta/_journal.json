@@ -505,6 +505,13 @@
       "when": 1792578259268,
       "tag": "0071_trainer_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1792658533801,
+      "tag": "0072_course_reviews",
+      "breakpoints": true
     }
   ]
 }

@@ -44,4 +44,6 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   META_PIXEL_UPDATED: "Pixel Meta modifié",
   TRAINER_REQUEST_APPROVED: "Formateur validé",
   TRAINER_REQUEST_REJECTED: "Candidature de formateur refusée",
+  COURSE_REVIEW_HIDDEN: "Avis de formation masqué",
+  COURSE_REVIEW_RESTORED: "Avis de formation réaffiché",
 };
