@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,26 +10,74 @@ import {
   verifyMfaAction,
 } from "./actions";
 
+// The 6-digit code. As soon as the 6th digit is typed (or the code is
+// pasted), onComplete runs: no need to press the button, which stays as a
+// fallback.
 function CodeField({
   code,
   onChange,
+  onComplete,
+  disabled,
+  inputRef,
 }: {
   code: string;
   onChange: (value: string) => void;
+  onComplete: (code: string) => void;
+  disabled?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
 }) {
   return (
     <div className="space-y-2">
       <Label htmlFor="mfa-code">Code à 6 chiffres</Label>
       <Input
         id="mfa-code"
+        ref={inputRef}
         inputMode="numeric"
         autoComplete="one-time-code"
+        autoFocus
         maxLength={6}
         value={code}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+        disabled={disabled}
+        className="text-center text-lg tracking-[0.4em]"
+        onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+          onChange(digits);
+          if (digits.length === 6) onComplete(digits);
+        }}
       />
     </div>
   );
+}
+
+// Runs a code check once per code: a code already being checked isn't sent
+// twice (the 6th digit and a click on the button arriving together). After
+// a refusal, the field is emptied and focused for the next try.
+function useCodeSubmit(
+  check: (code: string) => Promise<{ error?: string | null } | undefined>,
+) {
+  const [pending, startTransition] = useTransition();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const inFlight = useRef<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function submit(value: string) {
+    if (value.length !== 6 || inFlight.current === value) return;
+    inFlight.current = value;
+    setError(null);
+    startTransition(async () => {
+      // Only returns on failure — success redirects to /admin.
+      const result = await check(value);
+      if (result?.error) {
+        setError(result.error);
+        setCode("");
+        inFlight.current = null;
+        setTimeout(() => inputRef.current?.focus(), 0);
+      }
+    });
+  }
+
+  return { pending, code, setCode, error, submit, inputRef };
 }
 
 export function MfaEnrollForm() {
@@ -39,16 +87,18 @@ export function MfaEnrollForm() {
     qrCode: string;
     secret: string;
   } | null>(null);
-  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const confirm = useCodeSubmit((code) =>
+    confirmMfaEnrollmentAction(enrollment!.factorId, code),
+  );
 
   if (!enrollment) {
     return (
       <div className="space-y-4">
         <p className="text-muted-foreground text-sm">
-          Installez une application d&apos;authentification sur votre
-          téléphone (Google Authenticator, Microsoft Authenticator ou Authy),
-          puis cliquez ci-dessous pour afficher le QR code à scanner.
+          Installez une application d&apos;authentification sur votre téléphone
+          (Google Authenticator, Microsoft Authenticator ou Authy), puis cliquez
+          ci-dessous pour afficher le QR code à scanner.
         </p>
         {error && <p className="text-destructive text-sm">{error}</p>}
         <Button
@@ -89,53 +139,52 @@ export function MfaEnrollForm() {
         Impossible de scanner ? Saisissez cette clé dans l&apos;application :{" "}
         <span className="font-mono">{enrollment.secret}</span>
       </p>
-      <CodeField code={code} onChange={setCode} />
-      {error && <p className="text-destructive text-sm">{error}</p>}
+      <CodeField
+        code={confirm.code}
+        onChange={confirm.setCode}
+        onComplete={confirm.submit}
+        disabled={confirm.pending}
+        inputRef={confirm.inputRef}
+      />
+      {confirm.error && (
+        <p className="text-destructive text-sm">{confirm.error}</p>
+      )}
       <Button
         className="w-full"
-        disabled={pending || code.length !== 6}
-        onClick={() =>
-          startTransition(async () => {
-            setError(null);
-            // Only returns on failure — success redirects to /admin.
-            const result = await confirmMfaEnrollmentAction(
-              enrollment.factorId,
-              code,
-            );
-            if (result?.error) setError(result.error);
-          })
-        }
+        disabled={confirm.pending || confirm.code.length !== 6}
+        onClick={() => confirm.submit(confirm.code)}
       >
-        {pending ? "Vérification..." : "Activer"}
+        {confirm.pending ? "Vérification..." : "Activer"}
       </Button>
     </div>
   );
 }
 
 export function MfaVerifyForm() {
-  const [pending, startTransition] = useTransition();
-  const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const verify = useCodeSubmit((code) => verifyMfaAction(code));
 
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Saisissez le code affiché par votre application d&apos;authentification.
+        Saisissez le code affiché par votre application d&apos;authentification
+        : il est vérifié dès le 6e chiffre.
       </p>
-      <CodeField code={code} onChange={setCode} />
-      {error && <p className="text-destructive text-sm">{error}</p>}
+      <CodeField
+        code={verify.code}
+        onChange={verify.setCode}
+        onComplete={verify.submit}
+        disabled={verify.pending}
+        inputRef={verify.inputRef}
+      />
+      {verify.error && (
+        <p className="text-destructive text-sm">{verify.error}</p>
+      )}
       <Button
         className="w-full"
-        disabled={pending || code.length !== 6}
-        onClick={() =>
-          startTransition(async () => {
-            setError(null);
-            const result = await verifyMfaAction(code);
-            if (result?.error) setError(result.error);
-          })
-        }
+        disabled={verify.pending || verify.code.length !== 6}
+        onClick={() => verify.submit(verify.code)}
       >
-        {pending ? "Vérification..." : "Valider"}
+        {verify.pending ? "Vérification..." : "Valider"}
       </Button>
     </div>
   );
