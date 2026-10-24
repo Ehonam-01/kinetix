@@ -32,7 +32,7 @@ export function CountrySupportHint({
       href={whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 text-sm font-semibold text-white hover:bg-[#1fb857]"
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 text-center text-sm font-semibold text-white hover:bg-[#1fb857] ${shopUrl ? "min-h-11 sm:flex-1" : "h-9"}`}
     >
       {shopUrl ? "Envoyer ma preuve sur WhatsApp" : "Contacter sur WhatsApp"}
     </a>
@@ -67,7 +67,7 @@ export function CountrySupportHint({
             href={shopUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 inline-flex min-h-11 items-center sm:flex-1 justify-center gap-2 rounded-lg px-4 text-sm font-bold shadow-sm transition-colors"
+            className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-center text-sm font-bold shadow-sm transition-colors sm:flex-1"
           >
             Payer sur la boutique en ligne
             <ExternalLink className="size-3.5" />
