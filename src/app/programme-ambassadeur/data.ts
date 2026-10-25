@@ -31,27 +31,23 @@ export type CompensationData = {
   example: { price: number; commission: number } | null;
 };
 
+// The subscription price the worked example is computed with (see below).
+const EXAMPLE_PRICE = 25000;
+
 // Every rate on this page is read live from the same rules the platform
 // actually pays with (commission_rules) — never hand-typed — so the sales
 // page can never drift from what an ambassador is really paid.
 export async function getCompensationData(
   executor: Executor,
 ): Promise<CompensationData> {
-  const [
-    directRules,
-    generationRules,
-    levelRows,
-    subscriptionPrice,
-    bvValueInCfa,
-    rewardRows,
-  ] = await Promise.all([
-    listEffectiveDirectSaleRules(executor),
-    listEffectiveGenerationRules(executor),
-    listActiveLevels(executor),
-    getCurrentParameterValue(executor, "subscription.price_in_cfa"),
-    getCurrentParameterValue(executor, "bv.value_in_cfa"),
-    listRewardCatalog(executor),
-  ]);
+  const [directRules, generationRules, levelRows, bvValueInCfa, rewardRows] =
+    await Promise.all([
+      listEffectiveDirectSaleRules(executor),
+      listEffectiveGenerationRules(executor),
+      listActiveLevels(executor),
+      getCurrentParameterValue(executor, "bv.value_in_cfa"),
+      listRewardCatalog(executor),
+    ]);
 
   const defaultDirectRule =
     directRules.find((r) => r.courseId === null && r.category === null) ?? null;
@@ -99,18 +95,19 @@ export async function getCompensationData(
     };
   });
 
-  // The worked example uses the real subscription price, run through the
-  // real computeDirectSaleCommission — never a number typed by hand, so it
-  // can never contradict what the platform would really pay. businessVolume
-  // is irrelevant here: a PERCENTAGE-type direct-sale rule (the only kind
+  // The worked example uses a round illustrative price (an admin decision,
+  // not the price in force — the page says so), run through the real
+  // computeDirectSaleCommission with the real rate, so the commission shown
+  // is what the platform would pay on that price. businessVolume is
+  // irrelevant here: a PERCENTAGE-type direct-sale rule (the only kind
   // configured today) only ever reads pricePaid.
   let example: CompensationData["example"] = null;
   if (defaultDirectRule) {
     example = {
-      price: subscriptionPrice,
+      price: EXAMPLE_PRICE,
       commission: computeDirectSaleCommission(defaultDirectRule, {
-        pricePaid: subscriptionPrice,
-        businessVolume: subscriptionPrice,
+        pricePaid: EXAMPLE_PRICE,
+        businessVolume: EXAMPLE_PRICE,
         bvValueInCfa,
       }),
     };

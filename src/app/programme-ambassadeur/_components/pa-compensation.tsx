@@ -2,7 +2,7 @@ import { Reveal } from "@/app/_components/reveal";
 import type { CompensationData } from "../data";
 
 // How many referred subscribers the worked example shows — always computed
-// from the live price and direct rate (data.ts), never typed by hand.
+// from the example price and the live direct rate (data.ts).
 const REFERRAL_EXAMPLES = [1, 5, 10];
 
 export function PaCompensation({ data }: { data: CompensationData }) {
@@ -72,8 +72,9 @@ export function PaCompensation({ data }: { data: CompensationData }) {
                 </div>
               )}
               <p className="text-muted-foreground mt-4 text-xs">
-                Exemples donnés à titre pédagogique, calculés avec le prix et le
-                taux en vigueur : ce n&apos;est pas une promesse de gains. La
+                Exemples donnés à titre pédagogique, avec un prix d&apos;exemple
+                et le taux en vigueur : ce n&apos;est pas une promesse de gains.
+                La commission se calcule sur le prix réellement payé. La
                 commission n&apos;est versée que sur la première souscription de
                 chaque abonné réellement apporté, selon les règles du programme
                 ambassadeur.
