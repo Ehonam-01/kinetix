@@ -10,6 +10,7 @@ import { registerSchema, usernameSchema } from "@/schemas/auth";
 import { toWhatsappDigits } from "@/lib/whatsapp";
 import { isGoalValue } from "@/config/goals";
 import { assignSponsor } from "@/services/genealogy/assign-sponsor";
+import { attachSignupSource } from "@/services/marketing/campaign-tracking";
 
 const sponsorIdSchema = z.string().uuid();
 
@@ -56,6 +57,14 @@ export async function ensureProfile(user: User) {
       ? user.user_metadata.goal
       : null,
   });
+
+  // The campaign the sign-up came from (Admin → Marketing). Never allowed
+  // to block the sign-in.
+  try {
+    await attachSignupSource(db, user.id, user.user_metadata?.mkt_visit);
+  } catch (err) {
+    console.error("Source de l'inscription non enregistrée :", err);
+  }
 
   const parsedSponsorId = sponsorIdSchema.safeParse(
     user.user_metadata?.sponsor_id,

@@ -14,6 +14,7 @@ import { cn, formatDuration } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { CourseCover } from "@/components/course/course-cover";
 import { CourseOutline } from "@/components/course/course-outline";
+import { CourseReviews } from "@/components/course/course-reviews";
 import { ShareCourse } from "@/components/course/share-course";
 
 export type PublicCourseContent = NonNullable<
@@ -25,9 +26,20 @@ export type PublicCourseContent = NonNullable<
 export function PublicCourseView({
   content,
   shareUrl,
+  rating,
+  reviews,
 }: {
   content: PublicCourseContent;
   shareUrl: string;
+  // Learners' reviews (services/lms/course-reviews.ts) — real ones only.
+  rating: { average: number; count: number } | null;
+  reviews: {
+    id: string;
+    rating: number;
+    comment: string | null;
+    author: string;
+    updatedAt: Date;
+  }[];
 }) {
   const { course } = content;
 
@@ -48,6 +60,17 @@ export function PublicCourseView({
     name: course.title,
     description: course.description ?? undefined,
     inLanguage: "fr",
+    ...(rating && rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(rating.average.toFixed(1)),
+            reviewCount: rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     provider: { "@type": "Organization", name: SITE_NAME },
     ...(course.thumbnailUrl ? { image: course.thumbnailUrl } : {}),
   };
@@ -173,6 +196,13 @@ export function PublicCourseView({
               </p>
             ) : (
               <CourseOutline courseId={course.id} lessons={lessons} preview />
+            )}
+            {rating && rating.count > 0 && (
+              <CourseReviews
+                summary={rating}
+                reviews={reviews}
+                className="mt-8"
+              />
             )}
           </div>
         </div>

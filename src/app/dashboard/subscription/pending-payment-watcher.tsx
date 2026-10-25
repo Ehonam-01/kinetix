@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { checkSubscriptionConfirmedAction } from "./actions";
+import { trackMarketingEvent } from "@/lib/marketing-events";
 
 // Same poll as SubscribeButton/PaydunyaSubscribeForm, but started from a
 // server-found paymentId instead of one just returned by subscribeAction —
@@ -43,6 +44,7 @@ export function PendingPaymentWatcher({
           if (status === "CONFIRMED") {
             clearInterval(interval);
             setConfirmed(true);
+            trackMarketingEvent("Purchase", { currency: "XOF" });
             router.refresh();
           } else if (status === "FAILED") {
             clearInterval(interval);

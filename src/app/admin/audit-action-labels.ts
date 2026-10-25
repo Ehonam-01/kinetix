@@ -41,4 +41,9 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   PRICE_CHANGE_SCHEDULED: "Changement de prix programmé",
   PRICE_CHANGE_CANCELLED: "Changement de prix annulé",
   SUBSCRIPTION_REMINDER_SENT: "Relance d'abonnement envoyée (email)",
+  META_PIXEL_UPDATED: "Pixel Meta modifié",
+  TRAINER_REQUEST_APPROVED: "Formateur validé",
+  TRAINER_REQUEST_REJECTED: "Candidature de formateur refusée",
+  COURSE_REVIEW_HIDDEN: "Avis de formation masqué",
+  COURSE_REVIEW_RESTORED: "Avis de formation réaffiché",
 };

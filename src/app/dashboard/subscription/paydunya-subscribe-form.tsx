@@ -21,6 +21,7 @@ import {
   confirmWizallPaymentAction,
   subscribeAction,
 } from "./actions";
+import { trackMarketingEvent } from "@/lib/marketing-events";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75;
@@ -91,6 +92,7 @@ export function PaydunyaSubscribeForm({
           if (status === "CONFIRMED") {
             clearInterval(interval);
             setConfirmed(true);
+            trackMarketingEvent("Purchase", { value: price, currency: "XOF" });
             router.refresh();
           } else if (status === "FAILED") {
             clearInterval(interval);
@@ -112,7 +114,7 @@ export function PaydunyaSubscribeForm({
         });
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [paymentId, confirmed, wizall, pollOutcome, router]);
+  }, [paymentId, confirmed, wizall, pollOutcome, router, price]);
 
   function handleCountryChange(next: string) {
     setCountry(next);

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { checkSubscriptionConfirmedAction, subscribeAction } from "./actions";
+import { trackMarketingEvent } from "@/lib/marketing-events";
 
 // ~5 minutes at 4s per poll — long enough for a real SMS/USSD confirmation,
 // short enough not to poll forever if the member never confirms on their
@@ -23,9 +24,9 @@ export function SubscribeButton({ price }: { price: number }) {
   const [operator, setOperator] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [confirmationMessage, setConfirmationMessage] = useState<
-    string | null
-  >(null);
+  const [confirmationMessage, setConfirmationMessage] = useState<string | null>(
+    null,
+  );
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [pollOutcome, setPollOutcome] = useState<"failed" | "timeout" | null>(
@@ -55,6 +56,7 @@ export function SubscribeButton({ price }: { price: number }) {
           if (status === "CONFIRMED") {
             clearInterval(interval);
             setConfirmed(true);
+            trackMarketingEvent("Purchase", { value: price, currency: "XOF" });
             router.refresh();
           } else if (status === "FAILED") {
             clearInterval(interval);
@@ -76,7 +78,7 @@ export function SubscribeButton({ price }: { price: number }) {
         });
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [paymentId, confirmed, pollOutcome, router]);
+  }, [paymentId, confirmed, pollOutcome, router, price]);
 
   function handleCountryChange(next: string) {
     setCountry(next);

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { trackMarketingEvent } from "@/lib/marketing-events";
 
 // The whole registration card: its header (title, "déjà inscrit ?") comes
 // from the server page and gives way to a welcome screen once the account
@@ -296,6 +297,10 @@ export function RegistrationWelcome({
   firstName: string;
   email: string;
 }) {
+  // The sign-up is done: reported to the Meta pixel (if accepted).
+  useEffect(() => {
+    trackMarketingEvent("CompleteRegistration");
+  }, []);
   return (
     <Card>
       <CardContent>

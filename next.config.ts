@@ -47,11 +47,13 @@ const supabaseOrigin = (() => {
 
 const reportOnlyCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // Meta's pixel library, loaded only after consent
+  // (components/marketing/marketing-consent.tsx).
+  "script-src 'self' 'unsafe-inline' https://connect.facebook.net",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${supabaseOrigin}`,
+  `img-src 'self' data: blob: ${supabaseOrigin} https://www.facebook.com`,
   "font-src 'self' data:",
-  `connect-src 'self' ${supabaseOrigin}`,
+  `connect-src 'self' ${supabaseOrigin} https://www.facebook.com https://connect.facebook.net`,
   `media-src 'self' ${supabaseOrigin}`,
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com https://docs.google.com",
   "worker-src 'self'",

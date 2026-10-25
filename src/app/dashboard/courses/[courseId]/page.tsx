@@ -30,6 +30,14 @@ import { CourseCover } from "@/components/course/course-cover";
 import { CourseOutline } from "@/components/course/course-outline";
 import { ShareCourse } from "@/components/course/share-course";
 import { ProgressBar } from "../_components/progress-bar";
+import { CourseReviews } from "@/components/course/course-reviews";
+import {
+  getOwnCourseReview,
+  getRatingSummaries,
+  listCourseReviews,
+  reviewEligibility,
+} from "@/services/lms/course-reviews";
+import { CourseReviewForm } from "./review-form";
 
 export default async function CourseDetailPage(
   props: PageProps<"/dashboard/courses/[courseId]">,
@@ -78,6 +86,17 @@ export default async function CourseDetailPage(
     : isAmbassador
       ? `${siteUrl}/r/${ambassador.referralCode}?course=${course.id}`
       : `${siteUrl}/formations/${course.slug ?? course.id}`;
+
+  // Learners' reviews; the member's own form once they've completed a
+  // lesson (services/lms/course-reviews.ts).
+  const [ratingSummaries, reviews, eligibility, ownReview] = upcomingDraft
+    ? [new Map(), [], "NO_ACCESS" as const, null]
+    : await Promise.all([
+        getRatingSummaries(db, [course.id]),
+        listCourseReviews(db, course.id),
+        reviewEligibility(db, profile.id, course.id),
+        getOwnCourseReview(profile.id, course.id),
+      ]);
 
   const lessons = flattenLessons(content);
   const progress = getProgress(lessons);
@@ -251,6 +270,30 @@ export default async function CourseDetailPage(
             />
           )}
         </section>
+      )}
+
+      {!upcomingDraft && (
+        <CourseReviews
+          summary={ratingSummaries.get(course.id) ?? null}
+          reviews={reviews}
+          form={
+            eligibility === "CAN_REVIEW" ? (
+              <CourseReviewForm
+                courseId={course.id}
+                existing={
+                  ownReview
+                    ? { rating: ownReview.rating, comment: ownReview.comment }
+                    : null
+                }
+              />
+            ) : eligibility === "NOT_STARTED" ? (
+              <p className="bg-muted/40 rounded-xl p-3 text-sm">
+                Termine au moins une leçon pour donner ton avis sur cette
+                formation.
+              </p>
+            ) : null
+          }
+        />
       )}
 
       {access && (
