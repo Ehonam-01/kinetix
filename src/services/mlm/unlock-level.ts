@@ -240,7 +240,7 @@ async function completeLevel(tx: Executor, userId: string, levelCode: number) {
   // transaction is committed.
   scheduleLevelCompletedEmails();
 
-  if (levelCode >= 3) {
+  if (levelCode >= 2) {
     await unlockReward(tx, userId, levelCode);
   }
 

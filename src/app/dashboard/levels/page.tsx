@@ -42,9 +42,9 @@ export default async function LevelsPage() {
               {profile.becameAncestorAt.toLocaleDateString("fr-FR", {
                 dateStyle: "long",
               })}
-              . Vous ne recevez plus de nouvelles commissions, mais votre compte,
-              votre solde et vos formations restent accessibles tant que votre
-              abonnement est valide ou renouvelé.
+              . Vous ne recevez plus de nouvelles commissions, mais votre
+              compte, votre solde et vos formations restent accessibles tant que
+              votre abonnement est valide ou renouvelé.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -103,7 +103,7 @@ export default async function LevelsPage() {
                 )}
               </CardHeader>
               {((level.status !== "LOCKED" && level.generations.length > 0) ||
-                (level.code >= 3 && reward)) && (
+                (level.code >= 2 && reward)) && (
                 <CardContent className="space-y-4">
                   {level.status !== "LOCKED" &&
                     level.generations.length > 0 && (
@@ -138,7 +138,7 @@ export default async function LevelsPage() {
                       the fact. Nothing renders if the admin hasn't
                       configured a reward for this level yet (migration
                       0040 cleared the old seeded placeholders). */}
-                  {level.code >= 3 && reward && (
+                  {level.code >= 2 && reward && (
                     <div className="border-border flex items-center gap-3 rounded-xl border p-3">
                       {reward.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage public URL, no remotePatterns configured (same as course-card.tsx)

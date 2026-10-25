@@ -3,10 +3,11 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { profiles } from "@/db/schema/profiles";
 import { rewards } from "@/db/schema/rewards";
+import { REWARD_LEVEL_CODES } from "@/repositories/rewards";
 import { logAdminAction } from "./audit-log";
 import { assertMaxLength, LONG_TEXT_MAX, SHORT_TEXT_MAX } from "./input-limits";
 
-// One active reward per level 3-5, admin-configured from scratch (the
+// One active reward per level 2-5, admin-configured from scratch (the
 // seeded phone/moto/car placeholders were cleared — migration 0040):
 // updates the existing row for that level if one exists, otherwise
 // creates it. Unlike commission_rules/parameter_versions, a reward isn't
@@ -23,8 +24,8 @@ export async function upsertRewardCatalogEntry(
     value: number;
   },
 ) {
-  if (![3, 4, 5].includes(input.levelCode)) {
-    throw new Error("Seuls les niveaux 3 à 5 ont une récompense matérielle.");
+  if (!REWARD_LEVEL_CODES.includes(input.levelCode)) {
+    throw new Error("Seuls les niveaux 2 à 5 ont une récompense matérielle.");
   }
   if (!input.name.trim()) {
     throw new Error("Le nom de la récompense est requis.");

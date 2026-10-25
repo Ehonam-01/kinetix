@@ -5,11 +5,11 @@ import { financialTransactions } from "@/db/schema/financial-transactions";
 import { memberRewards, rewards } from "@/db/schema/rewards";
 import { creditBalance } from "./credit-balance";
 
-// Called from unlock-level.ts's completeLevel for levels 3-5. Distinct
+// Called from unlock-level.ts's completeLevel for levels 2-5. Distinct
 // from commissions (section 17): the reward goes to the member who just
 // completed the level, not to their ancestors, and its value is never
 // treated as a commission. Grants every currently active reward for that
-// level — usually exactly one (the seeded phone/moto/car), but the schema
+// level — usually exactly one (computer or phone, moto, car), but the schema
 // allows an admin to configure more than one without a migration.
 export async function unlockReward(
   tx: Executor,

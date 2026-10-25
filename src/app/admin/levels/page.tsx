@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { getLevelStats } from "@/repositories/member-levels";
-import { listRewardCatalog } from "@/repositories/rewards";
+import { listRewardCatalog, REWARD_LEVEL_CODES } from "@/repositories/rewards";
 import {
   Card,
   CardContent,
@@ -61,14 +61,14 @@ export default async function AdminLevelsPage() {
         <div>
           <h2 className="text-lg font-medium">Récompenses matérielles</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Un membre qui complète le niveau 3, 4 ou 5 reçoit automatiquement
-            la récompense active de ce niveau. Laissez un niveau sans
-            récompense pour ne rien accorder à sa complétion.
+            Un membre qui complète le niveau 2, 3, 4 ou 5 reçoit automatiquement
+            la récompense active de ce niveau. Laissez un niveau sans récompense
+            pour ne rien accorder à sa complétion.
           </p>
         </div>
 
         <div className="space-y-6">
-          {[3, 4, 5].map((levelCode) => (
+          {REWARD_LEVEL_CODES.map((levelCode) => (
             <Card key={levelCode}>
               <CardHeader>
                 <CardTitle>
