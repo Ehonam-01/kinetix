@@ -204,10 +204,6 @@ export function RegisterForm({
               placeholder="+228 90 00 00 00"
               {...register("whatsapp")}
             />
-            <p className="text-muted-foreground text-xs">
-              Avec l&apos;indicatif du pays. Ton parrain pourra te contacter sur
-              WhatsApp pour t&apos;accompagner.
-            </p>
             {errors.whatsapp && (
               <p className="text-destructive text-sm">
                 {errors.whatsapp.message}
