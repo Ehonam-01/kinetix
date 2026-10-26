@@ -228,11 +228,6 @@ export function RegisterForm({
             <legend className="text-sm font-medium">
               Souhaitez-vous aussi devenir ambassadeur ?
             </legend>
-            <p className="text-muted-foreground text-xs">
-              Gratuit, sans obligation d&apos;achat ni de recrutement. Activé
-              automatiquement dès que l&apos;abonnement est payé (si tu indiques
-              un parrain, il doit être lui-même ambassadeur actif).
-            </p>
             <div className="flex gap-4 text-sm">
               <label className="flex items-center gap-2">
                 <input
