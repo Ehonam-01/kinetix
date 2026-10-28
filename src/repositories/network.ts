@@ -7,7 +7,7 @@ import {
   findAncestors,
   findBinaryNodeByUserId,
   findDescendantsAtDepths,
-  searchDescendantsByUsername,
+  searchDescendants,
   type BinaryNodeWithGeneration,
 } from "./binary-nodes";
 
@@ -162,7 +162,7 @@ export type DownlineSearchResult = {
   currentLevelCode: number | null;
 };
 
-// Pseudo lookup across the member's *entire* downline, independent of the
+// Pseudo, name or email lookup across the member's *entire* downline, independent of the
 // tree render's maxDepth — a search match several generations past what's
 // visually rendered should still be findable.
 export async function searchDownlineMembers(
@@ -173,11 +173,7 @@ export async function searchDownlineMembers(
   const node = await findBinaryNodeByUserId(executor, userId);
   if (!node || query.trim() === "") return [];
 
-  const matches = await searchDescendantsByUsername(
-    executor,
-    node.path,
-    query.trim(),
-  );
+  const matches = await searchDescendants(executor, node.path, query.trim());
   const levelByUserId = await getHighestLevelCodes(
     executor,
     matches.map((m) => m.userId),

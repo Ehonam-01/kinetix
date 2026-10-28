@@ -82,10 +82,13 @@ export function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
-// Pseudo lookup scoped to the searcher's own downline (not the whole
-// platform — a member browsing "Mon réseau" has no reason to see people
-// outside it), at any depth, unlike the fixed 2/3-generation tree render.
-export async function searchDescendantsByUsername(
+// Lookup scoped to the searcher's own downline (not the whole platform — a
+// member browsing "Mon réseau" has no reason to see people outside it), at
+// any depth, unlike the fixed 2/3-generation tree render. Matches part of
+// the pseudo or the full name; an email only in full (case aside), so the
+// search can't be used to guess a downline member's address letter by
+// letter — and the address itself is never returned.
+export async function searchDescendants(
   executor: Executor,
   nodePath: string,
   query: string,
@@ -101,9 +104,14 @@ export async function searchDescendantsByUsername(
       (nlevel(bn.path) - nlevel(${nodePath}::ltree)) AS "relativeGeneration"
     FROM binary_nodes bn
     JOIN profiles p ON p.id = bn.user_id
+    LEFT JOIN auth.users u ON u.id = bn.user_id
     WHERE bn.path <@ ${nodePath}::ltree
       AND bn.path != ${nodePath}::ltree
-      AND p.username ILIKE ${pattern}
+      AND (
+        p.username ILIKE ${pattern}
+        OR p.full_name ILIKE ${pattern}
+        OR lower(u.email) = lower(${query})
+      )
     ORDER BY nlevel(bn.path)
     LIMIT ${limit}
   `);

@@ -40,7 +40,7 @@ export function DashboardTopBar({ memberName }: { memberName: string }) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher un membre par pseudo..."
+              placeholder="Pseudo, nom ou e-mail d'un membre..."
               className="bg-muted placeholder:text-muted-foreground focus:ring-ring w-full rounded-full py-2 pr-3 pl-9 text-sm focus:ring-2 focus:outline-none"
             />
           </form>

@@ -51,6 +51,7 @@ describe("downline contact", () => {
     const { client, db } = await createSimulationDb();
     localClient = client;
     localDb = db;
+    await client.exec('ALTER TABLE "auth"."users" ADD COLUMN email text;');
     await seedBaselineParameters(db);
     await seedDefaultCommissionRules(db);
   }, 120_000);
@@ -80,5 +81,38 @@ describe("downline contact", () => {
       await searchDownlineMembers(localDb, kodjo.userId, "dehors"),
     ).toEqual([]);
     expect(outsider).toBeTruthy();
+  });
+
+  it("finds a downline member by name or full email, never outside it", async () => {
+    const { searchDownlineMembers } = await import("@/repositories/network");
+    const top = await member("sommet", "racine");
+    const yao = await member("yao", "sommet");
+    const other = await member("autre", "racine");
+    await localClient.query(
+      'UPDATE "auth"."users" SET email = $2 WHERE id = $1;',
+      [yao, "Yao.Mensah@example.test"],
+    );
+    await localClient.query(
+      'UPDATE "auth"."users" SET email = $2 WHERE id = $1;',
+      [other, "autre@example.test"],
+    );
+
+    // Part of the full name ("Membre yao"), any case.
+    const byName = await searchDownlineMembers(localDb, top, "MEMBRE YAO");
+    expect(byName.map((r) => r.username)).toEqual(["yao"]);
+
+    // The whole address, any case — but not a fragment of it.
+    const byEmail = await searchDownlineMembers(
+      localDb,
+      top,
+      "yao.mensah@example.test",
+    );
+    expect(byEmail.map((r) => r.username)).toEqual(["yao"]);
+    expect(await searchDownlineMembers(localDb, top, "mensah@")).toEqual([]);
+
+    // Someone else's downline member, even by exact email: nothing.
+    expect(
+      await searchDownlineMembers(localDb, top, "autre@example.test"),
+    ).toEqual([]);
   });
 });
