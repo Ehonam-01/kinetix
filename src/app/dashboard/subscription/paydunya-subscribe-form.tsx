@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, Lock } from "lucide-react";
 import {
   OTHER_COUNTRY,
   PAYDUNYA_COUNTRY_OPTIONS,
@@ -342,12 +343,23 @@ export function PaydunyaSubscribeForm({
         </>
       )}
       {error && <p className="text-destructive text-sm">{error}</p>}
-      <Button disabled={pending} onClick={handleClick} className="w-full">
-        {pending
-          ? "Envoi de la demande de paiement..."
-          : isOther
-            ? `Continuer vers le paiement — ${price.toLocaleString("fr-FR")} F`
-            : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
+      {/* The page's main action: big, in the brand's accent colour. */}
+      <Button
+        disabled={pending}
+        onClick={handleClick}
+        className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-14 w-full rounded-xl py-3 text-base font-bold whitespace-normal shadow-lg transition-transform hover:-translate-y-0.5 active:translate-y-0 sm:text-lg"
+      >
+        {pending ? (
+          "Envoi de la demande de paiement..."
+        ) : (
+          <>
+            <Lock className="size-5" />
+            {isOther
+              ? `Continuer vers le paiement — ${price.toLocaleString("fr-FR")} F`
+              : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
+            <ArrowRight className="size-5" />
+          </>
+        )}
       </Button>
     </div>
   );
