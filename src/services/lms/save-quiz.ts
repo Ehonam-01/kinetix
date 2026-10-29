@@ -39,8 +39,8 @@ export async function saveQuiz(
     const lesson = await tx.query.lessons.findFirst({
       where: eq(lessons.id, lessonId),
     });
-    if (!lesson || lesson.lessonType !== "TEXT") {
-      throw new Error("Seule une leçon texte peut avoir un quiz.");
+    if (!lesson) {
+      throw new Error("Leçon introuvable.");
     }
 
     if (input.passingScore < 1 || input.passingScore > 100) {

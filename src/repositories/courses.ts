@@ -164,16 +164,10 @@ export async function getCourseContent(
         where: inArray(quizzes.lessonId, lessonIds),
       })
     : [];
-  // Only a text lesson can be passed through its quiz (submit-quiz-
-  // attempt.ts) — a quiz left behind on a lesson switched to video would
-  // otherwise lock the rest of the course for good.
-  const textLessonIds = new Set(
-    moduleLessons.filter((l) => l.lessonType === "TEXT").map((l) => l.id),
-  );
+  // Text and video lessons alike: a quiz is passed the same way on both
+  // (submit-quiz-attempt.ts).
   const quizIdByLessonId = new Map(
-    lessonQuizzes
-      .filter((q) => textLessonIds.has(q.lessonId))
-      .map((q) => [q.lessonId, q.id]),
+    lessonQuizzes.map((q) => [q.lessonId, q.id]),
   );
 
   const quizIds = lessonQuizzes.map((q) => q.id);

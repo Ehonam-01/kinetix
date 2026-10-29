@@ -40,7 +40,7 @@ export async function markLessonComplete(userId: string, lessonId: string) {
     if (!lessonView || lessonView.locked) {
       throw new Error("Cette leçon est verrouillée.");
     }
-    if (lessonView.hasQuiz && lesson.lessonType === "TEXT") {
+    if (lessonView.hasQuiz) {
       throw new Error("Réussis le quiz pour valider cette leçon.");
     }
 

@@ -61,9 +61,12 @@ async function makeSubscribedMember(label: string) {
   return id;
 }
 
-// A course of three text lessons: 1 (no quiz) → 2 (quiz) → 3 (locked until
-// the quiz of lesson 2 is passed).
-async function makeCourse(status: "DRAFT" | "PUBLISHED") {
+// A course of three text (or video) lessons: 1 (no quiz) → 2 (quiz) → 3
+// (locked until the quiz of lesson 2 is passed).
+async function makeCourse(
+  status: "DRAFT" | "PUBLISHED",
+  lessonType: "TEXT" | "VIDEO" = "TEXT",
+) {
   const [course] = await localDb
     .insert(schema.courses)
     .values({ title: `Formation ${status}`, status })
@@ -78,8 +81,13 @@ async function makeCourse(status: "DRAFT" | "PUBLISHED") {
       [1, 2, 3].map((position) => ({
         moduleId: mod.id,
         title: `Leçon ${position}`,
-        lessonType: "TEXT",
-        content: "## Titre\n\nUn paragraphe.",
+        lessonType,
+        ...(lessonType === "TEXT"
+          ? { content: "## Titre\n\nUn paragraphe." }
+          : {
+              videoProvider: "YOUTUBE",
+              videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            }),
         position,
       })),
     )
@@ -204,6 +212,53 @@ describe("course learner gates (pglite, no shared DB touched)", () => {
       .flatMap((m: { lessons: { completed: boolean }[] }) => m.lessons)
       .map((l: { completed: boolean }) => l.completed);
     expect(done).toEqual([true, true, true]);
+  });
+
+  it("gates a video lesson through its quiz the same way", async () => {
+    const { markLessonComplete } =
+      await import("@/services/lms/mark-lesson-complete");
+    const { submitQuizAttempt } =
+      await import("@/services/lms/submit-quiz-attempt");
+    const member = await makeSubscribedMember("video");
+    const c = await makeCourse("PUBLISHED", "VIDEO");
+    const [l1, l2, l3] = c.lessonIds;
+
+    await markLessonComplete(member, l1);
+    await expect(markLessonComplete(member, l2)).rejects.toThrow(
+      "Réussis le quiz pour valider cette leçon.",
+    );
+    await expect(markLessonComplete(member, l3)).rejects.toThrow(
+      "Cette leçon est verrouillée.",
+    );
+    const passed = await submitQuizAttempt(member, l2, {
+      [c.questionId]: c.good,
+    });
+    expect(passed).toMatchObject({ limited: false, passed: true });
+    await markLessonComplete(member, l3);
+  });
+
+  it("lets an admin put a quiz on a video lesson", async () => {
+    const { saveQuiz } = await import("@/services/lms/save-quiz");
+    const { findQuizByLessonId, findQuizQuestions } =
+      await import("@/repositories/quizzes");
+    const admin = await makeProfile("quiz-admin", "ADMIN");
+    const c = await makeCourse("PUBLISHED", "VIDEO");
+
+    await saveQuiz(admin, c.lessonIds[0], {
+      passingScore: 50,
+      questions: [
+        {
+          question: "Que montre la vidéo ?",
+          options: [
+            { text: "La bonne réponse", isCorrect: true },
+            { text: "Une autre", isCorrect: false },
+          ],
+        },
+      ],
+    });
+    const quiz = await findQuizByLessonId(localDb, c.lessonIds[0]);
+    expect(quiz?.passingScore).toBe(50);
+    expect(await findQuizQuestions(localDb, quiz!.id)).toHaveLength(1);
   });
 
   it("never reveals the answers of a failed attempt, and caps failed attempts", async () => {

@@ -63,7 +63,7 @@ export async function submitQuizAttempt(
 
   return db.transaction(async (tx) => {
     const lesson = await findLessonById(tx, lessonId);
-    if (!lesson || !lesson.isActive || lesson.lessonType !== "TEXT") {
+    if (!lesson || !lesson.isActive) {
       throw new Error("Leçon introuvable.");
     }
 

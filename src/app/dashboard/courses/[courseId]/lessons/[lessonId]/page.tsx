@@ -72,8 +72,8 @@ export default async function LessonDetailPage(
       ? getGoogleDriveEmbed(lesson.videoUrl)
       : null;
 
-  // Quizzes only exist on text lessons (services/lms/submit-quiz-attempt.ts).
-  const showQuiz = lesson.lessonType === "TEXT" && lesson.hasQuiz;
+  // Text or video lesson: with a quiz, passing it completes the lesson.
+  const showQuiz = lesson.hasQuiz;
   const quiz = showQuiz ? await findQuizByLessonId(db, lessonId) : null;
   const questions = quiz ? await findQuizQuestions(db, quiz.id) : [];
   // Never send isCorrect to the client — that would leak the answers into

@@ -12,7 +12,7 @@ import {
 import { lessons } from "./courses";
 import { profiles } from "./profiles";
 
-// One quiz per TEXT lesson (see courses.ts's lessonTypeEnum) — the
+// At most one quiz per lesson, text or video — the
 // comprehension check a learner must pass before the next lesson unlocks
 // (services/lms/quiz-progress.ts). passingScore is a percentage (0-100),
 // admin-configurable per quiz rather than hardcoded "must get 100%".

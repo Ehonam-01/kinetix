@@ -20,10 +20,7 @@ export default async function AdminLessonDetailPage(
   const lesson = await findLessonById(db, lessonId);
   if (!lesson) notFound();
 
-  const quiz =
-    lesson.lessonType === "TEXT"
-      ? await findQuizByLessonId(db, lessonId)
-      : null;
+  const quiz = await findQuizByLessonId(db, lessonId);
   const questions = quiz ? await findQuizQuestions(db, quiz.id) : [];
 
   return (
@@ -57,27 +54,30 @@ export default async function AdminLessonDetailPage(
         </CardContent>
       </Card>
 
-      {lesson.lessonType === "TEXT" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Quiz de compréhension</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <QuizEditor
-              courseId={courseId}
-              lessonId={lessonId}
-              initialPassingScore={quiz?.passingScore ?? 100}
-              initialQuestions={questions.map((q) => ({
-                question: q.question,
-                options: q.options.map((o) => ({
-                  text: o.text,
-                  isCorrect: o.isCorrect,
-                })),
-              }))}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quiz de compréhension</CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Facultatif. Avec un quiz, le membre doit le réussir pour terminer la
+            leçon et débloquer la suivante ; sans quiz, il la termine d&apos;un
+            clic.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <QuizEditor
+            courseId={courseId}
+            lessonId={lessonId}
+            initialPassingScore={quiz?.passingScore ?? 100}
+            initialQuestions={questions.map((q) => ({
+              question: q.question,
+              options: q.options.map((o) => ({
+                text: o.text,
+                isCorrect: o.isCorrect,
+              })),
+            }))}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

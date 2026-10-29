@@ -198,12 +198,11 @@ export default async function AdminCourseDetailPage(
                     <div className="flex shrink-0 items-center gap-3">
                       <span className="text-muted-foreground text-xs">
                         {lesson.lessonType === "TEXT"
-                          ? lesson.hasQuiz
-                            ? "Texte + quiz"
-                            : "Texte"
+                          ? "Texte"
                           : lesson.videoProvider
                             ? VIDEO_PROVIDER_LABEL[lesson.videoProvider]
                             : "Vidéo"}
+                        {lesson.hasQuiz && " + quiz"}
                       </span>
                       <Link
                         href={`/admin/courses/${courseId}/lessons/${lesson.id}`}
