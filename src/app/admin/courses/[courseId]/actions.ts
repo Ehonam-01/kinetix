@@ -5,6 +5,7 @@ import { requireAdmin } from "@/services/auth/current-user";
 import { createModule } from "@/services/lms/create-module";
 import { createLesson } from "@/services/lms/create-lesson";
 import { updateModule } from "@/services/lms/update-module";
+import { deleteLesson, deleteModule } from "@/services/lms/delete-course-item";
 import { updateCourseStatus } from "@/services/lms/update-course-status";
 import { updateCoursePricing } from "@/services/lms/update-course-pricing";
 import { updateCourseDetails } from "@/services/lms/update-course-details";
@@ -138,6 +139,27 @@ export async function moveCourseItemAction(
   try {
     if (kind === "module") await moveModule(profile.id, id, direction);
     else await moveLesson(profile.id, id, direction);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  // "layout" also refreshes the learner pages under this course.
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
+  revalidatePath(`/dashboard/courses/${courseId}`, "layout");
+  return { error: null };
+}
+
+export async function deleteCourseItemAction(
+  courseId: string,
+  kind: "module" | "lesson",
+  id: string,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    if (kind === "module") await deleteModule(profile.id, id);
+    else await deleteLesson(profile.id, id);
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Une erreur est survenue.",

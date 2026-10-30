@@ -16,6 +16,7 @@ import { AddLessonForm } from "./add-lesson-form";
 import { AddModuleForm } from "./add-module-form";
 import { CourseStatsCard } from "./course-stats-card";
 import { CourseStatusForm } from "./course-status-form";
+import { DeleteItemButton } from "./delete-item-button";
 import { EditModuleForm } from "./edit-module-form";
 import { EditDetailsForm } from "./edit-details-form";
 import { AvailabilityToggle } from "./availability-toggle";
@@ -156,6 +157,13 @@ export default async function AdminCourseDetailPage(
                 currentTitle={module.title}
                 currentIsActive={module.isActive}
               />
+              <DeleteItemButton
+                courseId={courseId}
+                kind="module"
+                id={module.id}
+                title={module.title}
+                lessonCount={module.lessons.length}
+              />
             </CardHeader>
             <CardContent className="space-y-2">
               {module.lessons.length === 0 ? (
@@ -210,6 +218,12 @@ export default async function AdminCourseDetailPage(
                       >
                         Modifier
                       </Link>
+                      <DeleteItemButton
+                        courseId={courseId}
+                        kind="lesson"
+                        id={lesson.id}
+                        title={lesson.title}
+                      />
                     </div>
                   </div>
                 ))
