@@ -309,7 +309,8 @@ export default async function CourseDetailPage(
               Échangez avec ceux qui suivent cette formation
             </p>
             <p className="text-muted-foreground text-xs">
-              Son salon dédié vous attend sur le Discord des membres.
+              Retrouvez les membres sur WhatsApp, et son salon dédié sur
+              Discord.
             </p>
           </div>
           <ArrowRight className="text-muted-foreground size-4 shrink-0" />

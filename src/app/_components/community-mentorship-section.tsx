@@ -13,7 +13,7 @@ export function CommunityMentorshipSection() {
           icon: Users2,
           title: "Communauté privée",
           description:
-            "Un Discord réservé aux membres : un salon par formation pour échanger avec ceux qui suivent la même, des ressources partagées et l'entraide au quotidien.",
+            "Un groupe WhatsApp et un Discord réservés aux membres : l'entraide au quotidien, un salon par formation pour échanger avec ceux qui suivent la même, et des ressources partagées.",
           href: "/dashboard/community",
           image: {
             src: "/community-photo.png",

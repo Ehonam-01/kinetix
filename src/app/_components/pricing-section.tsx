@@ -14,7 +14,7 @@ const INCLUDED = [
   "Les nouvelles formations ajoutées pendant l'année",
   "Autant de formations que tu veux, à ton rythme",
   "Des quiz pour valider chaque étape, ta progression sauvegardée",
-  "La communauté des membres sur Discord",
+  "La communauté des membres sur WhatsApp et Discord",
   "L'accès au programme ambassadeur, si tu le souhaites",
 ];
 

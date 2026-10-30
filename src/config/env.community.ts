@@ -12,3 +12,13 @@ export function getDiscordInviteUrl(): string | null {
   const url = process.env.DISCORD_INVITE_URL?.trim();
   return url && DISCORD_INVITE_PATTERN.test(url) ? url : null;
 }
+
+// Same for the members' WhatsApp group, set as WHATSAPP_COMMUNITY_URL. The
+// app adds a tracking query when the link is copied from a phone: accepted.
+const WHATSAPP_INVITE_PATTERN =
+  /^https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+\/?(\?[A-Za-z0-9_=&-]*)?$/;
+
+export function getWhatsappCommunityUrl(): string | null {
+  const url = process.env.WHATSAPP_COMMUNITY_URL?.trim();
+  return url && WHATSAPP_INVITE_PATTERN.test(url) ? url : null;
+}
