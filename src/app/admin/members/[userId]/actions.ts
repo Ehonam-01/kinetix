@@ -21,12 +21,23 @@ export async function setMemberStatusAction(
 
 // The one way to lift a permanently-frozen account (repositories/subscriptions.ts's
 // permanentlyFrozen — self-service payment stops working once the 7-day
-// grace period after expiry has passed, explicit user decision). Grants a real, free year, exactly
-// as if the member had paid.
-export async function grantSubscriptionCreditAction(userId: string) {
+// grace period after expiry has passed, explicit user decision), and the way
+// to validate a first subscription for what the member really has
+// (services/subscriptions/grant-subscription-credit.ts).
+export async function grantSubscriptionCreditAction(
+  userId: string,
+  receivedOutside = 0,
+) {
   const { profile } = await requireAdmin();
-  await grantSubscriptionCredit(profile.id, userId);
+  try {
+    await grantSubscriptionCredit(profile.id, userId, receivedOutside);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
   revalidatePath(`/admin/members/${userId}`);
+  return { error: null };
 }
 
 export async function requestMemberDeletionAction(userId: string) {

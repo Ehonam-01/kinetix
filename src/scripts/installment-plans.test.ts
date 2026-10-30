@@ -106,6 +106,23 @@ async function confirmDeposit(userId: string, planId: string, amount: number) {
   return event;
 }
 
+// The member pays the whole subscription in one go, outside their plan.
+async function payInFull(userId: string) {
+  const { confirmSubscriptionPurchaseInNewTransaction } =
+    await import("@/services/subscriptions/confirm-subscription-payment");
+  const [payment] = await localDb
+    .insert(schema.payments)
+    .values({
+      beneficiaryUserId: userId,
+      purpose: "SUBSCRIPTION",
+      method: "MOBILE_MONEY",
+      amount: PRICE,
+      idempotencyKey: `TEST:${randomUUID()}`,
+    })
+    .returning();
+  await confirmSubscriptionPurchaseInNewTransaction(payment.id);
+}
+
 function planOf(userId: string) {
   return localDb.query.installmentPlans.findFirst({
     where: eq(schema.installmentPlans.userId, userId),
@@ -313,7 +330,7 @@ describe("installment plans (pglite)", () => {
     const paid = await makeProfile("kofi");
     const plan = await openPlan(paid);
     await confirmDeposit(paid, plan.id, 6000);
-    await grantSubscriptionCredit(admin, paid);
+    await payInFull(paid);
     expect(await planOf(paid)).toMatchObject({
       status: "EXPIRED",
       paidAmount: 6000,

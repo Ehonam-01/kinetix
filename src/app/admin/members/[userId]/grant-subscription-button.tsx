@@ -12,7 +12,10 @@ export function GrantSubscriptionButton({ userId }: { userId: string }) {
       variant="outline"
       disabled={pending}
       onClick={() =>
-        startTransition(() => grantSubscriptionCreditAction(userId))
+        startTransition(async () => {
+          const result = await grantSubscriptionCreditAction(userId);
+          if (result.error) alert(result.error);
+        })
       }
     >
       {pending ? "..." : "Accorder un abonnement (1 an)"}

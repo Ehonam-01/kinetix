@@ -3,6 +3,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import type { Executor } from "@/db/executor";
 import { payments } from "@/db/schema/payments";
+import { prorateCommission } from "@/lib/prorate-commission";
 import { profiles } from "@/db/schema/profiles";
 import { subscriptions } from "@/db/schema/subscriptions";
 import {
@@ -27,7 +28,42 @@ type SubscriptionPaymentMetadata = {
   // Set when this payment is the completion of an installment plan
   // (installments.ts).
   installmentPlanId?: string | null;
+  // The price in force when an admin validated this subscription for a
+  // different amount (grant-subscription-credit.ts): the commission is
+  // prorated to it, whatever the rule's type.
+  referencePrice?: number | null;
 };
+
+// The direct commission on a first subscription. Without a referencePrice
+// it's the rule applied to the price paid, as always. With one, it's the
+// commission on that full price, prorated to what was really paid.
+export async function computeSubscriptionCommission(
+  executor: Executor,
+  input: {
+    pricePaid: number;
+    businessVolume: number;
+    referencePrice: number | null;
+  },
+) {
+  const rule = await getEffectiveSubscriptionRule(executor);
+  if (!rule) return null;
+  const bvValueInCfa = await getCurrentParameterValue(
+    executor,
+    "bv.value_in_cfa",
+  );
+  const amount = computeDirectSaleCommission(rule, {
+    pricePaid: input.referencePrice ?? input.pricePaid,
+    businessVolume: input.businessVolume,
+    bvValueInCfa,
+  });
+  return {
+    rule,
+    amount:
+      input.referencePrice === null
+        ? amount
+        : prorateCommission(amount, input.pricePaid, input.referencePrice),
+  };
+}
 
 // Calendar-year arithmetic, not a fixed 365-day duration: a fixed
 // millisecond offset silently shortchanges a subscriber by a day whenever
@@ -185,30 +221,23 @@ export async function confirmSubscriptionPurchase(
 
   if (ambassadorUserId) {
     if (isFirstSubscription) {
-      const rule = await getEffectiveSubscriptionRule(tx);
-      if (rule) {
-        const bvValueInCfa = await getCurrentParameterValue(
-          tx,
-          "bv.value_in_cfa",
-        );
-        const amount = computeDirectSaleCommission(rule, {
-          pricePaid: subscription.pricePaid,
-          businessVolume: subscription.businessVolume,
-          bvValueInCfa,
+      const commission = await computeSubscriptionCommission(tx, {
+        pricePaid: subscription.pricePaid,
+        businessVolume: subscription.businessVolume,
+        referencePrice: metadata?.referencePrice ?? null,
+      });
+      if (commission && commission.amount > 0) {
+        await createCommissionEvent(tx, {
+          beneficiaryUserId: ambassadorUserId,
+          sourceUserId: payment.beneficiaryUserId,
+          type: "DIRECT_SALE",
+          amount: commission.amount,
+          dedupeKey: `DIRECT_SALE:SUBSCRIPTION:${subscription.id}`,
+          metadata: {
+            subscriptionId: subscription.id,
+            commissionRuleId: commission.rule.id,
+          },
         });
-        if (amount > 0) {
-          await createCommissionEvent(tx, {
-            beneficiaryUserId: ambassadorUserId,
-            sourceUserId: payment.beneficiaryUserId,
-            type: "DIRECT_SALE",
-            amount,
-            dedupeKey: `DIRECT_SALE:SUBSCRIPTION:${subscription.id}`,
-            metadata: {
-              subscriptionId: subscription.id,
-              commissionRuleId: rule.id,
-            },
-          });
-        }
       }
     }
 

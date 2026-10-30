@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { GrantSubscriptionButton } from "./grant-subscription-button";
+import { ValidateSubscriptionForm } from "./validate-subscription-form";
 import { SubscriptionReminder } from "./subscription-reminder";
 import {
   getLastSubscriptionReminder,
@@ -28,6 +29,7 @@ import {
   subscriptionReminderText,
 } from "@/services/admin/send-subscription-reminder";
 import { getLaunchOffer } from "@/services/pricing/launch-offer";
+import { getSubscriptionCreditPreview } from "@/services/subscriptions/grant-subscription-credit";
 import { whatsappHref } from "@/lib/whatsapp";
 import { StatusActionButton } from "./status-action-button";
 import { requireAdmin } from "@/services/auth/current-user";
@@ -75,6 +77,10 @@ export default async function AdminMemberDetailPage(
     getNetworkView(db, userId, 2),
     getSubscriptionStatus(db, userId),
   ]);
+
+  const creditPreview = subscription.active
+    ? null
+    : await getSubscriptionCreditPreview(userId);
 
   // "Relancer": only for a member who can still pay by themselves.
   const reminderKind = await reminderKindFor(userId);
@@ -195,10 +201,18 @@ export default async function AdminMemberDetailPage(
                     : "Jamais souscrit."}
             </CardDescription>
           </div>
-          {!subscription.active && (
+          {!subscription.active && !creditPreview && (
             <GrantSubscriptionButton userId={member.id} />
           )}
         </CardHeader>
+        {creditPreview && (
+          <CardContent>
+            <ValidateSubscriptionForm
+              userId={member.id}
+              preview={creditPreview}
+            />
+          </CardContent>
+        )}
         {reminder && (
           <CardContent>
             <SubscriptionReminder
