@@ -92,13 +92,14 @@ function Section({
         className={cn(
           "mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8",
           !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
+          aside && "lg:items-center",
         )}
       >
         <div className={cn(aside && "text-center lg:text-left")}>
           <h2
             className={cn(
               "font-semibold tracking-tight text-balance",
-              aside ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl",
+              aside ? "text-base sm:text-lg" : "text-2xl sm:text-3xl",
             )}
           >
             {title}
@@ -268,14 +269,21 @@ export default async function AtelierVideoIaPage() {
           title="Ton formateur : Ehonam Afansi"
           muted
           aside={
-            <Image
-              src="/formateur-ehonam-afansi.jpg"
-              alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
-              width={807}
-              height={1018}
-              sizes="(min-width: 640px) 18rem, 70vw"
-              className="mx-auto mt-6 w-[70%] max-w-72 rounded-2xl object-cover shadow-lg sm:w-72 lg:mx-0"
-            />
+            // The photo on an accent-coloured card, offset up and to the right.
+            <div className="relative mx-auto mt-4 w-[70%] max-w-72 sm:w-72 lg:mx-0">
+              <div
+                aria-hidden
+                className="bg-brand-accent absolute inset-0 translate-x-2.5 -translate-y-2.5 rounded-2xl"
+              />
+              <Image
+                src="/formateur-ehonam-afansi.jpg"
+                alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
+                width={807}
+                height={1018}
+                sizes="(min-width: 640px) 18rem, 70vw"
+                className="relative w-full rounded-2xl object-cover shadow-lg"
+              />
+            </div>
           }
         >
           <p>
