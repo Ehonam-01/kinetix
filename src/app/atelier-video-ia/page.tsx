@@ -421,8 +421,7 @@ export default async function AtelierVideoIaPage() {
             />
             <p className="mt-7 font-semibold">Apprends. Crée. Évolue.</p>
             <p className="text-muted-foreground mt-1 text-sm italic">
-              Kinetix AI Video Masterclass · Animée par Ehonam Afansi · Kinetix
-              Africa
+              Kinetix AI Video Masterclass · Ehonam Afansi · Kinetix Africa
             </p>
           </div>
         </section>
