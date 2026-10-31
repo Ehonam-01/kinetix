@@ -87,7 +87,7 @@ function Section({
     <section className={muted ? "bg-muted/40" : undefined}>
       <div
         className={cn(
-          "mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8",
+          "mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8",
           !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
         )}
       >
@@ -129,18 +129,18 @@ export default async function AtelierVideoIaPage() {
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto grid max-w-6xl items-center px-4 py-12 text-center sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-x-12 lg:px-8 lg:text-left">
+          <div className="relative mx-auto grid max-w-7xl items-center px-4 py-12 text-center sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-x-16 lg:px-8 lg:py-10 lg:text-left">
             <div className="lg:col-start-1">
               <span className="text-primary bg-primary/10 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
                 KINETIX AI VIDEO MASTERCLASS
               </span>
-              <h1 className="font-heading mt-5 text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-5xl">
+              <h1 className="font-heading mt-5 text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[2.6rem]">
                 En une matinée, crée une vraie pub vidéo avec l&apos;IA, et
                 repars avec la méthode pour la vendre.
               </h1>
               <p className="mt-5 font-medium">
-                Atelier pratique en présentiel à Lomé · Samedi 7 novembre · 8 h
-                – 13 h
+                Atelier pratique en présentiel à Lomé · Samedi 7 novembre ·{" "}
+                <span className="whitespace-nowrap">8 h – 13 h</span>
               </p>
             </div>
             <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
@@ -159,11 +159,11 @@ export default async function AtelierVideoIaPage() {
               <LaunchCountdown
                 endsAt={workshop.startsAt.toISOString()}
                 label="Temps restant avant l'atelier"
-                className="mt-7 lg:justify-start"
+                className="mt-6 lg:justify-start"
                 boxClassName="bg-card border"
                 labelClassName="text-muted-foreground"
               />
-              <div className="mt-7 flex flex-col items-center gap-3 lg:items-start">
+              <div className="mt-6 flex flex-col items-center gap-3 lg:flex-row lg:gap-5">
                 <WorkshopCta
                   label="JE RÉSERVE MA PLACE"
                   className="w-full sm:w-auto"

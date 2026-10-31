@@ -26,7 +26,7 @@ export function ExampleVideos({ videos }: { videos: ExampleVideo[] }) {
   }, [playing]);
 
   return (
-    <div className="mx-auto mt-8 mb-12 grid max-w-lg grid-cols-3 gap-7 px-7 sm:mt-12 sm:mb-20 sm:gap-14 sm:px-4">
+    <div className="mx-auto mt-8 mb-12 grid max-w-lg grid-cols-3 gap-7 px-7 sm:mt-12 sm:mb-20 sm:gap-14 sm:px-4 lg:my-0 lg:max-w-xl lg:gap-12 lg:px-6 lg:pb-14">
       {CARDS.map((tilt, i) => {
         const video = videos[i];
         const cardClass = cn(
