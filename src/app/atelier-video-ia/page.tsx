@@ -81,7 +81,8 @@ function Section({
   title: string;
   muted?: boolean;
   wide?: boolean;
-  // Under the title: beside the text on large screens, above it otherwise.
+  // Under the title: beside the text on large screens, above it otherwise,
+  // centred with a smaller title on phones.
   aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -93,8 +94,13 @@ function Section({
           !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
         )}
       >
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+        <div className={cn(aside && "text-center lg:text-left")}>
+          <h2
+            className={cn(
+              "font-semibold tracking-tight text-balance",
+              aside ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl",
+            )}
+          >
             {title}
           </h2>
           {aside}
@@ -268,7 +274,7 @@ export default async function AtelierVideoIaPage() {
               width={807}
               height={1018}
               sizes="(min-width: 640px) 18rem, 70vw"
-              className="mt-6 w-[70%] max-w-72 rounded-2xl object-cover shadow-lg sm:w-72"
+              className="mx-auto mt-6 w-[70%] max-w-72 rounded-2xl object-cover shadow-lg sm:w-72 lg:mx-0"
             />
           }
         >
