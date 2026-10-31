@@ -337,14 +337,6 @@ export default async function AtelierVideoIaPage() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <p>
-                🎁 <strong>Bonus :</strong> si tu rejoins Kinetix Africa le jour
-                de l&apos;atelier,{" "}
-                <strong>
-                  tes {fmt(workshop.priceCfa)} F sont déduits de ton abonnement
-                </strong>
-                .
-              </p>
               <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
               <p>
                 ⚠️ Les frais d&apos;inscription servent à confirmer ta présence
