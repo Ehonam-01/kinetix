@@ -32,7 +32,7 @@ import {
 
 const TITLE = `Kinetix AI Video Masterclass — ${SITE_NAME}`;
 const DESCRIPTION =
-  "En une matinée, crée une vraie pub vidéo avec l'IA, et repars avec la méthode pour la vendre. Atelier pratique en présentiel à Lomé, samedi 7 novembre, 8 h – 13 h.";
+  "En une matinée, crée une vraie pub vidéo avec l'IA, et repars avec la méthode pour la vendre. Atelier pratique en présentiel à Lomé, samedi 14 novembre, 8 h – 13 h.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -113,7 +113,7 @@ export default async function AtelierVideoIaPage() {
   const whatsappUrl = (text: string) =>
     supportWhatsapp ? whatsappHref(supportWhatsapp, text) : null;
   const waitlistUrl = whatsappUrl(
-    "Bonjour, je ne peux pas venir à l'atelier du 7 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
+    "Bonjour, je ne peux pas venir à l'atelier du 14 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
   );
 
   return (
@@ -122,7 +122,7 @@ export default async function AtelierVideoIaPage() {
       open={open}
       price={workshop.priceCfa}
       whatsappUrl={whatsappUrl(
-        "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 7 novembre.",
+        "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.",
       )}
     >
       <Navbar />
@@ -139,7 +139,7 @@ export default async function AtelierVideoIaPage() {
                 repars avec la méthode pour la vendre.
               </h1>
               <p className="mt-5 font-medium">
-                Atelier pratique en présentiel à Lomé · Samedi 7 novembre ·{" "}
+                Atelier pratique en présentiel à Lomé · Samedi 14 novembre ·{" "}
                 <span className="whitespace-nowrap">8 h – 13 h</span>
               </p>
             </div>
@@ -385,7 +385,7 @@ export default async function AtelierVideoIaPage() {
             </p>
             <p className="mt-2">
               La seule question :{" "}
-              <strong>seras-tu dans la salle le 7 novembre ?</strong>
+              <strong>seras-tu dans la salle le 14 novembre ?</strong>
             </p>
             <WorkshopCta
               label="OUI, JE RÉSERVE MA PLACE"

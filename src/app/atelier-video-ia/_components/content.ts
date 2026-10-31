@@ -109,7 +109,8 @@ export const FAQS = [
       "En ligne, par Mobile Money, au moment de ta réservation. Ta place est confirmée immédiatement et tu reçois le lien du groupe WhatsApp des participants.",
   },
   {
-    question: "Je ne peux pas venir le 7 novembre. Y aura-t-il d'autres sessions ?",
+    question:
+      "Je ne peux pas venir le 14 novembre. Y aura-t-il d'autres sessions ?",
     answer: "Inscris-toi sur la liste d'attente, tu seras prévenu en priorité.",
     waitlist: true,
   },

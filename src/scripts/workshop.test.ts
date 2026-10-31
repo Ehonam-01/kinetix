@@ -90,8 +90,7 @@ function participant(whatsapp: string, email: string | null = null) {
 }
 
 async function register(whatsapp: string, email: string | null = null) {
-  const { registerForWorkshop } =
-    await import("@/services/workshops/register");
+  const { registerForWorkshop } = await import("@/services/workshops/register");
   return registerForWorkshop(participant(whatsapp, email));
 }
 
@@ -188,7 +187,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       priceCfa: 2000,
       regularPriceCfa: 25000,
     });
-    expect(workshop.endsAt.toISOString()).toBe("2026-11-07T13:00:00.000Z");
+    expect(workshop.endsAt.toISOString()).toBe("2026-11-14T13:00:00.000Z");
   });
 
   it("a started payment confirms nothing, and takes no seat", async () => {
@@ -371,8 +370,9 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     const member = await makeMember();
     const { payment } = await subscribeWithCode(member, discountCode);
 
-    const subscription =
-      await confirmSubscriptionPurchaseInNewTransaction(payment.id);
+    const subscription = await confirmSubscriptionPurchaseInNewTransaction(
+      payment.id,
+    );
     expect(subscription?.pricePaid).toBe(payment.amount);
   });
 
@@ -459,13 +459,13 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     const ics = buildWorkshopIcs({
       id: "abc",
       title: "Atelier, vidéo; IA",
-      startsAt: new Date("2026-11-07T08:00:00Z"),
-      endsAt: new Date("2026-11-07T13:00:00Z"),
+      startsAt: new Date("2026-11-14T08:00:00Z"),
+      endsAt: new Date("2026-11-14T13:00:00Z"),
       venue: "Lomé",
       url: ORIGIN,
     });
-    expect(ics).toContain("DTSTART:20261107T080000Z\r\n");
-    expect(ics).toContain("DTEND:20261107T130000Z\r\n");
+    expect(ics).toContain("DTSTART:20261114T080000Z\r\n");
+    expect(ics).toContain("DTEND:20261114T130000Z\r\n");
     expect(ics).toContain("SUMMARY:Atelier\\, vidéo\\; IA\r\n");
   });
 
