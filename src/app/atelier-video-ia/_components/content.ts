@@ -57,7 +57,7 @@ export const PROGRAM = [
 ];
 
 export const TO_BRING = [
-  "💻 **Ton ordinateur portable** (recommandé), ou à défaut ton smartphone récent, **chargé à 100 %**",
+  "💻 **Ton ordinateur portable ou ton smartphone**, **chargé à 100 %**",
   "🔌 Ton chargeur",
   "🎧 Des écouteurs",
   "📦 **Des photos du produit** pour lequel tu veux créer ta pub (sinon, on t'en fournit un)",
@@ -86,7 +86,7 @@ export const FAQS = [
   {
     question: "Dois-je apporter un ordinateur ?",
     answer:
-      "C'est recommandé pour un meilleur confort, mais un smartphone récent suffit pour réaliser ta pub.",
+      "Non. Ton ordinateur portable ou ton smartphone : les deux permettent de réaliser ta pub.",
   },
   {
     question: "Les outils sont-ils payants ?",

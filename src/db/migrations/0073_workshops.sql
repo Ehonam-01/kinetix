@@ -53,4 +53,4 @@ ALTER TABLE "workshops" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "workshop_registrations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 -- The one workshop: every value here is edited from /admin/atelier.
 INSERT INTO "workshops" ("slug", "title", "price_cfa", "regular_price_cfa", "capacity", "starts_at", "ends_at", "venue", "discount_valid_until")
-VALUES ('atelier-video-ia', 'Kinetix AI Video Masterclass', 2000, 25000, 50, '2026-11-07T08:00:00Z', '2026-11-07T13:00:00Z', '[adresse précise, Lomé]', '2026-11-07T23:59:59Z');
+VALUES ('atelier-video-ia', 'Kinetix AI Video Masterclass', 2000, 25000, 50, '2026-11-07T08:00:00Z', '2026-11-07T13:00:00Z', 'Adidogomé franciscain, Hôtel Marguo City, Lomé', '2026-11-07T23:59:59Z');
