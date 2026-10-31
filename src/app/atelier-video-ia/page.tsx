@@ -75,11 +75,14 @@ function Section({
   title,
   muted,
   wide,
+  aside,
   children,
 }: {
   title: string;
   muted?: boolean;
   wide?: boolean;
+  // Under the title: beside the text on large screens, above it otherwise.
+  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -90,9 +93,12 @@ function Section({
           !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
         )}
       >
-        <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-          {title}
-        </h2>
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+            {title}
+          </h2>
+          {aside}
+        </div>
         <div
           className={cn("mt-5 space-y-4 leading-relaxed", !wide && "lg:mt-0")}
         >
@@ -252,15 +258,20 @@ export default async function AtelierVideoIaPage() {
           </ol>
         </Section>
 
-        <Section title="Ton formateur : Ehonam Afansi" muted>
-          <Image
-            src="/formateur-ehonam-afansi.jpg"
-            alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
-            width={807}
-            height={1018}
-            sizes="(min-width: 640px) 16rem, 70vw"
-            className="mx-auto w-[70%] max-w-xs rounded-2xl object-cover shadow-lg sm:float-right sm:mb-2 sm:ml-6 sm:w-64"
-          />
+        <Section
+          title="Ton formateur : Ehonam Afansi"
+          muted
+          aside={
+            <Image
+              src="/formateur-ehonam-afansi.jpg"
+              alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
+              width={807}
+              height={1018}
+              sizes="(min-width: 640px) 18rem, 70vw"
+              className="mt-6 w-[70%] max-w-72 rounded-2xl object-cover shadow-lg sm:w-72"
+            />
+          }
+        >
           <p>
             Entrepreneur et consultant digital basé à Lomé, Ehonam forme depuis
             des années des jeunes africains aux compétences du numérique :
@@ -278,7 +289,6 @@ export default async function AtelierVideoIaPage() {
             « Je ne crois pas aux diplômes qui dorment dans un tiroir. Je crois
             aux compétences qui changent une vie. »
           </blockquote>
-          <div className="clear-both" />
         </Section>
 
         <Section title="Ce que tu dois apporter">
@@ -311,8 +321,7 @@ export default async function AtelierVideoIaPage() {
                     </span>
                   </strong>{" "}
                   (4 h de formation pratique, démonstrations d&apos;outils IA
-                  premium, modèle d&apos;offre, suivi de 30
-                  jours)
+                  premium, modèle d&apos;offre, suivi de 30 jours)
                 </p>
                 <p className="mt-4 text-lg font-semibold">
                   Seulement{" "}
