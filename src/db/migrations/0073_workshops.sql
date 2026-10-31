@@ -52,5 +52,5 @@ CREATE INDEX "workshop_registrations_whatsapp_idx" ON "workshop_registrations" U
 ALTER TABLE "workshops" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "workshop_registrations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 -- The one workshop: every value here is edited from /admin/atelier.
-INSERT INTO "workshops" ("slug", "title", "price_cfa", "regular_price_cfa", "capacity", "starts_at", "ends_at", "venue", "discount_valid_until")
-VALUES ('atelier-video-ia', 'Kinetix AI Video Masterclass', 2000, 25000, 50, '2026-11-14T08:00:00Z', '2026-11-14T13:00:00Z', 'Adidogomé franciscain, Hôtel Marguo City, Lomé', '2026-11-14T23:59:59Z');
+INSERT INTO "workshops" ("slug", "title", "price_cfa", "regular_price_cfa", "capacity", "starts_at", "ends_at", "venue", "whatsapp_group_url", "discount_valid_until")
+VALUES ('atelier-video-ia', 'Kinetix AI Video Masterclass', 2000, 25000, 50, '2026-11-14T08:00:00Z', '2026-11-14T13:00:00Z', 'Adidogomé franciscain, Hôtel Marguo City, Lomé', 'https://chat.whatsapp.com/F1qAyaFJZ5H6ZikkRjkHjX', '2026-11-14T23:59:59Z');
