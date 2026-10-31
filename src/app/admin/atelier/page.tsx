@@ -1,5 +1,6 @@
 import { db } from "@/db/client";
-import { formatWhatsapp } from "@/lib/whatsapp";
+import { getSiteEnv } from "@/config/env.site";
+import { formatWhatsapp, whatsappHref } from "@/lib/whatsapp";
 import { getWorkshop, listRegistrations } from "@/repositories/workshops";
 import { requireAdmin } from "@/services/auth/current-user";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,6 +14,29 @@ const STATUS_LABEL: Record<string, string> = {
 
 const fmtDate = (date: Date) =>
   date.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+
+const fmtValidUntil = (date: Date) =>
+  date.toLocaleString("fr-FR", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: "Africa/Lome",
+  });
+
+// The participant's code, sent by an admin after the workshop and the
+// platform's presentation: the confirmation page only shows it once the
+// workshop is over.
+function codeMessage(
+  registration: { fullName: string; amount: number; discountCode: string },
+  validUntil: Date,
+) {
+  const firstName = registration.fullName.trim().split(/\s+/)[0];
+  return [
+    `Bonjour ${firstName}, merci d'avoir participé à la Kinetix AI Video Masterclass !`,
+    `Voici ton code de réduction : ${registration.discountCode}`,
+    `${registration.amount.toLocaleString("fr-FR")} F déduits de ton abonnement Kinetix Africa si tu le saisis lors du paiement par Mobile Money. Utilisable une seule fois, jusqu'au ${fmtValidUntil(validUntil)}.`,
+    `Crée ton compte : ${getSiteEnv().SITE_URL}/register`,
+  ].join("\n\n");
+}
 
 // The paid workshop (/atelier-video-ia): its settings, who registered, and
 // the people added by hand after writing on WhatsApp.
@@ -69,6 +93,7 @@ export default async function AdminWorkshopPage() {
                     "Date",
                     "Code",
                     "Code utilisé",
+                    "Envoyer le code",
                   ].map((label) => (
                     <th key={label} className="px-3 py-2 font-medium">
                       {label}
@@ -96,6 +121,26 @@ export default async function AdminWorkshopPage() {
                     </td>
                     <td className="px-3 py-2">
                       {r.discountUsedAt ? "Oui" : "Non"}
+                    </td>
+                    <td className="px-3 py-2">
+                      {r.discountCode && !r.discountUsedAt ? (
+                        <a
+                          href={whatsappHref(
+                            r.whatsapp,
+                            codeMessage(
+                              { ...r, discountCode: r.discountCode },
+                              workshop.discountValidUntil,
+                            ),
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary font-medium whitespace-nowrap underline-offset-4 hover:underline"
+                        >
+                          WhatsApp
+                        </a>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -228,7 +228,8 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       49,
     );
     await vi.waitFor(() => expect(sentEmails).toHaveLength(1));
-    expect(sentEmails[0].html).toContain(registration.discountCode);
+    // The code is handed out after the workshop, not at registration.
+    expect(sentEmails[0].html).not.toContain(registration.discountCode);
   });
 
   it("a failed payment frees the number, a double submission doesn't", async () => {

@@ -47,7 +47,6 @@ async function sendConfirmationEmail(
       <p>Bonjour ${escapeHtml(registration.fullName)},</p>
       <p>Ta place est confirmée pour le <strong>${fmtDateTime(workshop.startsAt)}</strong>.</p>
       <p>Lieu : ${escapeHtml(workshop.venue)}</p>
-      <p>Ton code de réduction sur l'abonnement Kinetix Africa : <strong>${registration.discountCode}</strong>, valable jusqu'au ${fmtDateTime(workshop.discountValidUntil)}.</p>
       <p><a href="${url}">Voir ma confirmation, rejoindre le groupe WhatsApp et ajouter l'atelier à mon agenda</a></p>
     `,
     });

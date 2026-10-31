@@ -2,15 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarPlus, CheckCircle2, XCircle } from "lucide-react";
-import { Footer } from "@/app/_components/footer";
-import { Navbar } from "@/app/_components/navbar";
 import { buttonVariants } from "@/components/ui/button";
 import { db } from "@/db/client";
 import { cn } from "@/lib/utils";
-import {
-  findRegistrationByToken,
-  getWorkshop,
-} from "@/repositories/workshops";
+import { findRegistrationByToken, getWorkshop } from "@/repositories/workshops";
 import { TO_BRING } from "../_components/content";
 import { RichText } from "../_components/rich-text";
 import { WhatsappButton } from "../_components/workshop-live";
@@ -44,10 +39,13 @@ export default async function AtelierMerciPage(
   const registration = await findRegistrationByToken(db, t);
   if (!registration) notFound();
   const workshop = await getWorkshop(db);
+  // The code is given after the workshop and the platform's presentation:
+  // until it ends, this page doesn't show it (the admins can also send it
+  // by WhatsApp from /admin/atelier).
+  const codeRevealed = Date.now() >= workshop.endsAt.getTime();
 
   return (
     <>
-      <Navbar />
       <main className="mx-auto max-w-xl space-y-6 px-4 py-10 sm:px-6 sm:py-16">
         {registration.status === "PENDING" && (
           <div className="bg-card space-y-3 rounded-2xl border p-5">
@@ -66,7 +64,9 @@ export default async function AtelierMerciPage(
         {registration.status === "FAILED" && (
           <div className="bg-card space-y-3 rounded-2xl border p-5">
             <XCircle className="text-destructive size-8" />
-            <h1 className="text-2xl font-semibold">Le paiement n&apos;a pas abouti</h1>
+            <h1 className="text-2xl font-semibold">
+              Le paiement n&apos;a pas abouti
+            </h1>
             <p>Aucune place n&apos;a été réservée. Tu peux réessayer.</p>
             <Link
               href="/atelier-video-ia#inscription"
@@ -85,7 +85,9 @@ export default async function AtelierMerciPage(
             />
             <div className="space-y-2">
               <CheckCircle2 className="size-8 text-green-600" />
-              <h1 className="text-2xl font-semibold">Ta place est confirmée !</h1>
+              <h1 className="text-2xl font-semibold">
+                Ta place est confirmée !
+              </h1>
               <p className="text-muted-foreground">{workshop.title}</p>
             </div>
 
@@ -141,7 +143,7 @@ export default async function AtelierMerciPage(
               </ul>
             </div>
 
-            {registration.discountCode && (
+            {registration.discountCode && codeRevealed && (
               <div className="border-brand-accent bg-brand-accent/10 rounded-2xl border-2 p-5">
                 <h2 className="font-semibold">Ton code de réduction</h2>
                 <p className="mt-2 font-mono text-xl font-bold break-all">
@@ -149,8 +151,8 @@ export default async function AtelierMerciPage(
                 </p>
                 <p className="mt-2 text-sm">
                   {registration.amount.toLocaleString("fr-FR")} F déduits de ton
-                  abonnement Kinetix Africa si tu le saisis lors du paiement
-                  par Mobile Money. Utilisable une seule fois, jusqu&apos;au{" "}
+                  abonnement Kinetix Africa si tu le saisis lors du paiement par
+                  Mobile Money. Utilisable une seule fois, jusqu&apos;au{" "}
                   {fmtDate(workshop.discountValidUntil)} à{" "}
                   {fmtTime(workshop.discountValidUntil)}.
                 </p>
@@ -159,7 +161,6 @@ export default async function AtelierMerciPage(
           </>
         )}
       </main>
-      <Footer />
     </>
   );
 }
