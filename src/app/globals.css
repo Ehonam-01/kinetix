@@ -391,3 +391,16 @@ html.kx-launch-on .kx-launch {
     transform: none;
   }
 }
+
+/* The workshop's example video cards (atelier-video-ia/_components/
+   example-videos.tsx) drifting up and down. transform only: the tilt and
+   offset use the separate rotate/translate properties, which it adds to. */
+@keyframes kx-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7%);
+  }
+}

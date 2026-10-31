@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 
 export type ExampleVideo = { embedUrl: string; thumbnailUrl: string };
 
-// The fan of three cards, each with its own tilt. Fixed: always three, the
+// The fan of three cards, each with its own tilt, drifting up and down
+// (kx-bob in globals.css; still for visitors who turned animations off). Fixed: always three, the
 // ones without a video stay plain cards.
 const CARDS = [
   "-rotate-[19deg] translate-y-[10%]",
@@ -30,11 +31,20 @@ export function ExampleVideos({ videos }: { videos: ExampleVideo[] }) {
       {CARDS.map((tilt, i) => {
         const video = videos[i];
         const cardClass = cn(
-          "aspect-[9/17] w-full overflow-hidden rounded-[18%/10%] bg-[#078F5F]",
+          "aspect-[9/17] w-full overflow-hidden rounded-[18%/10%] bg-[#078F5F] motion-safe:animate-[kx-bob_4s_ease-in-out_infinite]",
           tilt,
         );
+        // Out of step with each other, like a hand waving them.
+        const style = { animationDelay: `${-i * 1.3}s` };
         if (!video) {
-          return <div key={i} aria-hidden="true" className={cardClass} />;
+          return (
+            <div
+              key={i}
+              aria-hidden="true"
+              className={cardClass}
+              style={style}
+            />
+          );
         }
         return (
           <button
@@ -43,6 +53,7 @@ export function ExampleVideos({ videos }: { videos: ExampleVideo[] }) {
             onClick={() => setPlaying(video)}
             aria-label={`Regarder la vidéo d'exemple ${i + 1}`}
             className={cn(cardClass, "relative cursor-pointer")}
+            style={style}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
