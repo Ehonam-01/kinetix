@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { ChevronDown } from "lucide-react";
-import { Footer } from "@/app/_components/footer";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
-import { Navbar } from "@/app/_components/navbar";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import { SITE_NAME } from "@/config/site";
 import { db } from "@/db/client";
@@ -125,7 +123,6 @@ export default async function AtelierVideoIaPage() {
         "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.",
       )}
     >
-      <Navbar />
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
           <GridBackdrop />
@@ -400,7 +397,6 @@ export default async function AtelierVideoIaPage() {
         </section>
       </main>
       <StickyCta />
-      <Footer />
     </WorkshopLiveProvider>
   );
 }
