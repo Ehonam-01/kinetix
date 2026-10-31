@@ -114,11 +114,6 @@ export default async function AtelierVideoIaPage() {
               Atelier pratique en présentiel à Lomé · Samedi 7 novembre · 8 h –
               13 h
             </p>
-            <p className="text-muted-foreground mt-2 text-sm italic">
-              Formation offerte · {fmt(workshop.priceCfa)} F de frais
-              d&apos;inscription · Suivie d&apos;une présentation de Kinetix
-              Africa
-            </p>
             <p className="mx-auto mt-5 max-w-2xl font-semibold text-pretty">
               Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
               une vidéo publicitaire terminée pour un vrai produit, et un plan
