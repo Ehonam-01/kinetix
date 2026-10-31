@@ -51,7 +51,7 @@ const reportOnlyCsp = [
   // (components/marketing/marketing-consent.tsx).
   "script-src 'self' 'unsafe-inline' https://connect.facebook.net",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${supabaseOrigin} https://www.facebook.com`,
+  `img-src 'self' data: blob: ${supabaseOrigin} https://www.facebook.com https://i.ytimg.com`,
   "font-src 'self' data:",
   `connect-src 'self' ${supabaseOrigin} https://www.facebook.com https://connect.facebook.net`,
   `media-src 'self' ${supabaseOrigin}`,

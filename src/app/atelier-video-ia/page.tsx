@@ -6,6 +6,7 @@ import { Navbar } from "@/app/_components/navbar";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import { SITE_NAME } from "@/config/site";
 import { db } from "@/db/client";
+import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { whatsappHref } from "@/lib/whatsapp";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
 import { getWorkshop, getWorkshopAvailability } from "@/repositories/workshops";
@@ -17,6 +18,10 @@ import {
   PROGRAM,
   TO_BRING,
 } from "./_components/content";
+import {
+  ExampleVideos,
+  type ExampleVideo,
+} from "./_components/example-videos";
 import { RegistrationForm } from "./_components/registration-form";
 import { RichText } from "./_components/rich-text";
 import {
@@ -55,6 +60,16 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 const fmt = (amount: number) => amount.toLocaleString("fr-FR");
+
+function toExampleVideo(url: string): ExampleVideo | null {
+  const embedUrl = getVideoEmbedUrl("YOUTUBE", url);
+  const id = embedUrl?.match(/\/embed\/([\w-]+)/)?.[1];
+  if (!embedUrl || !id) return null;
+  return {
+    embedUrl,
+    thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+  };
+}
 
 function Section({
   title,
@@ -114,6 +129,11 @@ export default async function AtelierVideoIaPage() {
               Atelier pratique en présentiel à Lomé · Samedi 7 novembre · 8 h –
               13 h
             </p>
+            <ExampleVideos
+              videos={workshop.exampleVideoUrls
+                .map(toExampleVideo)
+                .filter((video) => video !== null)}
+            />
             <p className="mx-auto mt-5 max-w-2xl font-semibold text-pretty">
               Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
               une vidéo publicitaire terminée pour un vrai produit, et un plan
@@ -214,13 +234,6 @@ export default async function AtelierVideoIaPage() {
               </li>
             ))}
           </ol>
-        </Section>
-
-        <Section title="Exemples de pubs réalisées avec cette méthode">
-          <p className="text-muted-foreground rounded-2xl border border-dashed p-6 text-center text-sm">
-            [INSÉRER 2 OU 3 VIDÉOS EXEMPLES : produit alimentaire, boutique,
-            application…]
-          </p>
         </Section>
 
         <Section title="Ton formateur : Ehonam Afansi" muted>

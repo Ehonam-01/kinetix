@@ -31,6 +31,7 @@ export function WorkshopSettingsForm({
     capacity: number;
     venue: string;
     whatsappGroupUrl: string | null;
+    exampleVideoUrls: string[];
     registrationsOpen: boolean;
   };
 }) {
@@ -43,6 +44,9 @@ export function WorkshopSettingsForm({
     venue: current.venue,
     whatsappGroupUrl: current.whatsappGroupUrl ?? "",
   });
+  const [videos, setVideos] = useState(
+    [0, 1, 2].map((i) => current.exampleVideoUrls[i] ?? ""),
+  );
   const [registrationsOpen, setRegistrationsOpen] = useState(
     current.registrationsOpen,
   );
@@ -58,6 +62,7 @@ export function WorkshopSettingsForm({
     startTransition(async () => {
       const result = await updateWorkshopSettingsAction({
         ...values,
+        exampleVideoUrls: videos,
         registrationsOpen,
       });
       setMessage(result.error ?? "Enregistré.");
@@ -102,6 +107,18 @@ export function WorkshopSettingsForm({
         value={values.whatsappGroupUrl}
         onChange={set("whatsappGroupUrl")}
       />
+      {videos.map((url, i) => (
+        <Field
+          key={i}
+          id={`workshop-video-${i}`}
+          label={`Vidéo d'exemple ${i + 1} (lien YouTube)`}
+          placeholder="https://www.youtube.com/shorts/..."
+          value={url}
+          onChange={(e) =>
+            setVideos((v) => v.map((u, j) => (j === i ? e.target.value : u)))
+          }
+        />
+      ))}
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"

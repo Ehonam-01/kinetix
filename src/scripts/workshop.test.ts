@@ -406,19 +406,33 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       capacity: 60,
       venue: "Lomé, Tokoin",
       whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
+      exampleVideoUrls: ["", "https://youtube.com/shorts/dQw4w9WgXcQ", ""],
       registrationsOpen: false,
     });
     expect(await localDb.query.workshops.findFirst()).toMatchObject({
       priceCfa: 2500,
       capacity: 60,
+      exampleVideoUrls: ["https://youtube.com/shorts/dQw4w9WgXcQ"],
       registrationsOpen: false,
     });
+    await expect(
+      updateWorkshopSettings(admin, {
+        priceCfa: 2000,
+        regularPriceCfa: 25000,
+        capacity: 50,
+        venue: "Lomé",
+        whatsappGroupUrl: "",
+        exampleVideoUrls: ["https://exemple.com/video"],
+        registrationsOpen: true,
+      }),
+    ).rejects.toThrow("Lien YouTube invalide");
     await updateWorkshopSettings(admin, {
       priceCfa: 2000,
       regularPriceCfa: 25000,
       capacity: 50,
       venue: "[adresse précise, Lomé]",
       whatsappGroupUrl: "",
+      exampleVideoUrls: [],
       registrationsOpen: true,
     });
 

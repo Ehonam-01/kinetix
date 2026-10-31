@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { toWhatsappDigits, WHATSAPP_FORMAT_ERROR } from "@/lib/whatsapp";
 
 // A Togolese number typed without its code ("90 00 00 00") is the usual case
@@ -60,6 +61,19 @@ export const workshopSettingsSchema = z.object({
       "Lien de groupe WhatsApp invalide (https://chat.whatsapp.com/...).",
     )
     .transform((value) => value || null),
+  // Blanks dropped: a filled link is shown, whichever field it was typed in.
+  exampleVideoUrls: z
+    .array(
+      z
+        .string()
+        .trim()
+        .refine(
+          (value) => !value || getVideoEmbedUrl("YOUTUBE", value),
+          "Lien YouTube invalide.",
+        ),
+    )
+    .max(3)
+    .transform((urls) => urls.filter(Boolean)),
   registrationsOpen: z.boolean(),
 });
 

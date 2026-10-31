@@ -8,6 +8,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { payments } from "./payments";
 
 export const workshopRegistrationStatusEnum = pgEnum(
@@ -37,6 +38,11 @@ export const workshops = pgTable("workshops", {
   endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
   venue: text("venue").notNull(),
   whatsappGroupUrl: text("whatsapp_group_url"),
+  // Up to three YouTube links, shown at the top of the sales page.
+  exampleVideoUrls: text("example_video_urls")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   registrationsOpen: boolean("registrations_open").notNull().default(true),
   // Last moment a participant's code still takes money off a subscription.
   discountValidUntil: timestamp("discount_valid_until", {

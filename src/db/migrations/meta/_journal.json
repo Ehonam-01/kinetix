@@ -519,6 +519,13 @@
       "when": 1793404982163,
       "tag": "0073_workshops",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1793406707819,
+      "tag": "0074_workshop_example_videos",
+      "breakpoints": true
     }
   ]
 }
