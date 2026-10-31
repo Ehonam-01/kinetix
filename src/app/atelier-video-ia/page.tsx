@@ -301,7 +301,7 @@ export default async function AtelierVideoIaPage() {
                     </span>
                   </strong>{" "}
                   (4 h de formation pratique, démonstrations d&apos;outils IA
-                  premium, guide de prompts, modèle d&apos;offre, suivi de 30
+                  premium, modèle d&apos;offre, suivi de 30
                   jours)
                 </p>
                 <p className="mt-4 text-lg font-semibold">

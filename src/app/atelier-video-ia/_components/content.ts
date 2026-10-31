@@ -66,7 +66,6 @@ export const TO_BRING = [
 export const INCLUDED = [
   "4 heures de formation pratique encadrée",
   "La collation de la pause",
-  "Le guide PDF des prompts publicitaires",
   "Le modèle d'offre pour proposer tes services aux entreprises",
   "L'accès au groupe WhatsApp de suivi pendant 30 jours",
   "Une attestation de participation",
