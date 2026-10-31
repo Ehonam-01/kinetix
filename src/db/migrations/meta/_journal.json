@@ -512,6 +512,13 @@
       "when": 1792658533801,
       "tag": "0072_course_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1793404982163,
+      "tag": "0073_workshops",
+      "breakpoints": true
     }
   ]
 }

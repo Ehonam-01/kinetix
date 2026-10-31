@@ -33,6 +33,12 @@ const LIMITS = {
   otpConfirm: { tokens: 10, window: "15 m" },
   // Starting a mobile money payment pushes a USSD/SMS prompt to a phone.
   paymentStart: { tokens: 5, window: "15 m" },
+  // The workshop's public form, per phone number; per IP much wider, since
+  // many mobile visitors can share one address.
+  workshopRegistration: { tokens: 5, window: "15 m" },
+  workshopRegistrationByIp: { tokens: 60, window: "15 m" },
+  // The confirmation page checking its payment, per access token.
+  workshopStatus: { tokens: 30, window: "1 m" },
   // Pseudo -> name previews (registration sponsor, transfer recipient).
   lookup: { tokens: 30, window: "1 m" },
   referralClick: { tokens: 30, window: "1 m" },

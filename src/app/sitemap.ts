@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/",
     "/formations",
     "/programme-ambassadeur",
+    "/atelier-video-ia",
     "/mentions-legales",
     "/conditions-utilisation",
     "/confidentialite",

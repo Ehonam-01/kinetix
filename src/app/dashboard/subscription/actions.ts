@@ -25,6 +25,7 @@ import {
 import { getPaymentProviderByName } from "@/services/payments/provider-selector";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
+import { findWorkshopDiscount } from "@/services/workshops/discount";
 
 // {error}-return convention, same as every other action here: a payment
 // provider rejecting the request (bad/placeholder credentials, a network
@@ -43,6 +44,7 @@ export async function subscribeAction(
   phone: string,
   otp?: string,
   address?: string,
+  workshopCode?: string,
 ) {
   const { authUser, profile } = await requireUser();
   // Past the grace period only an admin can reactivate the account —
@@ -92,6 +94,7 @@ export async function subscribeAction(
       phone,
       otp,
       address,
+      workshopCode: workshopCode || undefined,
     });
     checkoutUrl = intent.checkoutUrl;
     confirmationMessage = intent.confirmationMessage;
@@ -115,6 +118,14 @@ export async function subscribeAction(
     };
   }
   redirect(checkoutUrl);
+}
+
+// Previews a workshop participant's code (services/workshops/discount.ts)
+// before paying: what it takes off, or null when it can't be used.
+export async function checkWorkshopCodeAction(code: string) {
+  const { profile } = await requireUser();
+  if (await isRateLimited("lookup", `user:${profile.id}`)) return null;
+  return findWorkshopDiscount(db, code);
 }
 
 // One deposit towards the member's installment plan ("cagnotte",

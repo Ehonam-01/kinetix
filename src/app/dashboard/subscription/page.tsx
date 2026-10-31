@@ -128,6 +128,7 @@ export default async function SubscriptionPage() {
             activeProvider={activeProvider}
             installments={installments}
             otherCountries={otherCountries}
+            workshopDiscount={options.workshopDiscount}
           />
           <CountrySupportHint
             whatsapp={supportWhatsapp}

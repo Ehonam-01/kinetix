@@ -4,6 +4,10 @@ import type { Executor } from "@/db/executor";
 import { paymentEvents, payments } from "@/db/schema/payments";
 import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
 import { applyInstallmentDeposit } from "@/services/subscriptions/installments";
+import {
+  confirmWorkshopRegistration,
+  failWorkshopRegistration,
+} from "@/services/workshops/confirm";
 import { activateRegistration } from "./activate-registration";
 import type { WebhookEvent } from "./provider";
 import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
@@ -81,6 +85,8 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
       await applyInstallmentDeposit(tx, payment.id);
     } else if (payment.purpose === "REGISTRATION") {
       await activateRegistration(tx, payment.id);
+    } else if (payment.purpose === "WORKSHOP") {
+      await confirmWorkshopRegistration(tx, payment.id);
     }
   } else if (event.status === "FAILED") {
     // Only a payment still waiting can fail: a late "failed"/"reversed"
@@ -90,6 +96,9 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
       .update(payments)
       .set({ status: "FAILED" })
       .where(and(eq(payments.id, payment.id), eq(payments.status, "PENDING")));
+    if (payment.purpose === "WORKSHOP") {
+      await failWorkshopRegistration(tx, payment.id);
+    }
   }
 
   return { processed: true as const };

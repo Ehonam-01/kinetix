@@ -26,6 +26,10 @@ export async function activateRegistration(tx: Executor, paymentId: string) {
   if (payment.status === "CONFIRMED") {
     return payment;
   }
+  const memberId = payment.beneficiaryUserId;
+  if (!memberId) {
+    throw new Error(`Paiement d'inscription sans membre : ${paymentId}`);
+  }
 
   await tx
     .update(payments)
@@ -35,30 +39,30 @@ export async function activateRegistration(tx: Executor, paymentId: string) {
   await tx
     .update(profiles)
     .set({ status: "ACTIVE" })
-    .where(eq(profiles.id, payment.beneficiaryUserId));
+    .where(eq(profiles.id, memberId));
 
   const sponsorship = await tx.query.sponsorships.findFirst({
-    where: eq(sponsorships.userId, payment.beneficiaryUserId),
+    where: eq(sponsorships.userId, memberId),
   });
 
   if (sponsorship) {
-    await placeMember(tx, payment.beneficiaryUserId, sponsorship.sponsorId);
+    await placeMember(tx, memberId, sponsorship.sponsorId);
   } else {
     // No sponsor only ever happens for the platform's very first member —
     // createRootNode refuses a second call once a root exists.
-    await createRootNode(tx, payment.beneficiaryUserId);
+    await createRootNode(tx, memberId);
   }
 
-  await unlockLevel(tx, payment.beneficiaryUserId, 1);
+  await unlockLevel(tx, memberId, 1);
 
   if (sponsorship) {
     const rate = await getCurrentParameterValue(tx, "commission.direct");
     await createCommissionEvent(tx, {
       beneficiaryUserId: sponsorship.sponsorId,
-      sourceUserId: payment.beneficiaryUserId,
+      sourceUserId: memberId,
       type: "DIRECT",
       amount: rate,
-      dedupeKey: `DIRECT:${sponsorship.sponsorId}:${payment.beneficiaryUserId}`,
+      dedupeKey: `DIRECT:${sponsorship.sponsorId}:${memberId}`,
     });
   }
 

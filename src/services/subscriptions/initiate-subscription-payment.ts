@@ -9,6 +9,11 @@ import { getActivePaymentProvider } from "@/services/payments/provider-selector"
 import { saspayProvider } from "@/services/payments/saspay";
 import { isSaspayEnabled } from "@/repositories/payment-settings";
 import { OTHER_COUNTRY } from "@/config/paydunya-countries";
+import {
+  normalizeWorkshopCode,
+  releaseWorkshopDiscount,
+  reserveWorkshopDiscount,
+} from "@/services/workshops/discount";
 
 function splitFullName(fullName: string): {
   firstName: string;
@@ -53,8 +58,15 @@ export async function initiateSubscriptionPayment(input: {
   // installments.ts) instead of the full price: charged the same way, but
   // recorded as an INSTALLMENT payment, which never grants access itself.
   installment?: { planId: string; amount: number };
+  // A workshop participant's code (services/workshops/discount.ts): takes
+  // what they paid for the workshop off the full price. Not for a deposit.
+  workshopCode?: string;
 }) {
-  const amount = input.installment
+  const workshopCode =
+    !input.installment && input.workshopCode
+      ? normalizeWorkshopCode(input.workshopCode)
+      : undefined;
+  const fullAmount = input.installment
     ? input.installment.amount
     : await getCurrentParameterValue(db, "subscription.price_in_cfa");
   const attribution = input.installment
@@ -71,6 +83,10 @@ export async function initiateSubscriptionPayment(input: {
     input.country === OTHER_COUNTRY
       ? saspayProvider
       : await getActivePaymentProvider(db);
+  const discount = workshopCode
+    ? await reserveWorkshopDiscount(db, workshopCode)
+    : 0;
+  const amount = Math.max(0, fullAmount - discount);
 
   // Inserted before calling the provider, deliberately — providerReference
   // is filled in once createPayment returns, below. If that call throws
@@ -106,24 +122,30 @@ export async function initiateSubscriptionPayment(input: {
         : {
             ambassadorUserId: attribution?.ambassadorUserId ?? null,
             attributionId: attribution?.attributionId ?? null,
+            workshopCode: workshopCode ?? null,
           },
     })
     .returning();
 
-  const intent = await provider.createPayment({
-    amount,
-    description: input.installment
-      ? "Versement — abonnement annuel Kinetix Africa"
-      : "Abonnement annuel Kinetix Africa",
-    customer: { email: input.email, firstName, lastName, phone: input.phone },
-    returnUrl: input.returnUrl,
-    idempotencyKey,
-    metadata: { beneficiary_user_id: input.buyerUserId },
-    operator: input.operator,
-    country: input.country,
-    otp: input.otp,
-    address: input.address,
-  });
+  const intent = await provider
+    .createPayment({
+      amount,
+      description: input.installment
+        ? "Versement — abonnement annuel Kinetix Africa"
+        : "Abonnement annuel Kinetix Africa",
+      customer: { email: input.email, firstName, lastName, phone: input.phone },
+      returnUrl: input.returnUrl,
+      idempotencyKey,
+      metadata: { beneficiary_user_id: input.buyerUserId },
+      operator: input.operator,
+      country: input.country,
+      otp: input.otp,
+      address: input.address,
+    })
+    .catch(async (err) => {
+      if (workshopCode) await releaseWorkshopDiscount(db, workshopCode);
+      throw err;
+    });
 
   // PayDunya's Wizall Money only: the transaction id and phone the second
   // confirmation step needs are kept server-side, never taken back from

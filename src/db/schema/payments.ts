@@ -30,6 +30,9 @@ export const paymentPurposeEnum = pgEnum("payment_purpose", [
   // — never grants access by itself; the subscription comes from the
   // separate SUBSCRIPTION payment created once the plan is fully paid.
   "INSTALLMENT",
+  // A seat at a paid workshop (db/schema/workshops.ts). The participant has
+  // no account, so these are the only payments without a beneficiary.
+  "WORKSHOP",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [
@@ -50,9 +53,9 @@ export const payments = pgTable(
   "payments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    beneficiaryUserId: uuid("beneficiary_user_id")
-      .notNull()
-      .references(() => profiles.id),
+    beneficiaryUserId: uuid("beneficiary_user_id").references(
+      () => profiles.id,
+    ),
     payerUserId: uuid("payer_user_id").references(() => profiles.id),
     grantedByAdminId: uuid("granted_by_admin_id").references(() => profiles.id),
     purpose: paymentPurposeEnum("purpose").notNull().default("REGISTRATION"),

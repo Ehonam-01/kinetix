@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   checkSubscriptionConfirmedAction,
+  checkWorkshopCodeAction,
   confirmWizallPaymentAction,
   subscribeAction,
 } from "./actions";
@@ -36,6 +37,7 @@ type StartPayment = (
   phone: string,
   otp?: string,
   address?: string,
+  workshopCode?: string,
 ) => ReturnType<typeof subscribeAction>;
 
 export function PaydunyaSubscribeForm({
@@ -43,6 +45,7 @@ export function PaydunyaSubscribeForm({
   start = subscribeAction,
   submitLabel = "Payer",
   otherCountries = false,
+  workshopDiscount = false,
 }: {
   price: number;
   start?: StartPayment;
@@ -50,6 +53,8 @@ export function PaydunyaSubscribeForm({
   // Offers "Autre pays / carte bancaire" (SasPay's hosted checkout) when
   // SasPay is configured.
   otherCountries?: boolean;
+  // Offers the field for the code a workshop participant received.
+  workshopDiscount?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -58,6 +63,9 @@ export function PaydunyaSubscribeForm({
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [address, setAddress] = useState("");
+  const [workshopCode, setWorkshopCode] = useState("");
+  const [discount, setDiscount] = useState<number | null>(null);
+  const [codeRefused, setCodeRefused] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(
     null,
@@ -117,6 +125,17 @@ export function PaydunyaSubscribeForm({
     return () => clearInterval(interval);
   }, [paymentId, confirmed, wizall, pollOutcome, router, price]);
 
+  function handleCodeCheck() {
+    setDiscount(null);
+    setCodeRefused(false);
+    if (!workshopCode.trim()) return;
+    startTransition(async () => {
+      const amount = await checkWorkshopCodeAction(workshopCode);
+      setDiscount(amount);
+      setCodeRefused(amount === null);
+    });
+  }
+
   function handleCountryChange(next: string) {
     setCountry(next);
     setOperator("");
@@ -153,6 +172,7 @@ export function PaydunyaSubscribeForm({
         phone.trim(),
         needsOtp ? otp.trim() : undefined,
         needsAddress ? address.trim() : undefined,
+        discount ? workshopCode.trim() : undefined,
       );
       if (result.error) {
         setError(result.error);
@@ -342,6 +362,42 @@ export function PaydunyaSubscribeForm({
           )}
         </>
       )}
+      {workshopDiscount && !isOther && (
+        <div className="space-y-2">
+          <Label htmlFor="workshop-code">Code atelier (facultatif)</Label>
+          <div className="flex gap-2">
+            <Input
+              id="workshop-code"
+              value={workshopCode}
+              onChange={(e) => {
+                setWorkshopCode(e.target.value);
+                setDiscount(null);
+                setCodeRefused(false);
+              }}
+              placeholder="ATELIER-XXXXXXXX"
+              autoCapitalize="characters"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || !workshopCode.trim()}
+              onClick={handleCodeCheck}
+            >
+              Appliquer
+            </Button>
+          </div>
+          {discount !== null && (
+            <p className="text-sm text-green-600">
+              {discount.toLocaleString("fr-FR")} F déduits de ton abonnement.
+            </p>
+          )}
+          {codeRefused && (
+            <p className="text-destructive text-sm">
+              Ce code est invalide, expiré ou déjà utilisé.
+            </p>
+          )}
+        </div>
+      )}
       {error && <p className="text-destructive text-sm">{error}</p>}
       {/* The page's main action: big, in the brand's accent colour. */}
       <Button
@@ -356,7 +412,7 @@ export function PaydunyaSubscribeForm({
             <Lock className="size-5" />
             {isOther
               ? `Continuer vers le paiement — ${price.toLocaleString("fr-FR")} F`
-              : `${submitLabel} — ${price.toLocaleString("fr-FR")} F`}
+              : `${submitLabel} — ${Math.max(0, price - (discount ?? 0)).toLocaleString("fr-FR")} F`}
             <ArrowRight className="size-5" />
           </>
         )}

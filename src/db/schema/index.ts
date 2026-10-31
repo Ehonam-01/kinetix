@@ -36,3 +36,4 @@ export * from "./launch-offer-reminders";
 export * from "./marketing";
 export * from "./trainer-profiles";
 export * from "./course-reviews";
+export * from "./workshops";

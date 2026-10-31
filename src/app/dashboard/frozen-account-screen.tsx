@@ -54,6 +54,7 @@ export function FrozenAccountScreen({
         activeProvider={options.activeProvider}
         installments={options.installments}
         otherCountries={options.otherCountries}
+        workshopDiscount={options.workshopDiscount}
       />
     </div>
   );

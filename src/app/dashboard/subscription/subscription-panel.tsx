@@ -19,12 +19,15 @@ export function SubscriptionPanel({
   activeProvider,
   installments,
   otherCountries = false,
+  workshopDiscount = false,
 }: {
   price: number;
   username: string;
   activeProvider: string;
   // SasPay configured: "Autre pays / carte bancaire" on the PayDunya form.
   otherCountries?: boolean;
+  // Offers the code a workshop participant received (paydunya-subscribe-form).
+  workshopDiscount?: boolean;
   // Present only when this member may pay in several deposits (first
   // subscription, PayDunya active) — see page.tsx.
   installments?: {
@@ -81,6 +84,7 @@ export function SubscriptionPanel({
           <PaydunyaSubscribeForm
             price={price}
             otherCountries={otherCountries}
+            workshopDiscount={workshopDiscount}
           />
         ) : activeProvider === "BICTORYS" ? (
           <SubscribeButton price={price} />

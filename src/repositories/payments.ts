@@ -68,7 +68,11 @@ export async function listPayments(executor: Executor, limit = 100) {
 
   return rows.map((row) => ({
     ...row,
-    beneficiaryName: nameById.get(row.beneficiaryUserId) ?? "Membre",
+    // A workshop participant has no account (db/schema/workshops.ts).
+    beneficiaryName: row.beneficiaryUserId
+      ? (nameById.get(row.beneficiaryUserId) ?? "Membre")
+      : ((row.metadata as { participantName?: string } | null)
+          ?.participantName ?? "Participant atelier"),
     payerName: row.payerUserId
       ? (nameById.get(row.payerUserId) ?? "Membre")
       : null,

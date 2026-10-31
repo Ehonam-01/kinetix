@@ -20,6 +20,7 @@ import {
   joinAmbassadorProgram,
 } from "@/services/ambassador/join-program";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
+import { spendWorkshopDiscount } from "@/services/workshops/discount";
 import { closeOpenInstallmentPlan } from "./close-installment-plan";
 
 type SubscriptionPaymentMetadata = {
@@ -32,6 +33,8 @@ type SubscriptionPaymentMetadata = {
   // different amount (grant-subscription-credit.ts): the commission is
   // prorated to it, whatever the rule's type.
   referencePrice?: number | null;
+  // Set when a workshop participant's code reduced this payment's amount.
+  workshopCode?: string | null;
 };
 
 // The direct commission on a first subscription. Without a referencePrice
@@ -117,11 +120,14 @@ export async function confirmSubscriptionPurchase(
       where: eq(subscriptions.paymentId, paymentId),
     });
   }
+  const buyerUserId = payment.beneficiaryUserId;
+  if (!buyerUserId) {
+    throw new Error(`Paiement d'abonnement sans membre : ${paymentId}`);
+  }
 
   const metadata = payment.metadata as SubscriptionPaymentMetadata | null;
   const ambassadorUserId =
-    metadata?.ambassadorUserId &&
-    metadata.ambassadorUserId !== payment.beneficiaryUserId
+    metadata?.ambassadorUserId && metadata.ambassadorUserId !== buyerUserId
       ? metadata.ambassadorUserId
       : null;
   const attributionId = ambassadorUserId
@@ -134,7 +140,7 @@ export async function confirmSubscriptionPurchase(
     .where(eq(payments.id, paymentId));
 
   const priorSubscription = await tx.query.subscriptions.findFirst({
-    where: eq(subscriptions.userId, payment.beneficiaryUserId),
+    where: eq(subscriptions.userId, buyerUserId),
     orderBy: desc(subscriptions.expiresAt),
   });
   const isFirstSubscription = !priorSubscription;
@@ -160,7 +166,7 @@ export async function confirmSubscriptionPurchase(
   const [subscription] = await tx
     .insert(subscriptions)
     .values({
-      userId: payment.beneficiaryUserId,
+      userId: buyerUserId,
       paymentId: payment.id,
       expiresAt,
       pricePaid: payment.amount,
@@ -170,23 +176,27 @@ export async function confirmSubscriptionPurchase(
     })
     .returning();
 
+  if (metadata?.workshopCode) {
+    await spendWorkshopDiscount(tx, metadata.workshopCode, payment.id);
+  }
+
   // Subscribed some other way than through the member's open installment
   // plan: that plan can't be completed any more (no renewal by cagnotte).
   if (!metadata?.installmentPlanId) {
-    await closeOpenInstallmentPlan(tx, payment.beneficiaryUserId);
+    await closeOpenInstallmentPlan(tx, buyerUserId);
   }
 
   // A subscription is now the platform's real paid product (the old
   // paid-registration flow is dormant, migration 0031), so paying for one
   // activates the account the same way confirming registration used to.
   const buyerProfile = await tx.query.profiles.findFirst({
-    where: eq(profiles.id, payment.beneficiaryUserId),
+    where: eq(profiles.id, buyerUserId),
   });
   if (buyerProfile && buyerProfile.status !== "ACTIVE") {
     await tx
       .update(profiles)
       .set({ status: "ACTIVE" })
-      .where(eq(profiles.id, payment.beneficiaryUserId));
+      .where(eq(profiles.id, buyerUserId));
   }
 
   // Registration's "Devenir ambassadeur" checkbox (profiles.wants_ambassador)
@@ -204,16 +214,13 @@ export async function confirmSubscriptionPurchase(
   // already-taken payment and leave the member stuck on the frozen screen.
   if (buyerProfile?.wantsAmbassador) {
     const alreadyAmbassador = await tx.query.ambassadorProfiles.findFirst({
-      where: eq(ambassadorProfiles.userId, payment.beneficiaryUserId),
+      where: eq(ambassadorProfiles.userId, buyerUserId),
     });
     if (
       !alreadyAmbassador &&
-      (await canJoinAmbassadorProgramAutomatically(
-        tx,
-        payment.beneficiaryUserId,
-      ))
+      (await canJoinAmbassadorProgramAutomatically(tx, buyerUserId))
     ) {
-      await joinAmbassadorProgram(tx, payment.beneficiaryUserId, {
+      await joinAmbassadorProgram(tx, buyerUserId, {
         termsVersion: AMBASSADOR_TERMS_VERSION,
       });
     }
@@ -229,7 +236,7 @@ export async function confirmSubscriptionPurchase(
       if (commission && commission.amount > 0) {
         await createCommissionEvent(tx, {
           beneficiaryUserId: ambassadorUserId,
-          sourceUserId: payment.beneficiaryUserId,
+          sourceUserId: buyerUserId,
           type: "DIRECT_SALE",
           amount: commission.amount,
           dedupeKey: `DIRECT_SALE:SUBSCRIPTION:${subscription.id}`,

@@ -27,8 +27,10 @@ export function LaunchCountdown({
   className,
   boxClassName,
   labelClassName,
+  label = "Temps restant avant la fin du prix de lancement",
 }: {
   endsAt: string;
+  label?: string;
   className?: string;
   boxClassName?: string;
   labelClassName?: string;
@@ -51,7 +53,7 @@ export function LaunchCountdown({
     <div
       className={cn("flex justify-center gap-2", className)}
       role="timer"
-      aria-label="Temps restant avant la fin du prix de lancement"
+      aria-label={label}
     >
       {parts.map((part) => (
         <div

@@ -8,6 +8,7 @@ import {
   isSaspayEnabled,
 } from "@/repositories/payment-settings";
 import { findRecentPendingPayment } from "@/repositories/payments";
+import { isWorkshopDiscountOpen } from "@/services/workshops/discount";
 import {
   getLaunchOffer,
   lastLaunchDayLabel,
@@ -37,6 +38,7 @@ export async function getPaymentOptions(userId: string) {
     ineligibility,
     saspayEnabled,
     offer,
+    workshopDiscount,
   ] = await Promise.all([
     getCurrentParameterValue(db, "subscription.price_in_cfa"),
     getActiveProviderKey(db),
@@ -48,6 +50,7 @@ export async function getPaymentOptions(userId: string) {
     installmentIneligibility(db, userId),
     isSaspayEnabled(db),
     getLaunchOffer(db),
+    isWorkshopDiscountOpen(db),
   ]);
 
   // Paying in several deposits: a first subscription only, never a renewal
@@ -87,6 +90,7 @@ export async function getPaymentOptions(userId: string) {
         : null,
     activeProvider,
     installments,
+    workshopDiscount,
     // "Autre pays / carte bancaire": switched on by the admin, and SasPay
     // configured on the server.
     otherCountries: saspayEnabled && Boolean(process.env.SASPAY_SECRET_KEY),
