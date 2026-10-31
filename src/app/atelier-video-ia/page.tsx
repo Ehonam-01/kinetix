@@ -315,30 +315,7 @@ export default async function AtelierVideoIaPage() {
           </div>
         </Section>
 
-        <section>
-          <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-            <div className="border-brand-accent bg-brand-accent/10 rounded-2xl border-2 p-5 sm:p-7">
-              <h2 className="text-2xl font-semibold tracking-tight">
-                En toute transparence
-              </h2>
-              <p className="mt-4 leading-relaxed">
-                À la fin de l&apos;atelier, nous te présenterons{" "}
-                <strong>Kinetix Africa</strong>, la plateforme de formations en
-                ligne sur laquelle tu peux continuer à progresser : montage
-                vidéo avec l&apos;IA, motion design, vibe coding,
-                entrepreneuriat, intelligence financière, et plus encore.
-              </p>
-              <p className="mt-3 leading-relaxed">
-                Nous présenterons aussi le{" "}
-                <strong>programme ambassadeur</strong> pour ceux que ça
-                intéresse. <strong>Rien n&apos;est obligatoire</strong> :
-                l&apos;atelier a toute sa valeur par lui-même.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <Section title="Questions fréquentes" muted>
+        <Section title="Questions fréquentes">
           <div className="border-border divide-border bg-card divide-y rounded-2xl border">
             {FAQS.map((faq) => (
               <details key={faq.question} className="group p-5">
