@@ -6,6 +6,7 @@ import { Navbar } from "@/app/_components/navbar";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import { SITE_NAME } from "@/config/site";
 import { db } from "@/db/client";
+import { cn } from "@/lib/utils";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { whatsappHref } from "@/lib/whatsapp";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
@@ -18,10 +19,7 @@ import {
   PROGRAM,
   TO_BRING,
 } from "./_components/content";
-import {
-  ExampleVideos,
-  type ExampleVideo,
-} from "./_components/example-videos";
+import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { RegistrationForm } from "./_components/registration-form";
 import { RichText } from "./_components/rich-text";
 import {
@@ -71,22 +69,36 @@ function toExampleVideo(url: string): ExampleVideo | null {
   };
 }
 
+// On a large screen the title sits beside its text, which keeps lines
+// readable across the full width; "wide" gives the content the whole width
+// for what lays out in columns by itself.
 function Section({
   title,
   muted,
+  wide,
   children,
 }: {
   title: string;
   muted?: boolean;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section className={muted ? "bg-muted/40" : undefined}>
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <div
+        className={cn(
+          "mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8",
+          !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
+        )}
+      >
         <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
           {title}
         </h2>
-        <div className="mt-5 space-y-4 leading-relaxed">{children}</div>
+        <div
+          className={cn("mt-5 space-y-4 leading-relaxed", !wide && "lg:mt-0")}
+        >
+          {children}
+        </div>
       </div>
     </section>
   );
@@ -117,44 +129,50 @@ export default async function AtelierVideoIaPage() {
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 sm:py-20 lg:px-8">
-            <span className="text-primary bg-primary/10 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-              KINETIX AI VIDEO MASTERCLASS
-            </span>
-            <h1 className="font-heading mt-5 text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-5xl">
-              En une matinée, crée une vraie pub vidéo avec l&apos;IA, et repars
-              avec la méthode pour la vendre.
-            </h1>
-            <p className="mt-5 font-medium">
-              Atelier pratique en présentiel à Lomé · Samedi 7 novembre · 8 h –
-              13 h
-            </p>
-            <ExampleVideos
-              videos={workshop.exampleVideoUrls
-                .map(toExampleVideo)
-                .filter((video) => video !== null)}
-            />
-            <p className="mx-auto mt-5 max-w-2xl font-semibold text-pretty">
-              Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
-              une vidéo publicitaire terminée pour un vrai produit, et un plan
-              pour trouver tes premiers clients.
-            </p>
-            <LaunchCountdown
-              endsAt={workshop.startsAt.toISOString()}
-              label="Temps restant avant l'atelier"
-              className="mt-7"
-              boxClassName="bg-card border"
-              labelClassName="text-muted-foreground"
-            />
-            <div className="mt-7 flex flex-col items-center gap-3">
-              <WorkshopCta
-                label="JE RÉSERVE MA PLACE"
-                className="w-full sm:w-auto"
-              />
-              <p className="text-sm">
-                Seulement {workshop.capacity} places ·{" "}
-                <SeatsLeft className="inline" />
+          <div className="relative mx-auto grid max-w-6xl items-center px-4 py-12 text-center sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-x-12 lg:px-8 lg:text-left">
+            <div className="lg:col-start-1">
+              <span className="text-primary bg-primary/10 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+                KINETIX AI VIDEO MASTERCLASS
+              </span>
+              <h1 className="font-heading mt-5 text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-5xl">
+                En une matinée, crée une vraie pub vidéo avec l&apos;IA, et
+                repars avec la méthode pour la vendre.
+              </h1>
+              <p className="mt-5 font-medium">
+                Atelier pratique en présentiel à Lomé · Samedi 7 novembre · 8 h
+                – 13 h
               </p>
+            </div>
+            <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+              <ExampleVideos
+                videos={workshop.exampleVideoUrls
+                  .map(toExampleVideo)
+                  .filter((video) => video !== null)}
+              />
+            </div>
+            <div className="lg:col-start-1">
+              <p className="mx-auto mt-5 max-w-2xl font-semibold text-pretty lg:mx-0">
+                Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
+                une vidéo publicitaire terminée pour un vrai produit, et un plan
+                pour trouver tes premiers clients.
+              </p>
+              <LaunchCountdown
+                endsAt={workshop.startsAt.toISOString()}
+                label="Temps restant avant l'atelier"
+                className="mt-7 lg:justify-start"
+                boxClassName="bg-card border"
+                labelClassName="text-muted-foreground"
+              />
+              <div className="mt-7 flex flex-col items-center gap-3 lg:items-start">
+                <WorkshopCta
+                  label="JE RÉSERVE MA PLACE"
+                  className="w-full sm:w-auto"
+                />
+                <p className="text-sm">
+                  Seulement {workshop.capacity} places ·{" "}
+                  <SeatsLeft className="inline" />
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -184,8 +202,8 @@ export default async function AtelierVideoIaPage() {
           </p>
         </Section>
 
-        <Section title="Cette formation est faite pour toi si…" muted>
-          <div className="grid gap-4">
+        <Section title="Cette formation est faite pour toi si…" muted wide>
+          <div className="grid gap-4 lg:grid-cols-3">
             {AUDIENCES.map((audience) => (
               <div
                 key={audience.title}
@@ -245,9 +263,10 @@ export default async function AtelierVideoIaPage() {
             logiciels et des produits alimentaires.
           </p>
           <p>
-            C&apos;est d&apos;ailleurs <strong>l&apos;un de ses apprenants</strong>{" "}
-            qui a eu l&apos;idée de <strong>Kinetix Africa</strong>, une
-            plateforme qui rend ces formations accessibles au plus grand nombre.
+            C&apos;est d&apos;ailleurs{" "}
+            <strong>l&apos;un de ses apprenants</strong> qui a eu l&apos;idée de{" "}
+            <strong>Kinetix Africa</strong>, une plateforme qui rend ces
+            formations accessibles au plus grand nombre.
           </p>
           <blockquote className="border-brand-accent border-l-4 pl-4 italic">
             « Je ne crois pas aux diplômes qui dorment dans un tiroir. Je crois
@@ -270,56 +289,64 @@ export default async function AtelierVideoIaPage() {
           </p>
         </Section>
 
-        <Section title="Ton investissement" muted>
-          <div className="bg-card rounded-2xl border p-5">
-            <h3 className="text-lg font-semibold">
-              🎁 Formation offerte par Kinetix Africa
-            </h3>
-            <p className="mt-2 text-sm">
-              <strong>
-                Valeur :{" "}
-                <span className="line-through">
-                  {fmt(workshop.regularPriceCfa)} F CFA
-                </span>
-              </strong>{" "}
-              (4 h de formation pratique, démonstrations d&apos;outils IA
-              premium, guide de prompts, modèle d&apos;offre, suivi de 30 jours)
-            </p>
-            <p className="mt-4 text-lg font-semibold">
-              Seulement{" "}
-              <span className="text-primary text-2xl">
-                {fmt(workshop.priceCfa)} F CFA
-              </span>{" "}
-              de frais d&apos;inscription pour réserver ta place
-            </p>
-          </div>
-          <p className="font-semibold">Ce qui est inclus :</p>
-          <ul className="list-disc space-y-1 pl-5 text-sm sm:text-base">
-            {INCLUDED.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <p>
-            🎁 <strong>Bonus :</strong> si tu rejoins Kinetix Africa le jour de
-            l&apos;atelier,{" "}
-            <strong>
-              tes {fmt(workshop.priceCfa)} F sont déduits de ton abonnement
-            </strong>
-            .
-          </p>
-          <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
-          <p>
-            ⚠️ Les frais d&apos;inscription servent à confirmer ta présence :
-            les places sont limitées à {workshop.capacity}.
-          </p>
-          <WorkshopCta
-            label="JE RÉSERVE MA PLACE MAINTENANT"
-            className="w-full sm:w-auto"
-          />
-          <p>📍 Lieu : {workshop.venue}</p>
+        <Section title="Ton investissement" muted wide>
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+            <div className="space-y-4">
+              <div className="bg-card rounded-2xl border p-5">
+                <h3 className="text-lg font-semibold">
+                  🎁 Formation offerte par Kinetix Africa
+                </h3>
+                <p className="mt-2 text-sm">
+                  <strong>
+                    Valeur :{" "}
+                    <span className="line-through">
+                      {fmt(workshop.regularPriceCfa)} F CFA
+                    </span>
+                  </strong>{" "}
+                  (4 h de formation pratique, démonstrations d&apos;outils IA
+                  premium, guide de prompts, modèle d&apos;offre, suivi de 30
+                  jours)
+                </p>
+                <p className="mt-4 text-lg font-semibold">
+                  Seulement{" "}
+                  <span className="text-primary text-2xl">
+                    {fmt(workshop.priceCfa)} F CFA
+                  </span>{" "}
+                  de frais d&apos;inscription pour réserver ta place
+                </p>
+              </div>
+              <p className="font-semibold">Ce qui est inclus :</p>
+              <ul className="list-disc space-y-1 pl-5 text-sm sm:text-base">
+                {INCLUDED.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <p>
+                🎁 <strong>Bonus :</strong> si tu rejoins Kinetix Africa le jour
+                de l&apos;atelier,{" "}
+                <strong>
+                  tes {fmt(workshop.priceCfa)} F sont déduits de ton abonnement
+                </strong>
+                .
+              </p>
+              <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
+              <p>
+                ⚠️ Les frais d&apos;inscription servent à confirmer ta présence
+                : les places sont limitées à {workshop.capacity}.
+              </p>
+              <WorkshopCta
+                label="JE RÉSERVE MA PLACE MAINTENANT"
+                className="w-full sm:w-auto"
+              />
+              <p>📍 Lieu : {workshop.venue}</p>
+            </div>
 
-          <div id="inscription" className="scroll-mt-20 pt-4">
-            <RegistrationForm />
+            <div
+              id="inscription"
+              className="scroll-mt-20 pt-4 lg:sticky lg:top-24 lg:pt-0"
+            >
+              <RegistrationForm />
+            </div>
           </div>
         </Section>
 
@@ -349,8 +376,8 @@ export default async function AtelierVideoIaPage() {
         <section>
           <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
             <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Les compétences d&apos;aujourd&apos;hui ouvrent les opportunités de
-              demain.
+              Les compétences d&apos;aujourd&apos;hui ouvrent les opportunités
+              de demain.
             </h2>
             <p className="mt-4">
               En une matinée, tu peux savoir faire ce que la plupart des
