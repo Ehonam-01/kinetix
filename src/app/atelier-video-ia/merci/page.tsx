@@ -46,7 +46,7 @@ export default async function AtelierMerciPage(
 
   return (
     <>
-      <main className="mx-auto max-w-xl space-y-6 px-4 py-10 sm:px-6 sm:py-16">
+      <main className="mx-auto max-w-xl space-y-6 px-4 py-10 text-center sm:px-6 sm:py-16 sm:text-left">
         {registration.status === "PENDING" && (
           <div className="bg-card space-y-3 rounded-2xl border p-5">
             <h1 className="text-2xl font-semibold">
@@ -63,7 +63,7 @@ export default async function AtelierMerciPage(
 
         {registration.status === "FAILED" && (
           <div className="bg-card space-y-3 rounded-2xl border p-5">
-            <XCircle className="text-destructive size-8" />
+            <XCircle className="text-destructive mx-auto size-8 sm:mx-0" />
             <h1 className="text-2xl font-semibold">
               Le paiement n&apos;a pas abouti
             </h1>
@@ -84,7 +84,7 @@ export default async function AtelierMerciPage(
               value={registration.amount}
             />
             <div className="space-y-2">
-              <CheckCircle2 className="size-8 text-green-600" />
+              <CheckCircle2 className="mx-auto size-8 text-green-600 sm:mx-0" />
               <h1 className="text-2xl font-semibold">
                 Ta place est confirmée !
               </h1>
