@@ -246,24 +246,30 @@ export default async function AtelierVideoIaPage() {
           </ul>
         </Section>
 
-        <Section title="Le programme de la matinée" muted>
-          <ol className="border-primary/30 ml-1 space-y-5 border-l-2">
-            {PROGRAM.map((step) => (
-              <li key={step.time} className="relative pl-5">
-                <span
-                  aria-hidden="true"
-                  className="bg-primary absolute top-1.5 -left-[7px] size-3 rounded-full"
-                />
-                <p className="text-primary text-sm font-semibold">
-                  {step.time}
-                </p>
-                <p className="text-sm sm:text-base">
-                  <RichText text={step.text} />
-                </p>
-              </li>
-            ))}
-          </ol>
-        </Section>
+        <section className="bg-muted/40">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:grid lg:grid-cols-[auto_1fr] lg:items-center lg:gap-20 lg:px-8">
+            {/* Read bottom to top beside the timeline on large screens. */}
+            <h2 className="text-brand-accent text-center text-5xl leading-none font-extrabold tracking-tight uppercase sm:text-6xl lg:rotate-180 lg:text-8xl lg:[writing-mode:vertical-rl]">
+              Programme
+            </h2>
+            <ol className="border-primary/30 mt-8 ml-1 space-y-5 border-l-2 lg:mt-0">
+              {PROGRAM.map((step) => (
+                <li key={step.time} className="relative pl-5">
+                  <span
+                    aria-hidden="true"
+                    className="bg-primary absolute top-1.5 -left-[7px] size-3 rounded-full"
+                  />
+                  <p className="text-primary text-sm font-semibold">
+                    {step.time}
+                  </p>
+                  <p className="text-sm sm:text-base">
+                    <RichText text={step.text} />
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
 
         <Section
           title="Ton formateur : Ehonam Afansi"

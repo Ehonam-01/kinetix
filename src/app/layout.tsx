@@ -24,7 +24,7 @@ const THEME_INIT_SCRIPT = `(function(){try{if(localStorage.getItem("theme")==="d
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
