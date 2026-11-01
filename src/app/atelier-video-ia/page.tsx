@@ -293,17 +293,15 @@ export default async function AtelierVideoIaPage() {
           }
         >
           <p>
-            Entrepreneur et consultant digital basé à Lomé, Ehonam forme depuis
-            des années des jeunes africains aux compétences du numérique :
-            création web, vibe coding, motion design et vidéo avec l&apos;IA. Il
-            produit lui-même des spots publicitaires pour des applications, des
-            logiciels et des produits alimentaires.
+            Entrepreneur, consultant digital et passionné d&apos;IA, Ehonam
+            AFANSI forme depuis des années des jeunes africains aux compétences
+            du numérique : création web, vibe coding, motion design et vidéo
+            avec l&apos;IA. Il est le promoteur de la plateforme de freelancing{" "}
+            <strong>Edossimé</strong> et de plusieurs autres outils numériques.
           </p>
           <p>
-            C&apos;est d&apos;ailleurs{" "}
-            <strong>l&apos;un de ses apprenants</strong> qui a eu l&apos;idée de{" "}
-            <strong>Kinetix Africa</strong>, une plateforme qui rend ces
-            formations accessibles au plus grand nombre.
+            Il est convaincu que seules les compétences pourront nous placer sur
+            le chemin du succès.
           </p>
           <blockquote className="border-brand-accent border-l-4 pl-4 italic">
             « Je ne crois pas aux diplômes qui dorment dans un tiroir. Je crois
