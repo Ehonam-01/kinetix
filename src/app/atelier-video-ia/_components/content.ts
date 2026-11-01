@@ -68,7 +68,7 @@ export const INCLUDED = [
   "Création de ta propre publicité.",
   "Collation.",
   "Modèle d'offre commerciale.",
-  "Accompagnement WhatsApp pendant 30 jours.",
+  "Accompagnement groupe WhatsApp pendant 1 mois.",
   "Attestation de participation.",
 ];
 
