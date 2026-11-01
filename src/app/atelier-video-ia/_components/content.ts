@@ -64,11 +64,12 @@ export const TO_BRING = [
 ];
 
 export const INCLUDED = [
-  "5 heures de formation pratique encadrée",
-  "La collation de la pause",
-  "Le modèle d'offre pour proposer tes services aux entreprises",
-  "L'accès au groupe WhatsApp de suivi pendant 30 jours",
-  "Une attestation de participation",
+  "Formation pratique encadrée.",
+  "Création de ta propre publicité.",
+  "Collation.",
+  "Modèle d'offre commerciale.",
+  "Accompagnement WhatsApp pendant 30 jours.",
+  "Attestation de participation.",
 ];
 
 export const FAQS = [

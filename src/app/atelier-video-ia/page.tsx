@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Caveat } from "next/font/google";
-import { ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import { SITE_NAME } from "@/config/site";
@@ -484,35 +484,38 @@ export default async function AtelierVideoIaPage() {
           </p>
         </Section>
 
-        <Section title="Ton investissement" muted wide centered>
+        <Section title="Ta participation à la masterclass" muted wide centered>
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
             <div className="space-y-4">
-              <div className="bg-card rounded-2xl border p-5">
-                <h3 className="text-lg font-semibold">
-                  🎁 Formation offerte par Kinetix Africa
-                </h3>
-                <p className="mt-2 text-sm">
-                  <strong>
-                    Valeur :{" "}
-                    <span className="line-through">
-                      {fmt(workshop.regularPriceCfa)} F CFA
-                    </span>
-                  </strong>{" "}
-                  (5 h de formation pratique, démonstrations d&apos;outils IA
-                  premium, modèle d&apos;offre, suivi de 30 jours)
+              <div className="bg-card border-brand-accent/40 rounded-2xl border-2 p-6 text-center">
+                <p className="text-muted-foreground text-sm">
+                  Valeur de l&apos;atelier :{" "}
+                  <span className="font-semibold line-through">
+                    {fmt(workshop.regularPriceCfa)} F CFA
+                  </span>
                 </p>
-                <p className="mt-4 text-lg font-semibold">
-                  Seulement{" "}
-                  <span className="text-primary text-2xl">
-                    {fmt(workshop.priceCfa)} F CFA
-                  </span>{" "}
-                  de frais d&apos;inscription pour réserver ta place
+                <p className="text-primary mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                  {fmt(workshop.priceCfa)} F CFA
+                </p>
+                <p className="bg-brand-accent text-brand-accent-foreground mt-3 inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase">
+                  🎁 Offert par Kinetix Africa
+                </p>
+                <p className="mt-4 text-sm sm:text-base">
+                  Pour confirmer ta participation, seuls{" "}
+                  <strong>{fmt(workshop.priceCfa)} F CFA</strong> de frais
+                  d&apos;inscription sont demandés.
                 </p>
               </div>
-              <p className="font-semibold">Ce qui est inclus :</p>
-              <ul className="space-y-1 text-sm sm:text-base lg:list-disc lg:pl-5">
+              <p className="font-semibold">Tu bénéficies de :</p>
+              <ul className="mx-auto w-fit space-y-2 text-left text-sm sm:text-base lg:mx-0">
                 {INCLUDED.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li key={item} className="flex items-start gap-2">
+                    <Check
+                      aria-hidden="true"
+                      className="text-brand-accent mt-0.5 size-5 shrink-0"
+                    />
+                    {item}
+                  </li>
                 ))}
               </ul>
               <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
