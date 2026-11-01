@@ -76,6 +76,7 @@ function Section({
   muted,
   wide,
   aside,
+  centered,
   children,
 }: {
   title: string;
@@ -84,6 +85,9 @@ function Section({
   // Under the title, with a smaller title: beside the text on large
   // screens, above it otherwise.
   aside?: React.ReactNode;
+  // Short content (lists, cards) centred on phones like the titles; long
+  // prose stays left-aligned to stay readable.
+  centered?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -107,7 +111,11 @@ function Section({
           {aside}
         </div>
         <div
-          className={cn("mt-5 space-y-4 leading-relaxed", !wide && "lg:mt-0")}
+          className={cn(
+            "mt-5 space-y-4 leading-relaxed",
+            !wide && "lg:mt-0",
+            centered && "text-center lg:text-left",
+          )}
         >
           {children}
         </div>
@@ -213,7 +221,12 @@ export default async function AtelierVideoIaPage() {
           </p>
         </Section>
 
-        <Section title="Cette formation est faite pour toi si…" muted wide>
+        <Section
+          title="Cette formation est faite pour toi si…"
+          muted
+          wide
+          centered
+        >
           <div className="grid gap-4 lg:grid-cols-3">
             {AUDIENCES.map((audience) => (
               <div
@@ -229,7 +242,7 @@ export default async function AtelierVideoIaPage() {
           </div>
         </Section>
 
-        <Section title="Ce que tu vas réaliser">
+        <Section title="Ce que tu vas réaliser" centered>
           <p>
             Ce n&apos;est pas une conférence.{" "}
             <strong>Tu pratiques du début à la fin</strong>, sur un vrai projet
@@ -309,7 +322,7 @@ export default async function AtelierVideoIaPage() {
           </blockquote>
         </Section>
 
-        <Section title="Ce que tu dois apporter">
+        <Section title="Ce que tu dois apporter" centered>
           <ul className="space-y-2">
             {TO_BRING.map((item) => (
               <li key={item}>
@@ -324,7 +337,7 @@ export default async function AtelierVideoIaPage() {
           </p>
         </Section>
 
-        <Section title="Ton investissement" muted wide>
+        <Section title="Ton investissement" muted wide centered>
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
             <div className="space-y-4">
               <div className="bg-card rounded-2xl border p-5">
@@ -350,7 +363,7 @@ export default async function AtelierVideoIaPage() {
                 </p>
               </div>
               <p className="font-semibold">Ce qui est inclus :</p>
-              <ul className="list-disc space-y-1 pl-5 text-sm sm:text-base">
+              <ul className="space-y-1 text-sm sm:text-base lg:list-disc lg:pl-5">
                 {INCLUDED.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -369,7 +382,7 @@ export default async function AtelierVideoIaPage() {
 
             <div
               id="inscription"
-              className="scroll-mt-20 pt-4 lg:sticky lg:top-24 lg:pt-0"
+              className="scroll-mt-20 pt-4 text-left lg:sticky lg:top-24 lg:pt-0"
             >
               <RegistrationForm />
             </div>
