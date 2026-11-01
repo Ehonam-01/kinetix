@@ -32,10 +32,10 @@ export default function OpengraphImage() {
           lineHeight: 1.1,
         }}
       >
-        En une matinée, crée une vraie pub vidéo avec l&apos;IA
+        Crée ta première publicité vidéo professionnelle avec l&apos;IA
       </div>
       <div style={{ marginTop: 36, fontSize: 34, color: "#d7e0f5" }}>
-        Atelier pratique à Lomé · Samedi 14 novembre · 8 h – 13 h
+        Atelier 100 % pratique à Lomé · Samedi 14 novembre · 8 h – 13 h
       </div>
     </div>,
     size,

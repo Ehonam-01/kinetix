@@ -33,7 +33,7 @@ import {
 
 const TITLE = `Kinetix AI Video Masterclass — ${SITE_NAME}`;
 const DESCRIPTION =
-  "En une matinée, crée une vraie pub vidéo avec l'IA, et repars avec la méthode pour la vendre. Atelier pratique en présentiel à Lomé, samedi 14 novembre, 8 h – 13 h.";
+  "Crée ta première publicité vidéo professionnelle avec l'IA en une seule matinée, et découvre comment transformer cette compétence en source de revenus. Atelier 100 % pratique à Lomé, samedi 14 novembre, 8 h – 13 h.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -251,12 +251,17 @@ export default async function AtelierVideoIaPage() {
           <GridBackdrop />
           <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-16 lg:px-8 lg:pt-8">
             <h1 className="font-heading text-3xl leading-[1.15] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-[2.75rem]">
-              En une matinée,{" "}
+              Crée ta première{" "}
               <span className="text-brand-accent">
-                crée une vraie pub vidéo
+                publicité vidéo professionnelle
               </span>{" "}
-              avec l&apos;IA, et repars avec la méthode pour la vendre.
+              avec l&apos;IA en une seule matinée.
             </h1>
+            <p className="mx-auto mt-4 max-w-3xl font-medium text-pretty sm:text-lg">
+              Apprends à produire des vidéos publicitaires pour les entreprises
+              et découvre comment transformer cette compétence en source de
+              revenus.
+            </p>
             <span className="text-primary bg-primary/10 mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
               KINETIX AI VIDEO MASTERCLASS
             </span>
@@ -291,13 +296,10 @@ export default async function AtelierVideoIaPage() {
             </div>
 
             <p className="text-brand-accent mt-8 font-semibold">
-              Atelier pratique en présentiel à Lomé · Samedi 14 novembre ·{" "}
+              Atelier 100&nbsp;% pratique à Lomé
+              <br />
+              Samedi 14 novembre ·{" "}
               <span className="whitespace-nowrap">8 h – 13 h</span>
-            </p>
-            <p className="mx-auto mt-4 max-w-3xl font-semibold text-pretty">
-              Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
-              une vidéo publicitaire terminée pour un vrai produit, et un plan
-              pour trouver tes premiers clients.
             </p>
           </div>
         </section>
