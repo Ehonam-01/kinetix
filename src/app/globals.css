@@ -419,3 +419,18 @@ html.kx-launch-on .kx-launch {
       color-mix(in oklab, var(--brand-accent) 45%, transparent);
   }
 }
+
+/* The workshop page's call-to-action card: its neon outline breathing. */
+@keyframes kx-neon {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px -2px color-mix(in oklab, var(--brand-accent) 60%, transparent),
+      0 0 24px -6px color-mix(in oklab, var(--brand-accent) 40%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 14px 0 color-mix(in oklab, var(--brand-accent) 85%, transparent),
+      0 0 40px -4px color-mix(in oklab, var(--brand-accent) 60%, transparent);
+  }
+}

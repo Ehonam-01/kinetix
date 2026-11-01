@@ -169,18 +169,31 @@ export function CtaNote({ className }: { className?: string }) {
 }
 
 // A card around the button: a question, the date and place, the button
-// across the card, the payment line.
+// across the card, the payment line. Its outline is a neon light: a band
+// of the accent colour turning behind a 2px gap (kx-neon in globals.css for
+// the glow), still for visitors who turned animations off.
 export function WorkshopCtaBlock({ className }: { className?: string }) {
   return (
-    <div className={cn("bg-card rounded-2xl border p-5", className)}>
-      <p className="text-lg font-semibold">
-        Prêt à créer ta première publicité avec l&apos;IA ?
-      </p>
-      <p className="text-muted-foreground mt-2">
-        Réserve ta place pour la masterclass du 14 novembre à Lomé.
-      </p>
-      <WorkshopCta label="JE RÉSERVE MA PLACE" className="mt-4 w-full" />
-      <CtaNote className="mt-3 text-center" />
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl p-[2px] motion-safe:animate-[kx-neon_2.5s_ease-in-out_infinite]",
+        className,
+      )}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 aspect-square w-[200%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0deg,var(--brand-accent)_70deg,transparent_140deg,transparent_180deg,var(--brand-accent)_250deg,transparent_320deg)] motion-safe:animate-[spin_4s_linear_infinite]"
+      />
+      <div className="bg-card relative rounded-[calc(1rem-2px)] p-5">
+        <p className="text-lg font-semibold">
+          Prêt à créer ta première publicité avec l&apos;IA ?
+        </p>
+        <p className="text-muted-foreground mt-2">
+          Réserve ta place pour la masterclass du 14 novembre à Lomé.
+        </p>
+        <WorkshopCta label="JE RÉSERVE MA PLACE" className="mt-4 w-full" />
+        <CtaNote className="mt-3 text-center" />
+      </div>
     </div>
   );
 }
