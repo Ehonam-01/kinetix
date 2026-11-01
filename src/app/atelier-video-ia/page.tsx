@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Caveat } from "next/font/google";
 import { ChevronDown } from "lucide-react";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
 import { LaunchCountdown } from "@/components/launch-countdown";
@@ -59,6 +60,9 @@ export const revalidate = 60;
 
 const fmt = (amount: number) => amount.toLocaleString("fr-FR");
 
+// Handwriting, for the note beside the hero video only.
+const caveat = Caveat({ subsets: ["latin"], weight: "700" });
+
 function toExampleVideo(url: string): ExampleVideo | null {
   const embedUrl = getVideoEmbedUrl("YOUTUBE", url);
   const id = embedUrl?.match(/\/embed\/([\w-]+)/)?.[1];
@@ -72,6 +76,34 @@ function toExampleVideo(url: string): ExampleVideo | null {
 // On a large screen the title sits beside its text, which keeps lines
 // readable across the full width; "wide" gives the content the whole width
 // for what lays out in columns by itself.
+// The handwritten note beside the video, its arrow pointing at it. Above
+// the video on phones, where there's no room beside it.
+function PracticalNote() {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        caveat.className,
+        "text-brand-accent mb-2 -rotate-6 text-2xl leading-none lg:absolute lg:top-[12%] lg:right-full lg:mr-3 lg:mb-0 lg:w-36 lg:text-3xl",
+      )}
+    >
+      <svg
+        viewBox="0 0 80 60"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="ml-auto hidden h-12 w-16 lg:block"
+      >
+        <path d="M6 54 C 14 26, 38 10, 72 8" />
+        <path d="M60 2 L 73 8 L 62 17" />
+      </svg>
+      Atelier 100&nbsp;% pratique
+    </div>
+  );
+}
+
 function Section({
   title,
   muted,
@@ -149,61 +181,65 @@ export default async function AtelierVideoIaPage() {
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto grid max-w-7xl items-center px-4 py-12 text-center sm:px-6 sm:py-20 lg:grid-cols-[1.1fr_1fr] lg:gap-x-16 lg:px-8 lg:py-10 lg:text-left">
-            <div className="lg:col-start-1">
-              <span className="text-primary bg-primary/10 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
-                KINETIX AI VIDEO MASTERCLASS
-              </span>
-              <h1 className="font-heading mt-5 text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-5xl lg:text-[2.6rem]">
-                En une matinée, crée une vraie pub vidéo avec l&apos;IA, et
-                repars avec la méthode pour la vendre.
-              </h1>
-              <p className="mt-5 font-medium">
-                Atelier pratique en présentiel à Lomé · Samedi 14 novembre ·{" "}
-                <span className="whitespace-nowrap">8 h – 13 h</span>
-              </p>
-            </div>
-            <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-              <ExampleVideos
-                videos={workshop.exampleVideoUrls
-                  .map(toExampleVideo)
-                  .filter((video) => video !== null)}
+          <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-16 lg:px-8 lg:pt-8">
+            <h1 className="font-heading text-3xl leading-[1.15] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-[2.75rem]">
+              En une matinée,{" "}
+              <span className="text-brand-accent">
+                crée une vraie pub vidéo
+              </span>{" "}
+              avec l&apos;IA, et repars avec la méthode pour la vendre.
+            </h1>
+            <span className="text-primary bg-primary/10 mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+              KINETIX AI VIDEO MASTERCLASS
+            </span>
+
+            <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
+              <PracticalNote />
+              <HeroVideo
+                video={
+                  workshop.heroVideoUrl
+                    ? toExampleVideo(workshop.heroVideoUrl)
+                    : null
+                }
               />
-            </div>
-            <div className="lg:col-start-1">
-              <p className="mx-auto mt-5 max-w-2xl font-semibold text-pretty lg:mx-0">
-                Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
-                une vidéo publicitaire terminée pour un vrai produit, et un plan
-                pour trouver tes premiers clients.
-              </p>
-              <LaunchCountdown
-                endsAt={workshop.startsAt.toISOString()}
-                label="Temps restant avant l'atelier"
-                className="mt-6 lg:justify-start"
-                boxClassName="bg-card border"
-                labelClassName="text-muted-foreground"
-              />
-              <div className="mt-6 flex flex-col items-center gap-3 lg:flex-row lg:gap-5">
-                <WorkshopCta
-                  label="JE RÉSERVE MA PLACE"
-                  className="w-full sm:w-auto"
+              <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <LaunchCountdown
+                  endsAt={workshop.startsAt.toISOString()}
+                  label="Temps restant avant l'atelier"
+                  boxClassName="bg-card border"
+                  labelClassName="text-muted-foreground"
                 />
-                <p className="text-sm">
-                  Seulement {workshop.capacity} places ·{" "}
-                  <SeatsLeft className="inline" />
-                </p>
+                <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
+                  <WorkshopCta
+                    label="JE RÉSERVE MA PLACE"
+                    className="w-full sm:w-auto"
+                  />
+                  <p className="text-xs">
+                    Seulement {workshop.capacity} places ·{" "}
+                    <SeatsLeft className="inline" />
+                  </p>
+                </div>
               </div>
             </div>
+
+            <p className="text-brand-accent mt-8 font-semibold">
+              Atelier pratique en présentiel à Lomé · Samedi 14 novembre ·{" "}
+              <span className="whitespace-nowrap">8 h – 13 h</span>
+            </p>
+            <p className="mx-auto mt-4 max-w-3xl font-semibold text-pretty">
+              Tu arrives avec ton ordinateur ou ton téléphone. Tu repars avec
+              une vidéo publicitaire terminée pour un vrai produit, et un plan
+              pour trouver tes premiers clients.
+            </p>
           </div>
-          <div className="relative mx-auto max-w-5xl px-4 pb-12 sm:px-6 sm:pb-20 lg:px-8">
-            <HeroVideo
-              video={
-                workshop.heroVideoUrl
-                  ? toExampleVideo(workshop.heroVideoUrl)
-                  : null
-              }
-            />
-          </div>
+        </section>
+
+        <section className="px-4 sm:px-6 lg:px-8">
+          <ExampleVideos
+            videos={workshop.exampleVideoUrls
+              .map(toExampleVideo)
+              .filter((video) => video !== null)}
+          />
         </section>
 
         <Section title="Décembre arrive. Les entreprises vont toutes vouloir des vidéos.">
