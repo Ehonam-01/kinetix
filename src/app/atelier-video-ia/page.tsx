@@ -486,7 +486,9 @@ export default async function AtelierVideoIaPage() {
             </p>
             <p className="mt-2">
               La seule question :{" "}
-              <strong>seras-tu dans la salle le 14 novembre ?</strong>
+              <strong className="text-brand-accent">
+                seras-tu dans la salle le 14 novembre ?
+              </strong>
             </p>
             <WorkshopCta
               label="OUI, JE RÉSERVE MA PLACE"
