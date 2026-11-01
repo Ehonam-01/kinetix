@@ -76,30 +76,45 @@ function toExampleVideo(url: string): ExampleVideo | null {
 // On a large screen the title sits beside its text, which keeps lines
 // readable across the full width; "wide" gives the content the whole width
 // for what lays out in columns by itself.
-// The handwritten note beside the video, its arrow pointing at it. Above
-// the video on phones, where there's no room beside it.
-function PracticalNote() {
+// A curved arrow, from its lower left to its upper right.
+function HandArrow({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 80 60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("hidden h-12 w-16 lg:block", className)}
+    >
+      <path d="M6 54 C 14 26, 38 10, 72 8" />
+      <path d="M60 2 L 73 8 L 62 17" />
+    </svg>
+  );
+}
+
+// The two handwritten notes on either side of the video, each with an
+// arrow. Side by side above the video on phones, where there's no room
+// beside it.
+function HandNotes() {
+  const note = cn(
+    caveat.className,
+    "text-brand-accent text-xl leading-none sm:text-2xl lg:absolute lg:w-40 lg:text-3xl",
+  );
   return (
     <div
       aria-hidden="true"
-      className={cn(
-        caveat.className,
-        "text-brand-accent mb-2 -rotate-6 text-2xl leading-none lg:absolute lg:top-[12%] lg:right-full lg:mr-3 lg:mb-0 lg:w-36 lg:text-3xl",
-      )}
+      className="mb-3 flex items-end justify-between gap-4 px-1 lg:contents"
     >
-      <svg
-        viewBox="0 0 80 60"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="ml-auto hidden h-12 w-16 lg:block"
-      >
-        <path d="M6 54 C 14 26, 38 10, 72 8" />
-        <path d="M60 2 L 73 8 L 62 17" />
-      </svg>
-      Atelier 100&nbsp;% pratique
+      <div className={cn(note, "-rotate-6 lg:top-[10%] lg:right-full lg:mr-3")}>
+        <HandArrow className="ml-auto" />
+        Atelier 100&nbsp;% pratique
+      </div>
+      <div className={cn(note, "-rotate-12 lg:top-[38%] lg:left-full lg:ml-2")}>
+        Sur ordinateur ou téléphone
+        <HandArrow className="mt-2 -ml-2" />
+      </div>
     </div>
   );
 }
@@ -194,7 +209,7 @@ export default async function AtelierVideoIaPage() {
             </span>
 
             <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
-              <PracticalNote />
+              <HandNotes />
               <HeroVideo
                 video={
                   workshop.heroVideoUrl
