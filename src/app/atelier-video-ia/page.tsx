@@ -24,10 +24,11 @@ import { HeroVideo } from "./_components/hero-video";
 import { RegistrationForm } from "./_components/registration-form";
 import { RichText } from "./_components/rich-text";
 import {
-  SeatsLeft,
+  CtaNote,
   StickyCta,
   WhatsappButton,
   WorkshopCta,
+  WorkshopCtaBlock,
   WorkshopLiveProvider,
 } from "./_components/workshop-live";
 
@@ -287,10 +288,7 @@ export default async function AtelierVideoIaPage() {
                     label="JE RÉSERVE MA PLACE"
                     className="w-full sm:w-auto"
                   />
-                  <p className="text-xs">
-                    Seulement {workshop.capacity} places ·{" "}
-                    <SeatsLeft className="inline" />
-                  </p>
+                  <CtaNote />
                 </div>
               </div>
             </div>
@@ -523,10 +521,7 @@ export default async function AtelierVideoIaPage() {
                 ⚠️ Les frais d&apos;inscription servent à confirmer ta présence
                 : les places sont limitées à {workshop.capacity}.
               </p>
-              <WorkshopCta
-                label="JE RÉSERVE MA PLACE MAINTENANT"
-                className="w-full sm:w-auto"
-              />
+              <WorkshopCtaBlock />
               <p>📍 Lieu : {workshop.venue}</p>
             </div>
 
@@ -539,28 +534,45 @@ export default async function AtelierVideoIaPage() {
           </div>
         </Section>
 
-        <Section title="Questions fréquentes">
-          <div className="border-border divide-border bg-card divide-y rounded-2xl border">
-            {FAQS.map((faq) => (
-              <details key={faq.question} className="group p-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-                  {faq.question}
-                  <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
-                </summary>
-                <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-                  {faq.answer}
-                </p>
-                {faq.waitlist && waitlistUrl && (
-                  <WhatsappButton
-                    url={waitlistUrl}
-                    label="Liste d'attente"
-                    className="mt-3"
-                  />
-                )}
-              </details>
-            ))}
+        <section>
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
+              Questions fréquentes
+            </h2>
+            {/* Two columns on large screens, each its own card: opening a
+                question only pushes down its own column. */}
+            <div className="mt-8 grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-6">
+              {[
+                FAQS.slice(0, Math.ceil(FAQS.length / 2)),
+                FAQS.slice(Math.ceil(FAQS.length / 2)),
+              ].map((column, i) => (
+                <div
+                  key={i}
+                  className="border-border divide-border bg-card divide-y rounded-2xl border"
+                >
+                  {column.map((faq) => (
+                    <details key={faq.question} className="group p-5">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
+                        {faq.question}
+                        <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+                      </summary>
+                      <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+                        {faq.answer}
+                      </p>
+                      {faq.waitlist && waitlistUrl && (
+                        <WhatsappButton
+                          url={waitlistUrl}
+                          label="Liste d'attente"
+                          className="mt-3"
+                        />
+                      )}
+                    </details>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </Section>
+        </section>
 
         <section>
           <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
@@ -582,6 +594,7 @@ export default async function AtelierVideoIaPage() {
               label="OUI, JE RÉSERVE MA PLACE"
               className="mt-7 w-full sm:w-auto"
             />
+            <CtaNote className="mt-3" />
             <p className="mt-7 font-semibold">Apprends. Crée. Évolue.</p>
             <p className="text-muted-foreground mt-1 text-sm italic">
               Kinetix AI Video Masterclass

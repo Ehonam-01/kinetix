@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackMarketingEvent } from "@/lib/marketing-events";
 import { cn } from "@/lib/utils";
@@ -110,9 +110,9 @@ export function WhatsappButton({
   );
 }
 
-// Every "reserve" button. Once the online sale stops it becomes a WhatsApp
-// link: explicit user decision, a visitor past the capacity is never
-// offered a payment.
+// Every "reserve" button, its label followed by the price. Once the online
+// sale stops it becomes a WhatsApp link: explicit user decision, a visitor
+// past the capacity is never offered a payment.
 export function WorkshopCta({
   label,
   className,
@@ -146,9 +146,42 @@ export function WorkshopCta({
         className,
       )}
     >
-      {label}
-      <ArrowRight className="size-5" />
+      {label} – {price.toLocaleString("fr-FR")}&nbsp;F
     </a>
+  );
+}
+
+// The line under a button: how to pay, and the seats left (or that the
+// online sale is over).
+export function CtaNote({ className }: { className?: string }) {
+  const { open } = useLive();
+  return (
+    <p className={cn("text-muted-foreground text-xs", className)}>
+      {open ? (
+        <>
+          Paiement Mobile Money · <SeatsLeft className="text-xs" />
+        </>
+      ) : (
+        <SeatsLeft className="text-xs" />
+      )}
+    </p>
+  );
+}
+
+// A card around the button: a question, the date and place, the button
+// across the card, the payment line.
+export function WorkshopCtaBlock({ className }: { className?: string }) {
+  return (
+    <div className={cn("bg-card rounded-2xl border p-5", className)}>
+      <p className="text-lg font-semibold">
+        Prêt à créer ta première publicité avec l&apos;IA ?
+      </p>
+      <p className="text-muted-foreground mt-2">
+        Réserve ta place pour la masterclass du 14 novembre à Lomé.
+      </p>
+      <WorkshopCta label="JE RÉSERVE MA PLACE" className="mt-4 w-full" />
+      <CtaNote className="mt-3 text-center" />
+    </div>
   );
 }
 

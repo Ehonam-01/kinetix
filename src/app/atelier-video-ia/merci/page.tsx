@@ -31,6 +31,11 @@ const fmtTime = (date: Date) =>
     timeZone: "Africa/Lome",
   });
 
+// Read per request: this page is rendered for each visit (its token).
+function hasEnded(date: Date) {
+  return Date.now() >= date.getTime();
+}
+
 export default async function AtelierMerciPage(
   props: PageProps<"/atelier-video-ia/merci">,
 ) {
@@ -42,7 +47,7 @@ export default async function AtelierMerciPage(
   // The code is given after the workshop and the platform's presentation:
   // until it ends, this page doesn't show it (the admins can also send it
   // by WhatsApp from /admin/atelier).
-  const codeRevealed = Date.now() >= workshop.endsAt.getTime();
+  const codeRevealed = hasEnded(workshop.endsAt);
 
   return (
     <>
