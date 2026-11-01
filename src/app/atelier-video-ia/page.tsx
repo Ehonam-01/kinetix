@@ -304,12 +304,21 @@ export default async function AtelierVideoIaPage() {
           </div>
         </section>
 
-        <section className="px-4 sm:px-6 lg:px-8">
+        <section className="flex flex-col items-center px-4 sm:px-6 lg:px-8">
           <ExampleVideos
             videos={workshop.exampleVideoUrls
               .map(toExampleVideo)
               .filter((video) => video !== null)}
           />
+          {/* A hand-drawn ring around the label, under the cards. */}
+          <p
+            className={cn(
+              caveat.className,
+              "text-brand-accent border-brand-accent -mt-4 mb-12 -rotate-2 rounded-[50%] border-2 px-6 py-1 text-2xl sm:-mt-10 sm:mb-16 sm:text-3xl lg:mt-2",
+            )}
+          >
+            Vidéos exemples
+          </p>
         </section>
 
         <Section
