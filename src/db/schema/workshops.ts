@@ -43,6 +43,8 @@ export const workshops = pgTable("workshops", {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  // A YouTube link, shown full width under the top of the sales page.
+  heroVideoUrl: text("hero_video_url"),
   registrationsOpen: boolean("registrations_open").notNull().default(true),
   // Last moment a participant's code still takes money off a subscription.
   discountValidUntil: timestamp("discount_valid_until", {

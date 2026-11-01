@@ -32,6 +32,7 @@ export function WorkshopSettingsForm({
     venue: string;
     whatsappGroupUrl: string | null;
     exampleVideoUrls: string[];
+    heroVideoUrl: string | null;
     registrationsOpen: boolean;
   };
 }) {
@@ -43,6 +44,7 @@ export function WorkshopSettingsForm({
     capacity: String(current.capacity),
     venue: current.venue,
     whatsappGroupUrl: current.whatsappGroupUrl ?? "",
+    heroVideoUrl: current.heroVideoUrl ?? "",
   });
   const [videos, setVideos] = useState(
     [0, 1, 2].map((i) => current.exampleVideoUrls[i] ?? ""),
@@ -106,6 +108,13 @@ export function WorkshopSettingsForm({
         placeholder="https://chat.whatsapp.com/..."
         value={values.whatsappGroupUrl}
         onChange={set("whatsappGroupUrl")}
+      />
+      <Field
+        id="workshop-hero-video"
+        label="Vidéo horizontale sous le haut de page (lien YouTube)"
+        placeholder="https://www.youtube.com/watch?v=..."
+        value={values.heroVideoUrl}
+        onChange={set("heroVideoUrl")}
       />
       {videos.map((url, i) => (
         <Field

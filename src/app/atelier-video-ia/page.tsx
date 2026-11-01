@@ -19,6 +19,7 @@ import {
   TO_BRING,
 } from "./_components/content";
 import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
+import { HeroVideo } from "./_components/hero-video";
 import { RegistrationForm } from "./_components/registration-form";
 import { RichText } from "./_components/rich-text";
 import {
@@ -193,6 +194,15 @@ export default async function AtelierVideoIaPage() {
                 </p>
               </div>
             </div>
+          </div>
+          <div className="relative mx-auto max-w-5xl px-4 pb-12 sm:px-6 sm:pb-20 lg:px-8">
+            <HeroVideo
+              video={
+                workshop.heroVideoUrl
+                  ? toExampleVideo(workshop.heroVideoUrl)
+                  : null
+              }
+            />
           </div>
         </section>
 

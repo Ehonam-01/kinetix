@@ -74,6 +74,14 @@ export const workshopSettingsSchema = z.object({
     )
     .max(3)
     .transform((urls) => urls.filter(Boolean)),
+  heroVideoUrl: z
+    .string()
+    .trim()
+    .refine(
+      (value) => !value || getVideoEmbedUrl("YOUTUBE", value),
+      "Lien YouTube invalide.",
+    )
+    .transform((value) => value || null),
   registrationsOpen: z.boolean(),
 });
 

@@ -408,12 +408,14 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       venue: "Lomé, Tokoin",
       whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
       exampleVideoUrls: ["", "https://youtube.com/shorts/dQw4w9WgXcQ", ""],
+      heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       registrationsOpen: false,
     });
     expect(await localDb.query.workshops.findFirst()).toMatchObject({
       priceCfa: 2500,
       capacity: 60,
       exampleVideoUrls: ["https://youtube.com/shorts/dQw4w9WgXcQ"],
+      heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       registrationsOpen: false,
     });
     await expect(
@@ -424,6 +426,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
         venue: "Lomé",
         whatsappGroupUrl: "",
         exampleVideoUrls: ["https://exemple.com/video"],
+        heroVideoUrl: "",
         registrationsOpen: true,
       }),
     ).rejects.toThrow("Lien YouTube invalide");
@@ -434,6 +437,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       venue: "[adresse précise, Lomé]",
       whatsappGroupUrl: "",
       exampleVideoUrls: [],
+      heroVideoUrl: "",
       registrationsOpen: true,
     });
 
