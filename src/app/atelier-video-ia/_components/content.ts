@@ -79,6 +79,12 @@ export const FAQS = [
       "Kinetix Africa offre cet atelier pour faire découvrir sa méthode et son catalogue de formations. À la fin, nous te présenterons la plateforme et le programme ambassadeur. Rien n'est obligatoire : tu repars avec ta pub et la méthode, que tu t'abonnes ou non.",
   },
   {
+    question:
+      "Est-ce que je peux participer même si je n'ai jamais utilisé l'intelligence artificielle ?",
+    answer:
+      "Absolument ! La formation est accessible aux débutants. Nous allons t'accompagner étape par étape, depuis la conception de ton idée jusqu'à la réalisation de ta publicité vidéo. Tu n'as pas besoin d'avoir une expérience préalable en montage ou en intelligence artificielle.",
+  },
+  {
     question: "Faut-il des connaissances en IA ou en montage ?",
     answer:
       "Non. L'atelier part de zéro et chaque étape est faite avec toi, avec de l'aide si tu bloques.",
@@ -102,6 +108,12 @@ export const FAQS = [
     question: "Pourrai-je vendre cette compétence ensuite ?",
     answer:
       "Tu repars avec les bases pratiques, un premier élément de portfolio et une méthode pour prospecter. Tes résultats dépendront ensuite de ta pratique, de la qualité de ton travail et de ta capacité à trouver des clients : personne ne peut te garantir de revenus, et nous ne le ferons pas.",
+  },
+  {
+    question:
+      "Est-ce que les 5 000 F CFA représentent le prix total de la formation ?",
+    answer:
+      "Les 5 000 F CFA correspondent uniquement aux frais d'inscription pour confirmer ta participation à cette édition de la masterclass, offerte par Kinetix Africa. Aucun autre paiement n'est obligatoire pour participer à l'atelier.",
   },
   {
     question: "Comment se passe le paiement ?",
