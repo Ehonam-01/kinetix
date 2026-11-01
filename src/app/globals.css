@@ -341,8 +341,7 @@ html.kx-launch-on .kx-launch {
 @keyframes kx-orbit {
   to {
     opacity: 1;
-    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)))
-      scale(1);
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1);
   }
 }
 @keyframes kx-lift {
@@ -402,5 +401,21 @@ html.kx-launch-on .kx-launch {
   }
   50% {
     transform: translateY(-7%);
+  }
+}
+
+/* The workshop page's horizontal video: a slow, small float with a soft
+   accent glow breathing under it. */
+@keyframes kx-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 30px -12px
+      color-mix(in oklab, var(--brand-accent) 25%, transparent);
+  }
+  50% {
+    transform: translateY(-8px);
+    box-shadow: 0 22px 44px -14px
+      color-mix(in oklab, var(--brand-accent) 45%, transparent);
   }
 }
