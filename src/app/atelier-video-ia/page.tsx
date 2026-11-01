@@ -177,7 +177,6 @@ function Section({
   muted,
   wide,
   aside,
-  smallTitle,
   centered,
   children,
 }: {
@@ -186,7 +185,6 @@ function Section({
   wide?: boolean;
   // Under the title: beside the text on large screens, above it otherwise.
   aside?: React.ReactNode;
-  smallTitle?: boolean;
   // Short content (lists, cards) centred on phones like the titles; long
   // prose stays left-aligned to stay readable.
   centered?: boolean;
@@ -205,7 +203,7 @@ function Section({
           <h2
             className={cn(
               "font-semibold tracking-tight text-balance",
-              smallTitle ? "text-base sm:text-lg" : "text-2xl sm:text-3xl",
+              "text-2xl sm:text-3xl",
             )}
           >
             {title}
@@ -428,44 +426,59 @@ export default async function AtelierVideoIaPage() {
           </div>
         </section>
 
-        <Section
-          title="Ton formateur : Ehonam Afansi"
-          muted
-          smallTitle
-          aside={
-            // The photo on an accent-coloured card, offset up and to the right.
-            <div className="relative mx-auto mt-4 w-[70%] max-w-72 sm:w-72 lg:mx-0">
-              <div
-                aria-hidden
-                className="bg-brand-accent absolute inset-0 translate-x-2.5 -translate-y-2.5 rounded-2xl"
-              />
-              <Image
-                src="/formateur-ehonam-afansi.jpg"
-                alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
-                width={807}
-                height={1018}
-                sizes="(min-width: 640px) 18rem, 70vw"
-                className="relative w-full rounded-2xl object-cover shadow-lg"
-              />
+        <section className="bg-muted/40">
+          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <h2 className="text-brand-accent text-center text-3xl font-extrabold tracking-tight sm:text-5xl">
+              À propos du formateur
+            </h2>
+            <div className="mt-10 grid items-center gap-8 lg:grid-cols-[18rem_1fr] lg:gap-12">
+              {/* The photo on an accent-coloured card, offset up and to the
+                  right. */}
+              <div className="relative mx-auto w-[70%] max-w-72 sm:w-72">
+                <div
+                  aria-hidden
+                  className="bg-brand-accent absolute inset-0 translate-x-2.5 -translate-y-2.5 rounded-2xl"
+                />
+                <Image
+                  src="/formateur-ehonam-afansi.jpg"
+                  alt="Ehonam Afansi, formateur de la Kinetix AI Video Masterclass"
+                  width={807}
+                  height={1018}
+                  sizes="(min-width: 640px) 18rem, 70vw"
+                  className="relative w-full rounded-2xl object-cover shadow-lg"
+                />
+              </div>
+              <div>
+                <p
+                  className={cn(
+                    caveat.className,
+                    "text-brand-accent -rotate-2 text-center text-4xl leading-none lg:text-left",
+                  )}
+                >
+                  Ehonam AFANSI
+                </p>
+                <div className="mt-4 space-y-4 leading-relaxed">
+                  <p>
+                    Entrepreneur, consultant digital et passionné d&apos;IA,
+                    Ehonam AFANSI forme depuis des années des jeunes africains
+                    aux compétences du numérique : création web, vibe coding,
+                    motion design et vidéo avec l&apos;IA. Il est le promoteur
+                    de la plateforme de freelancing <strong>Edossimé</strong> et
+                    de plusieurs autres outils numériques.
+                  </p>
+                  <p>
+                    Il est convaincu que seules les compétences pourront nous
+                    placer sur le chemin du succès.
+                  </p>
+                  <blockquote className="border-brand-accent border-l-4 pl-4 italic">
+                    « Je ne crois pas aux diplômes qui dorment dans un tiroir.
+                    Je crois aux compétences qui changent une vie. »
+                  </blockquote>
+                </div>
+              </div>
             </div>
-          }
-        >
-          <p>
-            Entrepreneur, consultant digital et passionné d&apos;IA, Ehonam
-            AFANSI forme depuis des années des jeunes africains aux compétences
-            du numérique : création web, vibe coding, motion design et vidéo
-            avec l&apos;IA. Il est le promoteur de la plateforme de freelancing{" "}
-            <strong>Edossimé</strong> et de plusieurs autres outils numériques.
-          </p>
-          <p>
-            Il est convaincu que seules les compétences pourront nous placer sur
-            le chemin du succès.
-          </p>
-          <blockquote className="border-brand-accent border-l-4 pl-4 italic">
-            « Je ne crois pas aux diplômes qui dorment dans un tiroir. Je crois
-            aux compétences qui changent une vie. »
-          </blockquote>
-        </Section>
+          </div>
+        </section>
 
         <Section title="Ce que tu dois apporter" centered>
           <ul className="space-y-2">
