@@ -113,7 +113,8 @@ function HandNotes() {
       </div>
       <div className={cn(note, "-rotate-12 lg:top-[38%] lg:left-full lg:ml-2")}>
         Sur ordinateur ou téléphone
-        <HandArrow className="mt-2 -ml-2" />
+        {/* Turned round: its head points back at the video. */}
+        <HandArrow className="mt-2 -ml-2 rotate-180" />
       </div>
     </div>
   );
