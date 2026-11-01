@@ -535,6 +535,11 @@ export default async function AtelierVideoIaPage() {
                 : les places sont limitées à {workshop.capacity}.
               </p>
               <WorkshopCtaBlock />
+              <p className="text-muted-foreground text-sm">
+                Après ton paiement, ta place est confirmée et tu reçois les
+                informations pratiques ainsi que le lien du groupe WhatsApp des
+                participants.
+              </p>
               <p>📍 Lieu : {workshop.venue}</p>
             </div>
 
