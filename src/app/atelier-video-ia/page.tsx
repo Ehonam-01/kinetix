@@ -322,6 +322,23 @@ export default async function AtelierVideoIaPage() {
           </p>
         </section>
 
+        <section>
+          <div className="mx-auto max-w-3xl space-y-5 px-4 pb-12 text-center text-lg leading-relaxed text-pretty sm:px-6 sm:pb-16 sm:text-xl lg:px-8">
+            <p>
+              Imagine une boutique de vêtements à Lomé qui veut promouvoir ses
+              nouveaux produits. Un restaurant qui veut attirer plus de clients.
+              Un commerçant qui prépare une campagne spéciale pour les fêtes.
+            </p>
+            <p className="font-semibold">
+              Tous ont besoin de vidéos publicitaires pour vendre davantage.
+            </p>
+            <p className="text-brand-accent text-xl font-bold sm:text-2xl">
+              Et si tu étais capable de créer ces vidéos pour eux, sans caméra,
+              sans studio et sans équipe de production ?
+            </p>
+          </div>
+        </section>
+
         <Section
           title="Décembre arrive. Les entreprises vont toutes vouloir des vidéos."
           aside={<EventStickers />}
