@@ -82,7 +82,6 @@ function participant(whatsapp: string, email: string | null = null) {
     fullName: "Ama Mensah",
     whatsapp,
     email,
-    city: "Lomé",
     operator: "TOGOCELL",
     paymentPhone: whatsapp,
     origin: ORIGIN,

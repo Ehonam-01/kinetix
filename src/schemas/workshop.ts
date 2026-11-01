@@ -22,6 +22,12 @@ const phoneField = z
     return phone;
   });
 
+const cityField = z
+  .string()
+  .trim()
+  .min(2, "Indique ta ville.")
+  .max(80, "Ce nom de ville est trop long.");
+
 export const workshopRegistrationSchema = z.object({
   fullName: z
     .string()
@@ -32,11 +38,6 @@ export const workshopRegistrationSchema = z.object({
   email: z
     .union([z.literal(""), z.email("Adresse e-mail invalide.")])
     .transform((value) => value || null),
-  city: z
-    .string()
-    .trim()
-    .min(2, "Indique ta ville.")
-    .max(80, "Ce nom de ville est trop long."),
   operator: z.enum(["TOGOCELL", "MOOV_MONEY"], {
     error: "Choisis ton opérateur Mobile Money.",
   }),
@@ -89,6 +90,6 @@ export const adminWorkshopRegistrationSchema = z.object({
   fullName: workshopRegistrationSchema.shape.fullName,
   whatsapp: phoneField,
   email: workshopRegistrationSchema.shape.email,
-  city: workshopRegistrationSchema.shape.city,
+  city: cityField,
   amount: z.coerce.number().int().min(0).max(1_000_000),
 });

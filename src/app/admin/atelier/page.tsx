@@ -108,7 +108,7 @@ export default async function AdminWorkshopPage() {
                     <td className="px-3 py-2 whitespace-nowrap">
                       {formatWhatsapp(r.whatsapp)}
                     </td>
-                    <td className="px-3 py-2">{r.city}</td>
+                    <td className="px-3 py-2">{r.city || "—"}</td>
                     <td className="px-3 py-2">
                       {STATUS_LABEL[r.status]}
                       {r.source === "ADMIN" && " (ajouté)"}

@@ -16,6 +16,10 @@ import { getActivePaymentProvider } from "@/services/payments/provider-selector"
 // prompt is still on the phone, and a double tap must not send a second one.
 const PENDING_WINDOW_MS = 5 * 60 * 1000;
 
+// Moov Togo requires an address and this form doesn't ask for one: where the
+// workshop takes place, like the fallback email below.
+const PAYMENT_ADDRESS = "Lomé";
+
 function splitName(fullName: string) {
   const [firstName, ...rest] = fullName.trim().split(/\s+/);
   return { firstName, lastName: rest.join(" ") || firstName };
@@ -31,7 +35,6 @@ type RegisterInput = {
   fullName: string;
   whatsapp: string;
   email: string | null;
-  city: string;
   operator: string;
   paymentPhone: string;
   origin: string;
@@ -102,7 +105,8 @@ export async function registerForWorkshop(
     fullName: input.fullName,
     whatsapp: input.whatsapp,
     email: input.email,
-    city: input.city,
+    // No longer asked online; the column stays for people an admin adds.
+    city: "",
     amount: workshop.priceCfa,
     paymentId: payment.id,
     accessToken: token,
@@ -122,8 +126,7 @@ export async function registerForWorkshop(
       metadata: { workshop_registration_id: registrationId },
       country: "TG",
       operator: input.operator,
-      // Moov Togo requires an address; the city is what this form has.
-      address: input.city,
+      address: PAYMENT_ADDRESS,
     });
     await db
       .update(payments)

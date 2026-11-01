@@ -13,7 +13,6 @@ const EMPTY: WorkshopRegistrationInput = {
   fullName: "",
   whatsapp: "",
   email: "",
-  city: "",
   operator: "" as WorkshopRegistrationInput["operator"],
   paymentPhone: "",
 };
@@ -92,17 +91,6 @@ export function RegistrationForm() {
           className="h-11 text-base"
           value={values.email}
           onChange={(e) => set("email", e.target.value)}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="atelier-city">Ville</Label>
-        <Input
-          id="atelier-city"
-          required
-          autoComplete="address-level2"
-          className="h-11 text-base"
-          value={values.city}
-          onChange={(e) => set("city", e.target.value)}
         />
       </div>
       <div className="space-y-1.5">
