@@ -115,8 +115,8 @@ export function RegistrationForm() {
           onChange={(e) => set("operator", e.target.value)}
         >
           <option value="">Choisir</option>
-          <option value="TOGOCELL">T-Money (Togocel)</option>
-          <option value="MOOV_MONEY">Flooz (Moov Togo)</option>
+          <option value="TOGOCELL">Mixx by Yas (ex T-Money)</option>
+          <option value="MOOV_MONEY">Moov Money (ex Flooz)</option>
         </select>
       </div>
       <div className="space-y-1.5">
