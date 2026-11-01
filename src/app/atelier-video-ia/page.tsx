@@ -310,11 +310,12 @@ export default async function AtelierVideoIaPage() {
               .map(toExampleVideo)
               .filter((video) => video !== null)}
           />
-          {/* A hand-drawn ring around the label, under the cards. */}
+          {/* A hand-drawn ring around the label, under the cards, drifting
+              like them (kx-bob in globals.css). */}
           <p
             className={cn(
               caveat.className,
-              "text-brand-accent border-brand-accent -mt-4 mb-12 -rotate-2 rounded-[50%] border-2 px-6 py-1 text-2xl sm:-mt-10 sm:mb-16 sm:text-3xl lg:mt-2",
+              "text-brand-accent border-brand-accent -mt-2 mb-14 -rotate-3 rounded-[50%] border-[3px] px-10 py-3 text-4xl leading-none motion-safe:animate-[kx-bob_4s_ease-in-out_infinite] sm:-mt-8 sm:mb-20 sm:px-14 sm:py-4 sm:text-6xl lg:mt-4",
             )}
           >
             Vidéos exemples
