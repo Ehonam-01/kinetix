@@ -498,7 +498,7 @@ export default async function AtelierVideoIaPage() {
                       {fmt(workshop.regularPriceCfa)} F CFA
                     </span>
                   </strong>{" "}
-                  (4 h de formation pratique, démonstrations d&apos;outils IA
+                  (5 h de formation pratique, démonstrations d&apos;outils IA
                   premium, modèle d&apos;offre, suivi de 30 jours)
                 </p>
                 <p className="mt-4 text-lg font-semibold">
