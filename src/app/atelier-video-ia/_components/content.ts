@@ -85,7 +85,7 @@ export const FAQS = [
   {
     question: "Dois-je apporter un ordinateur ?",
     answer:
-      "Non. Ton ordinateur portable ou ton smartphone : les deux permettent de réaliser ta pub.",
+      "Pas forcément. Ton ordinateur portable ou ton smartphone : les deux permettent de réaliser ta pub.",
   },
   {
     question: "Les outils sont-ils payants ?",
