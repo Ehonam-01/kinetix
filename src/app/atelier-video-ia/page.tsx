@@ -81,8 +81,8 @@ function Section({
   title: string;
   muted?: boolean;
   wide?: boolean;
-  // Under the title: beside the text on large screens, above it otherwise,
-  // centred with a smaller title on phones.
+  // Under the title, with a smaller title: beside the text on large
+  // screens, above it otherwise.
   aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -95,7 +95,7 @@ function Section({
           aside && "lg:items-center",
         )}
       >
-        <div className={cn(aside && "text-center lg:text-left")}>
+        <div className="text-center lg:text-left">
           <h2
             className={cn(
               "font-semibold tracking-tight text-balance",

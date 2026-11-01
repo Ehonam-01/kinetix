@@ -100,7 +100,7 @@ export function WhatsappButton({
       rel="noopener noreferrer"
       className={cn(
         buttonVariants({ size: "lg" }),
-        "h-auto min-h-12 bg-[#128C7E] px-6 py-3 text-base font-semibold whitespace-normal text-white hover:bg-[#128C7E]/90",
+        "h-auto min-h-12 bg-[#128C7E] px-6 py-3 text-center text-base font-semibold whitespace-normal text-white hover:bg-[#128C7E]/90",
         className,
       )}
     >
@@ -142,7 +142,7 @@ export function WorkshopCta({
       }
       className={cn(
         buttonVariants({ size: "lg" }),
-        "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-12 px-6 py-3 text-base font-bold whitespace-normal shadow-lg",
+        "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-12 px-6 py-3 text-center text-base font-bold whitespace-normal shadow-lg",
         className,
       )}
     >
