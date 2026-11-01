@@ -428,7 +428,7 @@ export default async function AtelierVideoIaPage() {
 
         <section className="bg-muted/40">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-            <h2 className="text-brand-accent text-center text-3xl font-extrabold tracking-tight sm:text-5xl">
+            <h2 className="text-foreground text-center text-3xl font-extrabold tracking-tight sm:text-5xl">
               À propos du formateur
             </h2>
             <div className="mt-10 grid items-center gap-8 lg:grid-cols-[18rem_1fr] lg:gap-12">
