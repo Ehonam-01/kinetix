@@ -120,20 +120,72 @@ function HandNotes() {
   );
 }
 
+// The year-end occasions the section talks about, as stickers drifting
+// up and down out of step (kx-bob in globals.css): a row on phones, a
+// loose two-by-two pile under the title on large screens.
+const EVENT_STICKERS = [
+  {
+    src: "/black-friday.png",
+    alt: "Black Friday",
+    width: 360,
+    height: 360,
+    tilt: "-rotate-6",
+  },
+  { src: "/noel.png", alt: "Noël", width: 352, height: 512, tilt: "rotate-3" },
+  {
+    src: "/promo.png",
+    alt: "Spécial promo",
+    width: 736,
+    height: 736,
+    tilt: "rotate-6",
+  },
+  {
+    src: "/destockage.jpg",
+    alt: "Déstockage",
+    width: 400,
+    height: 225,
+    // A rectangle, not a cut-out: rounded like a label.
+    tilt: "-rotate-3 rounded-xl shadow-lg",
+  },
+];
+
+function EventStickers() {
+  return (
+    <div className="mx-auto mt-6 grid max-w-md grid-cols-4 items-center gap-3 lg:mx-0 lg:mt-8 lg:max-w-sm lg:grid-cols-2 lg:gap-6">
+      {EVENT_STICKERS.map((sticker, i) => (
+        <Image
+          key={sticker.src}
+          src={sticker.src}
+          alt={sticker.alt}
+          width={sticker.width}
+          height={sticker.height}
+          sizes="(min-width: 1024px) 11rem, 25vw"
+          className={cn(
+            "mx-auto max-h-20 w-auto object-contain motion-safe:animate-[kx-bob_4s_ease-in-out_infinite] sm:max-h-28 lg:max-h-36",
+            sticker.tilt,
+          )}
+          style={{ animationDelay: `${-i * 1.1}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function Section({
   title,
   muted,
   wide,
   aside,
+  smallTitle,
   centered,
   children,
 }: {
   title: string;
   muted?: boolean;
   wide?: boolean;
-  // Under the title, with a smaller title: beside the text on large
-  // screens, above it otherwise.
+  // Under the title: beside the text on large screens, above it otherwise.
   aside?: React.ReactNode;
+  smallTitle?: boolean;
   // Short content (lists, cards) centred on phones like the titles; long
   // prose stays left-aligned to stay readable.
   centered?: boolean;
@@ -152,7 +204,7 @@ function Section({
           <h2
             className={cn(
               "font-semibold tracking-tight text-balance",
-              aside ? "text-base sm:text-lg" : "text-2xl sm:text-3xl",
+              smallTitle ? "text-base sm:text-lg" : "text-2xl sm:text-3xl",
             )}
           >
             {title}
@@ -258,7 +310,10 @@ export default async function AtelierVideoIaPage() {
           />
         </section>
 
-        <Section title="Décembre arrive. Les entreprises vont toutes vouloir des vidéos.">
+        <Section
+          title="Décembre arrive. Les entreprises vont toutes vouloir des vidéos."
+          aside={<EventStickers />}
+        >
           <p>
             Promotions de fin d&apos;année, offres de fêtes, nouveaux produits :
             dans quelques semaines, chaque boutique, restaurant et marque de
@@ -349,6 +404,7 @@ export default async function AtelierVideoIaPage() {
         <Section
           title="Ton formateur : Ehonam Afansi"
           muted
+          smallTitle
           aside={
             // The photo on an accent-coloured card, offset up and to the right.
             <div className="relative mx-auto mt-4 w-[70%] max-w-72 sm:w-72 lg:mx-0">
