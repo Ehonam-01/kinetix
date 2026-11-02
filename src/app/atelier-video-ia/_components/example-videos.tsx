@@ -31,7 +31,7 @@ export function ExampleVideos({ videos }: { videos: ExampleVideo[] }) {
       {CARDS.map((tilt, i) => {
         const video = videos[i];
         const cardClass = cn(
-          "aspect-[9/17] w-full overflow-hidden rounded-[18%/10%] bg-[#078F5F] motion-safe:animate-[kx-bob_4s_ease-in-out_infinite]",
+          "aspect-[9/17] w-full overflow-hidden rounded-[18%/10%] border bg-white shadow-lg motion-safe:animate-[kx-bob_4s_ease-in-out_infinite]",
           tilt,
         );
         // Out of step with each other, like a hand waving them.

@@ -75,6 +75,20 @@ export const workshopSettingsSchema = z.object({
     )
     .max(3)
     .transform((urls) => urls.filter(Boolean)),
+  // The slider: as many as the admin wants, within reason (each one
+  // visible plays on its own).
+  sliderVideoUrls: z
+    .array(
+      z
+        .string()
+        .trim()
+        .refine(
+          (value) => !value || getVideoEmbedUrl("YOUTUBE", value),
+          "Lien YouTube invalide dans le slider.",
+        ),
+    )
+    .transform((urls) => urls.filter(Boolean))
+    .pipe(z.array(z.string()).max(12, "12 vidéos au plus dans le slider.")),
   heroVideoUrl: z
     .string()
     .trim()

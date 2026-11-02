@@ -11,7 +11,7 @@ import type { ExampleVideo } from "./example-videos";
 export function HeroVideo({ video }: { video: ExampleVideo | null }) {
   const [playing, setPlaying] = useState(false);
   const frame =
-    "relative aspect-video w-full overflow-hidden rounded-2xl border bg-[#078F5F] shadow-lg";
+    "relative aspect-video w-full overflow-hidden rounded-2xl border bg-white shadow-lg";
   // Floats gently until it plays: a player that moves is hard to watch.
   const floating = `${frame} motion-safe:animate-[kx-float_5s_ease-in-out_infinite]`;
 

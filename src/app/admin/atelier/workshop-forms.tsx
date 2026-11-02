@@ -33,6 +33,7 @@ export function WorkshopSettingsForm({
     whatsappGroupUrl: string | null;
     exampleVideoUrls: string[];
     heroVideoUrl: string | null;
+    sliderVideoUrls: string[];
     registrationsOpen: boolean;
   };
 }) {
@@ -48,6 +49,11 @@ export function WorkshopSettingsForm({
   });
   const [videos, setVideos] = useState(
     [0, 1, 2].map((i) => current.exampleVideoUrls[i] ?? ""),
+  );
+  // One link per line: easier than a field per video for a list of any
+  // length.
+  const [sliderVideos, setSliderVideos] = useState(
+    current.sliderVideoUrls.join("\n"),
   );
   const [registrationsOpen, setRegistrationsOpen] = useState(
     current.registrationsOpen,
@@ -65,6 +71,7 @@ export function WorkshopSettingsForm({
       const result = await updateWorkshopSettingsAction({
         ...values,
         exampleVideoUrls: videos,
+        sliderVideoUrls: sliderVideos.split("\n"),
         registrationsOpen,
       });
       setMessage(result.error ?? "Enregistré.");
@@ -128,6 +135,25 @@ export function WorkshopSettingsForm({
           }
         />
       ))}
+      <div className="space-y-1.5">
+        <Label htmlFor="workshop-slider-videos">
+          Slider de vidéos exemples (un lien YouTube par ligne, 12 au plus)
+        </Label>
+        <textarea
+          id="workshop-slider-videos"
+          rows={5}
+          placeholder={
+            "https://www.youtube.com/shorts/...\nhttps://www.youtube.com/shorts/..."
+          }
+          value={sliderVideos}
+          onChange={(e) => setSliderVideos(e.target.value)}
+          className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 w-full rounded-lg border bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:ring-3"
+        />
+        <p className="text-muted-foreground text-xs">
+          Sous « Ce que tu vas réaliser ». Les vidéos se lisent sans le son ; un
+          tap relance la vidéo avec le son. Vide : le slider est masqué.
+        </p>
+      </div>
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"

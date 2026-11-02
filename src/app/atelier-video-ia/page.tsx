@@ -24,8 +24,10 @@ import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { HeroVideo } from "./_components/hero-video";
 import { PaymentLogos } from "./_components/payment-logos";
 import { RichText } from "./_components/rich-text";
+import { VideoSlider, type SliderVideo } from "./_components/video-slider";
 import {
   CtaNote,
+  HERO_CTA_ID,
   StickyCta,
   WhatsappButton,
   WorkshopCta,
@@ -65,6 +67,13 @@ const fmt = (amount: number) => amount.toLocaleString("fr-FR");
 // Handwriting, for the note beside the hero video only.
 const caveat = Caveat({ subsets: ["latin"], weight: "700" });
 
+function toSliderVideo(url: string): SliderVideo | null {
+  const id = getVideoEmbedUrl("YOUTUBE", url)?.match(/\/embed\/([\w-]+)/)?.[1];
+  return id
+    ? { id, thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` }
+    : null;
+}
+
 function toExampleVideo(url: string): ExampleVideo | null {
   const embedUrl = getVideoEmbedUrl("YOUTUBE", url);
   const id = embedUrl?.match(/\/embed\/([\w-]+)/)?.[1];
@@ -102,7 +111,7 @@ function HandArrow({ className }: { className?: string }) {
 function HandNotes() {
   const note = cn(
     caveat.className,
-    "text-brand-accent text-xl leading-none sm:text-2xl lg:absolute lg:w-40 lg:text-3xl",
+    "text-brand-accent max-w-36 text-lg leading-none sm:max-w-none sm:text-2xl lg:absolute lg:w-40 lg:text-3xl",
   );
   return (
     <div
@@ -233,6 +242,9 @@ export default async function AtelierVideoIaPage() {
   const { remaining, open } = await getWorkshopAvailability(db, workshop);
   const whatsappUrl = (text: string) =>
     supportWhatsapp ? whatsappHref(supportWhatsapp, text) : null;
+  const sliderVideos = workshop.sliderVideoUrls
+    .map(toSliderVideo)
+    .filter((video) => video !== null);
   const waitlistUrl = whatsappUrl(
     "Bonjour, je ne peux pas venir à l'atelier du 14 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
   );
@@ -247,24 +259,24 @@ export default async function AtelierVideoIaPage() {
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-16 lg:px-8 lg:pt-8">
-            <h1 className="font-heading text-3xl leading-[1.15] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-[2.75rem]">
+          <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-16 lg:px-8 lg:pt-8">
+            <h1 className="font-heading text-[1.7rem] leading-[1.12] font-extrabold tracking-tight text-balance sm:text-5xl sm:leading-[1.15] lg:text-[2.75rem]">
               Crée ta première{" "}
               <span className="text-brand-accent">
                 publicité vidéo professionnelle
               </span>{" "}
               avec l&apos;IA en une seule matinée.
             </h1>
-            <p className="mx-auto mt-4 max-w-3xl font-medium text-pretty sm:text-lg">
+            <p className="mx-auto mt-3 max-w-3xl text-[0.95rem] leading-snug font-medium text-pretty sm:mt-4 sm:text-lg sm:leading-normal">
               Apprends à produire des vidéos publicitaires pour les entreprises
               et découvre comment transformer cette compétence en source de
               revenus.
             </p>
-            <span className="text-primary bg-primary/10 mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+            <span className="text-primary bg-primary/10 mt-4 hidden rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase sm:inline-flex">
               KINETIX AI VIDEO MASTERCLASS
             </span>
 
-            <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
+            <div className="relative mx-auto mt-4 max-w-3xl sm:mt-5 lg:max-w-xl">
               <HandNotes />
               <HeroVideo
                 video={
@@ -280,7 +292,10 @@ export default async function AtelierVideoIaPage() {
                   boxClassName="bg-card border"
                   labelClassName="text-muted-foreground"
                 />
-                <div className="flex w-full flex-col items-center gap-2 sm:w-auto">
+                <div
+                  id={HERO_CTA_ID}
+                  className="flex w-full flex-col items-center gap-2 sm:w-auto"
+                >
                   <WorkshopCta
                     label="JE RÉSERVE MA PLACE"
                     className="w-full sm:w-auto"
@@ -399,6 +414,23 @@ export default async function AtelierVideoIaPage() {
             ))}
           </ul>
         </Section>
+
+        {sliderVideos.length > 0 && (
+          <section className="py-12 sm:py-16">
+            <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+              <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+                Ce que l&apos;IA permet de créer
+              </h2>
+              <p className="text-muted-foreground mt-2">
+                Fais glisser, et appuie sur une vidéo pour l&apos;écouter avec
+                le son.
+              </p>
+            </div>
+            <div className="mt-8">
+              <VideoSlider videos={sliderVideos} />
+            </div>
+          </section>
+        )}
 
         <section className="bg-muted/40">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:grid lg:grid-cols-[auto_1fr] lg:items-center lg:gap-20 lg:px-8">

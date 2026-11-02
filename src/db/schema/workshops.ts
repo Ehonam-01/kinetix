@@ -45,6 +45,12 @@ export const workshops = pgTable("workshops", {
     .default(sql`'{}'::text[]`),
   // A YouTube link, shown full width under the top of the sales page.
   heroVideoUrl: text("hero_video_url"),
+  // YouTube links for the slider further down the page, playing muted
+  // on their own; separate from the three cards at the top.
+  sliderVideoUrls: text("slider_video_urls")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   registrationsOpen: boolean("registrations_open").notNull().default(true),
   // Last moment a participant's code still takes money off a subscription.
   discountValidUntil: timestamp("discount_valid_until", {

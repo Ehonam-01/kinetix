@@ -210,10 +210,36 @@ export function SeatsLeft({ className }: { className?: string }) {
   );
 }
 
-// Phones only: always in reach on a long page.
+// The button under the hero video: while it is on screen, the bar below
+// would only repeat it.
+export const HERO_CTA_ID = "reserver";
+
+// Phones only: always in reach on a long page, except where the hero's own
+// button is already showing.
 export function StickyCta() {
+  const [heroCtaVisible, setHeroCtaVisible] = useState(false);
+
+  useEffect(() => {
+    const heroCta = document.getElementById(HERO_CTA_ID);
+    if (!heroCta) return;
+    // Two thirds of it on screen: a sliver of a button isn't one to tap.
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroCtaVisible(entry.intersectionRatio >= 0.66),
+      { threshold: [0, 0.66, 1] },
+    );
+    observer.observe(heroCta);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur sm:hidden">
+    <div
+      aria-hidden={heroCtaVisible || undefined}
+      inert={heroCtaVisible}
+      className={cn(
+        "bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 backdrop-blur transition-transform duration-300 sm:hidden",
+        heroCtaVisible && "translate-y-full",
+      )}
+    >
       <div className="flex items-center gap-3">
         <SeatsLeft className="w-24 shrink-0 text-xs leading-tight" />
         <WorkshopCta label="JE RÉSERVE MA PLACE" className="flex-1 text-sm" />

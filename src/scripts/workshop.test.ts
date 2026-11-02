@@ -408,6 +408,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
       exampleVideoUrls: ["", "https://youtube.com/shorts/dQw4w9WgXcQ", ""],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ", " ", ""],
       registrationsOpen: false,
     });
     expect(await localDb.query.workshops.findFirst()).toMatchObject({
@@ -415,6 +416,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       capacity: 60,
       exampleVideoUrls: ["https://youtube.com/shorts/dQw4w9WgXcQ"],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ"],
       registrationsOpen: false,
     });
     await expect(
@@ -426,9 +428,32 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
         whatsappGroupUrl: "",
         exampleVideoUrls: ["https://exemple.com/video"],
         heroVideoUrl: "",
+        sliderVideoUrls: [],
         registrationsOpen: true,
       }),
     ).rejects.toThrow("Lien YouTube invalide");
+    const settings = {
+      priceCfa: 2000,
+      regularPriceCfa: 25000,
+      capacity: 50,
+      venue: "Lomé",
+      whatsappGroupUrl: "",
+      exampleVideoUrls: [],
+      heroVideoUrl: "",
+      registrationsOpen: true,
+    };
+    await expect(
+      updateWorkshopSettings(admin, {
+        ...settings,
+        sliderVideoUrls: ["https://vimeo.com/123"],
+      }),
+    ).rejects.toThrow("Lien YouTube invalide dans le slider");
+    await expect(
+      updateWorkshopSettings(admin, {
+        ...settings,
+        sliderVideoUrls: Array(13).fill("https://youtu.be/dQw4w9WgXcQ"),
+      }),
+    ).rejects.toThrow("12 vidéos au plus");
     await updateWorkshopSettings(admin, {
       priceCfa: 2000,
       regularPriceCfa: 25000,
@@ -437,6 +462,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       whatsappGroupUrl: "",
       exampleVideoUrls: [],
       heroVideoUrl: "",
+      sliderVideoUrls: [],
       registrationsOpen: true,
     });
 
