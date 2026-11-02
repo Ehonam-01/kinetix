@@ -74,7 +74,7 @@ export default async function AtelierMerciPage(
             </h1>
             <p>Aucune place n&apos;a été réservée. Tu peux réessayer.</p>
             <Link
-              href="/atelier-video-ia#inscription"
+              href="/atelier-video-ia/inscription"
               className={buttonVariants({ size: "lg" })}
             >
               Réessayer

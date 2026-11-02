@@ -18,10 +18,11 @@ import {
   OUTCOMES,
   PROGRAM,
   TO_BRING,
+  WHATSAPP_REGISTER_TEXT,
 } from "./_components/content";
 import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { HeroVideo } from "./_components/hero-video";
-import { RegistrationForm } from "./_components/registration-form";
+import { PaymentLogos } from "./_components/payment-logos";
 import { RichText } from "./_components/rich-text";
 import {
   CtaNote,
@@ -172,40 +173,6 @@ function EventStickers() {
   );
 }
 
-// The two Mobile Money services the form takes (Togo).
-const PAYMENT_LOGOS = [
-  {
-    src: "/paiement-mixx-by-yas.png",
-    alt: "Mixx by Yas",
-    width: 960,
-    height: 483,
-  },
-  {
-    src: "/paiement-moov-money.png",
-    alt: "Moov Money",
-    width: 918,
-    height: 612,
-  },
-];
-
-function PaymentLogos() {
-  return (
-    <div className="flex items-center justify-center gap-3 lg:justify-start">
-      {PAYMENT_LOGOS.map((logo) => (
-        <Image
-          key={logo.src}
-          src={logo.src}
-          alt={logo.alt}
-          width={logo.width}
-          height={logo.height}
-          sizes="5rem"
-          className="h-12 w-auto rounded-md"
-        />
-      ))}
-    </div>
-  );
-}
-
 function Section({
   title,
   muted,
@@ -275,9 +242,7 @@ export default async function AtelierVideoIaPage() {
       remaining={remaining}
       open={open}
       price={workshop.priceCfa}
-      whatsappUrl={whatsappUrl(
-        "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.",
-      )}
+      whatsappUrl={whatsappUrl(WHATSAPP_REGISTER_TEXT)}
     >
       <main className="pb-24 sm:pb-0">
         <section className="relative overflow-hidden">
@@ -563,6 +528,9 @@ export default async function AtelierVideoIaPage() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="space-y-4">
               <div className="space-y-3">
                 <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
                 <PaymentLogos />
@@ -578,13 +546,6 @@ export default async function AtelierVideoIaPage() {
                 participants.
               </p>
               <p>📍 Lieu : {workshop.venue}</p>
-            </div>
-
-            <div
-              id="inscription"
-              className="scroll-mt-20 pt-4 text-left lg:sticky lg:top-24 lg:pt-0"
-            >
-              <RegistrationForm />
             </div>
           </div>
         </Section>

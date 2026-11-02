@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackMarketingEvent } from "@/lib/marketing-events";
@@ -110,8 +111,8 @@ export function WhatsappButton({
   );
 }
 
-// Every "reserve" button, its label followed by the price. Once the online
-// sale stops it becomes a WhatsApp link: explicit user decision, a visitor
+// Every "reserve" button, its label followed by the price, leading to the
+// form alone on its own page. Once the online sale stops it becomes a WhatsApp link: explicit user decision, a visitor
 // past the capacity is never offered a payment.
 export function WorkshopCta({
   label,
@@ -132,8 +133,8 @@ export function WorkshopCta({
     );
   }
   return (
-    <a
-      href="#inscription"
+    <Link
+      href="/atelier-video-ia/inscription"
       onClick={() =>
         trackMarketingEvent("InitiateCheckout", {
           value: price,
@@ -147,7 +148,7 @@ export function WorkshopCta({
       )}
     >
       {label} – {price.toLocaleString("fr-FR")}&nbsp;F
-    </a>
+    </Link>
   );
 }
 

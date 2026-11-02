@@ -1,3 +1,7 @@
+// Prefilled on the WhatsApp button once the online sale stops.
+export const WHATSAPP_REGISTER_TEXT =
+  "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.";
+
 // The page's text, kept word for word as supplied: shared with the
 // confirmation page, which repeats what to bring.
 export const AUDIENCES = [

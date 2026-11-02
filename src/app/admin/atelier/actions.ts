@@ -23,6 +23,7 @@ export async function updateWorkshopSettingsAction(input: SettingsInput) {
   }
   revalidatePath("/admin/atelier");
   revalidatePath("/atelier-video-ia");
+  revalidatePath("/atelier-video-ia/inscription");
   return { error: null };
 }
 
