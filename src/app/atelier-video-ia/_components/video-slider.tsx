@@ -30,6 +30,11 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
   const [visible, setVisible] = useState<ReadonlySet<number>>(new Set());
   const [withSound, setWithSound] = useState<number | null>(null);
   const [edges, setEdges] = useState({ start: true, end: true });
+  // Enough sets for the row to stay full while it loops, even on a wide
+  // screen with few videos. A single video doesn't loop.
+  const copies =
+    videos.length < 2 ? 1 : Math.max(2, Math.ceil(12 / videos.length));
+  const cards = Array.from({ length: copies }, () => videos).flat();
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -72,7 +77,93 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
       resize.disconnect();
       scroller.removeEventListener("scroll", updateEdges);
     };
-  }, [videos.length]);
+  }, [cards.length]);
+
+  // Drifts slowly and endlessly: the row holds the videos several times
+  // over, and once a whole set has gone by it jumps back by exactly one
+  // set, which looks the same. It holds while a video plays with sound,
+  // while the mouse is over the row, for a while after a swipe, a click
+  // or the wheel, off screen, and for visitors who asked for less motion.
+  const hoveringRef = useRef(false);
+  const pausedUntilRef = useRef(0);
+  const withSoundRef = useRef(withSound);
+  useEffect(() => {
+    withSoundRef.current = withSound;
+  }, [withSound]);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || copies < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const PIXELS_PER_SECOND = 55;
+    // Snapping fights a scroll moved a little each frame: off while it
+    // drifts, back on as soon as a hand takes over.
+    const pause = () => {
+      pausedUntilRef.current = Date.now() + 8000;
+      scroller.style.scrollSnapType = "";
+    };
+    const enter = (event: PointerEvent) => {
+      if (event.pointerType === "mouse") hoveringRef.current = true;
+    };
+    const leave = () => {
+      hoveringRef.current = false;
+    };
+    scroller.addEventListener("pointerdown", pause);
+    scroller.addEventListener("touchstart", pause, { passive: true });
+    scroller.addEventListener("wheel", pause, { passive: true });
+    scroller.addEventListener("pointerenter", enter);
+    scroller.addEventListener("pointerleave", leave);
+
+    // One set's width: from the first card to its first copy.
+    const setWidth = () => {
+      const cards = scroller.children;
+      const first = cards[0] as HTMLElement | undefined;
+      const copy = cards[videos.length] as HTMLElement | undefined;
+      return first && copy ? copy.offsetLeft - first.offsetLeft : 0;
+    };
+
+    let frame = 0;
+    let last: number | null = null;
+    let position: number | null = null;
+    const step = (now: number) => {
+      frame = requestAnimationFrame(step);
+      const box = scroller.getBoundingClientRect();
+      const held =
+        document.hidden ||
+        hoveringRef.current ||
+        withSoundRef.current !== null ||
+        Date.now() < pausedUntilRef.current ||
+        box.bottom < 0 ||
+        box.top > window.innerHeight;
+      if (held) {
+        last = null;
+        position = null;
+        return;
+      }
+      const width = setWidth();
+      if (last === null || position === null || width <= 0) {
+        scroller.style.scrollSnapType = "none";
+        last = now;
+        position = scroller.scrollLeft;
+        return;
+      }
+      position += ((now - last) / 1000) * PIXELS_PER_SECOND;
+      last = now;
+      while (position >= width) position -= width;
+      scroller.scrollLeft = position;
+    };
+    frame = requestAnimationFrame(step);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      scroller.removeEventListener("pointerdown", pause);
+      scroller.removeEventListener("touchstart", pause);
+      scroller.removeEventListener("wheel", pause);
+      scroller.removeEventListener("pointerenter", enter);
+      scroller.removeEventListener("pointerleave", leave);
+    };
+  }, [videos.length, copies]);
 
   function scrollByCard(direction: 1 | -1) {
     const scroller = scrollerRef.current;
@@ -93,7 +184,7 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
         ref={scrollerRef}
         className="flex snap-x snap-mandatory [scrollbar-width:none] gap-4 overflow-x-auto px-[calc(50%-min(31vw,8rem))] py-2 sm:scroll-px-6 sm:px-6 lg:scroll-px-8 lg:px-8 [&::-webkit-scrollbar]:hidden sm:[&>*:first-child]:ms-auto sm:[&>*:last-child]:me-auto"
       >
-        {videos.map((video, i) => {
+        {cards.map((video, i) => {
           const sound = withSound === i;
           const playing = sound || visible.has(i);
           return (
@@ -114,7 +205,7 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
                 <iframe
                   key={sound ? "sound" : "muted"}
                   src={sound ? soundSrc(video.id) : mutedSrc(video.id)}
-                  title={`Vidéo d'exemple ${i + 1}`}
+                  title={`Vidéo d'exemple ${(i % videos.length) + 1}`}
                   allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen={sound}
                   className={cn(
@@ -128,7 +219,7 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
                 <button
                   type="button"
                   onClick={() => setWithSound(i)}
-                  aria-label={`Regarder la vidéo d'exemple ${i + 1} avec le son`}
+                  aria-label={`Regarder la vidéo d'exemple ${(i % videos.length) + 1} avec le son`}
                   className="absolute inset-0 flex cursor-pointer items-end justify-center p-3"
                 >
                   <span className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
@@ -144,7 +235,10 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
       {!edges.start && (
         <button
           type="button"
-          onClick={() => scrollByCard(-1)}
+          onClick={() => {
+            pausedUntilRef.current = Date.now() + 8000;
+            scrollByCard(-1);
+          }}
           aria-label="Vidéo précédente"
           className={cn(arrow, "left-1")}
         >
@@ -154,7 +248,10 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
       {!edges.end && (
         <button
           type="button"
-          onClick={() => scrollByCard(1)}
+          onClick={() => {
+            pausedUntilRef.current = Date.now() + 8000;
+            scrollByCard(1);
+          }}
           aria-label="Vidéo suivante"
           className={cn(arrow, "right-1")}
         >
