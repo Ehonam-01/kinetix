@@ -1,7 +1,24 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Caveat } from "next/font/google";
-import { Check, ChevronDown } from "lucide-react";
+import {
+  Award,
+  Briefcase,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  Clapperboard,
+  Coffee,
+  FileText,
+  Film,
+  GraduationCap,
+  ImagePlus,
+  MapPin,
+  MessageCircle,
+  PenLine,
+  Ticket,
+  type LucideIcon,
+} from "lucide-react";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
 import { LaunchCountdown } from "@/components/launch-countdown";
 import { SITE_NAME } from "@/config/site";
@@ -13,12 +30,12 @@ import { getSupportWhatsapp } from "@/repositories/payment-settings";
 import { getWorkshop, getWorkshopAvailability } from "@/repositories/workshops";
 import {
   AUDIENCES,
-  FAQS,
   INCLUDED,
   OUTCOMES,
   PROGRAM,
-  TO_BRING,
+  SKILLS,
   WHATSAPP_REGISTER_TEXT,
+  workshopFaqs,
 } from "./_components/content";
 import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { HeroVideo } from "./_components/hero-video";
@@ -64,7 +81,28 @@ export const revalidate = 60;
 
 const fmt = (amount: number) => amount.toLocaleString("fr-FR");
 
-// Handwriting, for the note beside the hero video only.
+// The date and hours as set in /admin/atelier, in Lomé time.
+const fmtDay = (date: Date) =>
+  date.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Africa/Lome",
+  });
+function fmtHour(date: Date) {
+  const [hours, minutes] = date
+    .toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Africa/Lome",
+    })
+    .split(":");
+  return `${Number(hours)} h${minutes === "00" ? "" : ` ${minutes}`}`;
+}
+const capitalize = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
+// Handwriting, for the notes beside the hero video and a few labels.
 const caveat = Caveat({ subsets: ["latin"], weight: "700" });
 
 function toSliderVideo(url: string): SliderVideo | null {
@@ -84,9 +122,6 @@ function toExampleVideo(url: string): ExampleVideo | null {
   };
 }
 
-// On a large screen the title sits beside its text, which keeps lines
-// readable across the full width; "wide" gives the content the whole width
-// for what lays out in columns by itself.
 // A curved arrow, from its lower left to its upper right.
 function HandArrow({ className }: { className?: string }) {
   return (
@@ -131,108 +166,104 @@ function HandNotes() {
   );
 }
 
-// The year-end occasions the section talks about, as stickers drifting
-// up and down out of step (kx-bob in globals.css): a row on phones, a
-// loose two-by-two pile under the title on large screens.
-const EVENT_STICKERS = [
-  {
-    src: "/black-friday.png",
-    alt: "Black Friday",
-    width: 360,
-    height: 360,
-    tilt: "-rotate-6",
-  },
-  { src: "/noel.png", alt: "Noël", width: 352, height: 512, tilt: "rotate-3" },
-  {
-    src: "/promo.png",
-    alt: "Spécial promo",
-    width: 736,
-    height: 736,
-    tilt: "rotate-6",
-  },
-  {
-    src: "/destockage.jpg",
-    alt: "Déstockage",
-    width: 400,
-    height: 225,
-    // A rectangle, not a cut-out: rounded like a label.
-    tilt: "-rotate-3 rounded-xl shadow-lg",
-  },
-];
-
-function EventStickers() {
+// Date and hours, place, price: what a visitor needs to decide, as chips.
+function EventInfo({
+  when,
+  venue,
+  price,
+  className,
+}: {
+  when: string;
+  venue: string;
+  price: string;
+  className?: string;
+}) {
+  const items: { icon: LucideIcon; text: string; strong?: boolean }[] = [
+    { icon: CalendarDays, text: when },
+    { icon: MapPin, text: venue },
+    { icon: Ticket, text: `${price} F CFA`, strong: true },
+  ];
   return (
-    <div className="mx-auto mt-6 grid max-w-md grid-cols-4 items-center gap-3 lg:mx-0 lg:mt-8 lg:max-w-sm lg:grid-cols-2 lg:gap-6">
-      {EVENT_STICKERS.map((sticker, i) => (
-        <Image
-          key={sticker.src}
-          src={sticker.src}
-          alt={sticker.alt}
-          width={sticker.width}
-          height={sticker.height}
-          sizes="(min-width: 1024px) 11rem, 25vw"
+    <ul
+      className={cn(
+        "flex flex-wrap justify-center gap-2 text-sm sm:text-base",
+        className,
+      )}
+    >
+      {items.map(({ icon: Icon, text, strong }) => (
+        <li
+          key={text}
           className={cn(
-            "mx-auto max-h-20 w-auto object-contain motion-safe:animate-[kx-bob_4s_ease-in-out_infinite] sm:max-h-28 lg:max-h-36",
-            sticker.tilt,
+            "bg-card flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-left",
+            strong && "border-brand-accent/50 font-bold",
           )}
-          style={{ animationDelay: `${-i * 1.1}s` }}
-        />
+        >
+          <Icon
+            aria-hidden="true"
+            className="text-brand-accent size-4 shrink-0"
+          />
+          {text}
+        </li>
       ))}
+    </ul>
+  );
+}
+
+// A reserve button with its payment and seats line, centred.
+function CtaRow({
+  label = "JE RÉSERVE MA PLACE",
+  className,
+}: {
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col items-center gap-2", className)}>
+      <WorkshopCta label={label} className="w-full sm:w-auto" />
+      <CtaNote />
     </div>
   );
 }
 
-function Section({
+// A section with its title centred above the content.
+function Block({
   title,
+  intro,
   muted,
-  wide,
-  aside,
-  centered,
   children,
 }: {
   title: string;
+  intro?: React.ReactNode;
   muted?: boolean;
-  wide?: boolean;
-  // Under the title: beside the text on large screens, above it otherwise.
-  aside?: React.ReactNode;
-  // Short content (lists, cards) centred on phones like the titles; long
-  // prose stays left-aligned to stay readable.
-  centered?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section className={muted ? "bg-muted/40" : undefined}>
-      <div
-        className={cn(
-          "mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8",
-          !wide && "lg:grid lg:grid-cols-[2fr_3fr] lg:gap-14",
-          aside && "lg:items-center",
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <h2 className="text-center text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+          {title}
+        </h2>
+        {intro && (
+          <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-center text-pretty">
+            {intro}
+          </p>
         )}
-      >
-        <div className="text-center lg:text-left">
-          <h2
-            className={cn(
-              "font-semibold tracking-tight text-balance",
-              "text-2xl sm:text-3xl",
-            )}
-          >
-            {title}
-          </h2>
-          {aside}
-        </div>
-        <div
-          className={cn(
-            "mt-5 space-y-4 leading-relaxed",
-            !wide && "lg:mt-0",
-            centered && "text-center lg:text-left",
-          )}
-        >
-          {children}
-        </div>
+        <div className="mt-8">{children}</div>
       </div>
     </section>
   );
 }
+
+// Icons for SKILLS and INCLUDED, in their order.
+const SKILL_ICONS = [Clapperboard, PenLine, ImagePlus, Film, Briefcase];
+const INCLUDED_ICONS = [
+  GraduationCap,
+  Clapperboard,
+  Coffee,
+  FileText,
+  MessageCircle,
+  Award,
+];
 
 export default async function AtelierVideoIaPage() {
   const [workshop, supportWhatsapp] = await Promise.all([
@@ -245,9 +276,23 @@ export default async function AtelierVideoIaPage() {
   const sliderVideos = workshop.sliderVideoUrls
     .map(toSliderVideo)
     .filter((video) => video !== null);
+  const exampleVideos = workshop.exampleVideoUrls
+    .map(toExampleVideo)
+    .filter((video) => video !== null);
   const waitlistUrl = whatsappUrl(
     "Bonjour, je ne peux pas venir à l'atelier du 14 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
   );
+
+  const day = fmtDay(workshop.startsAt);
+  const hours = `${fmtHour(workshop.startsAt)} – ${fmtHour(workshop.endsAt)}`;
+  const when = `${capitalize(day)} · ${hours}`;
+  const price = fmt(workshop.priceCfa);
+  const eventInfo = { when, venue: workshop.venue, price };
+  const faqs = workshopFaqs({
+    price,
+    venue: workshop.venue,
+    date: `${day}, de ${hours}`,
+  });
 
   return (
     <WorkshopLiveProvider
@@ -257,26 +302,27 @@ export default async function AtelierVideoIaPage() {
       whatsappUrl={whatsappUrl(WHATSAPP_REGISTER_TEXT)}
     >
       <main className="pb-24 sm:pb-0">
+        {/* 1. The offer, at a glance. */}
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-16 lg:px-8 lg:pt-8">
-            <h1 className="font-heading text-[1.7rem] leading-[1.12] font-extrabold tracking-tight text-balance sm:text-5xl sm:leading-[1.15] lg:text-[2.75rem]">
-              Crée ta première{" "}
-              <span className="text-brand-accent">
-                publicité vidéo professionnelle
-              </span>{" "}
-              avec l&apos;IA en une seule matinée.
-            </h1>
-            <p className="mx-auto mt-3 max-w-3xl text-[0.95rem] leading-snug font-medium text-pretty sm:mt-4 sm:text-lg sm:leading-normal">
-              Apprends à produire des vidéos publicitaires pour les entreprises
-              et découvre comment transformer cette compétence en source de
-              revenus.
+          <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-12 text-center sm:px-6 sm:pt-12 sm:pb-16 lg:px-8 lg:pt-8">
+            <p className="text-primary text-xs font-bold tracking-widest uppercase sm:text-sm">
+              Kinetix AI Video Masterclass
             </p>
-            <span className="text-primary bg-primary/10 mt-4 hidden rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase sm:inline-flex">
-              KINETIX AI VIDEO MASTERCLASS
-            </span>
+            <h1 className="font-heading mt-2 text-[1.6rem] leading-[1.12] font-extrabold tracking-tight text-balance sm:text-5xl sm:leading-[1.15] lg:text-[2.75rem]">
+              En une matinée, crée une{" "}
+              <span className="text-brand-accent">
+                vraie publicité vidéo avec l&apos;IA
+              </span>{" "}
+              et repars avec la méthode pour la vendre.
+            </h1>
+            <p className="mx-auto mt-3 max-w-2xl text-[0.95rem] leading-snug font-medium text-pretty sm:mt-4 sm:text-lg sm:leading-normal">
+              Atelier 100&nbsp;% pratique, accessible aux débutants : tu
+              réalises ta propre pub, accompagné du début à la fin.
+            </p>
+            <EventInfo {...eventInfo} className="mt-4" />
 
-            <div className="relative mx-auto mt-4 max-w-3xl sm:mt-5 lg:max-w-xl">
+            <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
               <HandNotes />
               <HeroVideo
                 video={
@@ -304,162 +350,131 @@ export default async function AtelierVideoIaPage() {
                 </div>
               </div>
             </div>
-
-            <p className="text-brand-accent mt-8 font-semibold">
-              Atelier 100&nbsp;% pratique à Lomé
-              <br />
-              Samedi 14 novembre ·{" "}
-              <span className="whitespace-nowrap">8 h – 13 h</span>
-            </p>
           </div>
         </section>
 
-        <section className="flex flex-col items-center px-4 sm:px-6 lg:px-8">
-          <ExampleVideos
-            videos={workshop.exampleVideoUrls
-              .map(toExampleVideo)
-              .filter((video) => video !== null)}
-          />
-          {/* A hand-drawn ring around the label, under the cards, drifting
-              like them (kx-bob in globals.css). */}
-          <p
-            className={cn(
-              caveat.className,
-              "text-brand-accent border-brand-accent -mt-2 mb-14 -rotate-3 rounded-[50%] border-[3px] px-10 py-3 text-4xl leading-none motion-safe:animate-[kx-bob_4s_ease-in-out_infinite] sm:-mt-8 sm:mb-20 sm:px-14 sm:py-4 sm:text-6xl lg:mt-4",
-            )}
-          >
-            Vidéos exemples
-          </p>
-        </section>
+        {/* 2. What the morning produces. */}
+        <Block
+          title="Ce que tu vas réaliser"
+          intro={
+            <>
+              Ce n&apos;est pas une conférence :{" "}
+              <strong className="text-foreground">
+                tu pratiques du début à la fin
+              </strong>
+              , sur une pub pour un produit de ton choix.
+            </>
+          }
+        >
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {SKILLS.map((skill, i) => {
+              const Icon = SKILL_ICONS[i];
+              return (
+                <li
+                  key={skill}
+                  className="bg-card flex items-center gap-3 rounded-2xl border p-4 lg:flex-col lg:p-5 lg:text-center"
+                >
+                  <span className="bg-brand-accent/15 text-brand-accent flex size-11 shrink-0 items-center justify-center rounded-xl">
+                    <Icon aria-hidden="true" className="size-6" />
+                  </span>
+                  <span className="font-medium">{skill}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="border-brand-accent/40 bg-card mx-auto mt-8 max-w-3xl rounded-2xl border-2 p-5 sm:p-6">
+            <p className="text-center font-semibold">
+              À la fin de la matinée, tu repars avec :
+            </p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+              {OUTCOMES.map((outcome) => (
+                <li key={outcome} className="text-sm sm:text-base">
+                  <RichText text={outcome} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Block>
 
-        <section>
-          <div className="mx-auto max-w-3xl space-y-5 px-4 pb-12 text-center text-lg leading-relaxed text-pretty sm:px-6 sm:pb-16 sm:text-xl lg:px-8">
-            <p>
-              Imagine une boutique de vêtements à Lomé qui veut promouvoir ses
-              nouveaux produits. Un restaurant qui veut attirer plus de clients.
-              Un commerçant qui prépare une campagne spéciale pour les fêtes.
-            </p>
-            <p className="font-semibold">
-              Tous ont besoin de vidéos publicitaires pour vendre davantage.
-            </p>
-            <p className="text-brand-accent text-xl font-bold sm:text-2xl">
-              Et si tu étais capable de créer ces vidéos pour eux, sans caméra,
-              sans studio et sans équipe de production ?
+        {/* 3. The proof: real videos made with AI. */}
+        <section className="bg-muted/40 py-12 sm:py-16">
+          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+            <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+              Des exemples de vidéos créées avec l&apos;IA
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              {sliderVideos.length > 0
+                ? "Fais glisser, et appuie sur une vidéo pour l'écouter avec le son."
+                : "Appuie sur une vidéo pour la regarder."}
             </p>
           </div>
+          {sliderVideos.length > 0 ? (
+            <div className="mt-8">
+              <VideoSlider videos={sliderVideos} />
+            </div>
+          ) : (
+            // No slider set: the three cards set for the top of the page.
+            <div className="flex flex-col items-center px-4 sm:px-6 lg:px-8">
+              <ExampleVideos videos={exampleVideos} />
+              <p
+                className={cn(
+                  caveat.className,
+                  "text-brand-accent border-brand-accent -mt-2 -rotate-3 rounded-[50%] border-[3px] px-10 py-3 text-4xl leading-none sm:-mt-8 sm:px-14 sm:py-4 sm:text-6xl lg:mt-4",
+                )}
+              >
+                Vidéos exemples
+              </p>
+            </div>
+          )}
+          <CtaRow className="mt-10 px-4" />
         </section>
 
-        <Section
-          title="Décembre arrive. Les entreprises vont toutes vouloir des vidéos."
-          aside={<EventStickers />}
-        >
-          <p>
-            Promotions de fin d&apos;année, offres de fêtes, nouveaux produits :
-            dans quelques semaines, chaque boutique, restaurant et marque de
-            Lomé voudra une vidéo pour attirer des clients sur Facebook, TikTok,
-            Instagram et WhatsApp.
-          </p>
-          <p>
-            Le problème : une pub vidéo coûtait jusqu&apos;ici du matériel, un
-            studio, une équipe et beaucoup d&apos;argent.
-          </p>
-          <p>
-            <strong>Ce n&apos;est plus le cas.</strong> Avec l&apos;intelligence
-            artificielle, une seule personne bien formée peut produire en
-            quelques heures ce qui demandait hier une équipe entière.
-          </p>
-          <p>
-            La question est simple :{" "}
-            <strong>
-              cette fin d&apos;année, seras-tu celui qui regarde les pubs… ou
-              celui qui les crée ?
-            </strong>
-          </p>
-        </Section>
-
-        <Section
-          title="Cette formation est faite pour toi si…"
-          muted
-          wide
-          centered
-        >
+        {/* 4. Who it's for. */}
+        <Block title="À qui s'adresse la masterclass ?">
           <div className="grid gap-4 lg:grid-cols-3">
             {AUDIENCES.map((audience) => (
               <div
                 key={audience.title}
-                className="bg-card rounded-2xl border p-5"
+                className="bg-card rounded-2xl border p-5 text-center lg:text-left"
               >
                 <h3 className="font-semibold">{audience.title}</h3>
-                <p className="text-muted-foreground mt-2 text-sm">
+                <p className="text-muted-foreground mt-2 text-sm sm:text-base">
                   <RichText text={audience.text} />
                 </p>
               </div>
             ))}
           </div>
-        </Section>
+        </Block>
 
-        <Section title="Ce que tu vas réaliser" centered>
-          <p>
-            Ce n&apos;est pas une conférence.{" "}
-            <strong>Tu pratiques du début à la fin</strong>, sur un vrai projet
-            : une pub vidéo pour un produit de ton choix (le tien, celui
-            d&apos;un proche ou d&apos;un commerce que tu veux démarcher).
-          </p>
-          <p>À la fin de la matinée, tu auras :</p>
-          <ul className="space-y-2">
-            {OUTCOMES.map((outcome) => (
-              <li key={outcome}>
-                <RichText text={outcome} />
+        {/* 5. The programme, module by module. */}
+        <Block title="Programme de la formation" muted>
+          <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {PROGRAM.map((module, i) => (
+              <li
+                key={module.title}
+                className="bg-card relative rounded-2xl border p-5"
+              >
+                <span className="bg-primary text-primary-foreground inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wide uppercase">
+                  Module {i + 1}
+                </span>
+                <h3 className="mt-3 font-semibold">{module.title}</h3>
+                <p className="text-muted-foreground mt-1.5 text-sm">
+                  {module.text}
+                </p>
               </li>
             ))}
-          </ul>
-        </Section>
+          </ol>
+          <p className="text-muted-foreground mt-6 text-center text-sm">
+            ☕ Pause collation incluse. La matinée se termine par une
+            présentation de Kinetix Africa.
+          </p>
+          <CtaRow className="mt-8" />
+        </Block>
 
-        {sliderVideos.length > 0 && (
-          <section className="py-12 sm:py-16">
-            <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-              <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-                Ce que l&apos;IA permet de créer
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                Fais glisser, et appuie sur une vidéo pour l&apos;écouter avec
-                le son.
-              </p>
-            </div>
-            <div className="mt-8">
-              <VideoSlider videos={sliderVideos} />
-            </div>
-          </section>
-        )}
-
-        <section className="bg-muted/40">
-          <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:grid lg:grid-cols-[auto_1fr] lg:items-center lg:gap-20 lg:px-8">
-            {/* Read bottom to top beside the timeline on large screens. */}
-            <h2 className="text-brand-accent text-center text-5xl leading-none font-extrabold tracking-tight uppercase sm:text-6xl lg:rotate-180 lg:text-8xl lg:[writing-mode:vertical-rl]">
-              Programme
-            </h2>
-            <ol className="border-primary/30 mt-8 ml-1 space-y-5 border-l-2 lg:mt-0">
-              {PROGRAM.map((step) => (
-                <li key={step.time} className="relative pl-5">
-                  <span
-                    aria-hidden="true"
-                    className="bg-primary absolute top-1.5 -left-[7px] size-3 rounded-full"
-                  />
-                  <p className="text-primary text-sm font-semibold">
-                    {step.time}
-                  </p>
-                  <p className="text-sm sm:text-base">
-                    <RichText text={step.text} />
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="bg-muted/40">
+        {/* 6. The trainer. */}
+        <section>
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-            <h2 className="text-foreground text-center text-3xl font-extrabold tracking-tight sm:text-5xl">
+            <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
               À propos du formateur
             </h2>
             <div className="mt-10 grid items-center gap-8 lg:grid-cols-[18rem_1fr] lg:gap-12">
@@ -497,10 +512,6 @@ export default async function AtelierVideoIaPage() {
                     de la plateforme de freelancing <strong>Edossimé</strong> et
                     de plusieurs autres outils numériques.
                   </p>
-                  <p>
-                    Il est convaincu que seules les compétences pourront nous
-                    placer sur le chemin du succès.
-                  </p>
                   <blockquote className="border-brand-accent border-l-4 pl-4 italic">
                     « Je ne crois pas aux diplômes qui dorment dans un tiroir.
                     Je crois aux compétences qui changent une vie. »
@@ -511,67 +522,59 @@ export default async function AtelierVideoIaPage() {
           </div>
         </section>
 
-        <Section title="Ce que tu dois apporter" centered>
-          <ul className="space-y-2">
-            {TO_BRING.map((item) => (
-              <li key={item}>
-                <RichText text={item} />
-              </li>
-            ))}
-          </ul>
-          <p className="text-muted-foreground text-sm italic">
-            Après ton inscription, tu recevras la liste des comptes gratuits à
-            créer <strong>avant</strong> l&apos;atelier, pour ne perdre aucune
-            minute le jour J.
-          </p>
-        </Section>
-
-        <Section title="Ta participation à la masterclass" muted wide centered>
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
-            <div className="space-y-4">
-              <div className="bg-card border-brand-accent/40 rounded-2xl border-2 p-6 text-center">
-                <p className="text-muted-foreground text-sm">
-                  Valeur de l&apos;atelier :{" "}
-                  <span className="font-semibold line-through">
-                    {fmt(workshop.regularPriceCfa)} F CFA
+        {/* 7. What the contribution includes. */}
+        <Block title="Ce qui est inclus" muted>
+          <ul className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {INCLUDED.map((item, i) => {
+              const Icon = INCLUDED_ICONS[i] ?? Check;
+              return (
+                <li
+                  key={item}
+                  className="bg-card flex items-center gap-3 rounded-2xl border p-4"
+                >
+                  <span className="bg-brand-accent/15 text-brand-accent flex size-10 shrink-0 items-center justify-center rounded-xl">
+                    <Icon aria-hidden="true" className="size-5" />
                   </span>
-                </p>
-                <p className="text-primary mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
-                  {fmt(workshop.priceCfa)} F CFA
-                </p>
-                <p className="bg-brand-accent text-brand-accent-foreground mt-3 inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase">
-                  🎁 Offert par Kinetix Africa
-                </p>
-                <p className="mt-4 text-sm sm:text-base">
-                  Kinetix Africa prend en charge le coût de cette formation
-                  pratique. Ta contribution de{" "}
-                  <strong>{fmt(workshop.priceCfa)} F CFA</strong> couvre la
-                  réservation de ta place, la collation et l&apos;organisation
-                  de l&apos;atelier.
-                </p>
-              </div>
-              <p className="font-semibold">Tu bénéficies de :</p>
-              <ul className="mx-auto w-fit space-y-2 text-left text-sm sm:text-base lg:mx-0">
-                {INCLUDED.map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <Check
-                      aria-hidden="true"
-                      className="text-brand-accent mt-0.5 size-5 shrink-0"
-                    />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+                  <span className="font-medium">{item}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </Block>
+
+        {/* 8. Price and booking. */}
+        <Block title="Réserve ta place">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+            <div className="bg-card border-brand-accent/40 rounded-2xl border-2 p-6 text-center">
+              <p className="text-muted-foreground text-sm">
+                Valeur de l&apos;atelier :{" "}
+                <span className="font-semibold line-through">
+                  {fmt(workshop.regularPriceCfa)} F CFA
+                </span>
+              </p>
+              <p className="text-primary mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                {price} F CFA
+              </p>
+              <p className="bg-brand-accent text-brand-accent-foreground mt-3 inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase">
+                🎁 Formation prise en charge par Kinetix Africa
+              </p>
+              <p className="mt-4 text-sm sm:text-base">
+                Kinetix Africa prend en charge le coût de cette formation
+                pratique. Ta contribution de <strong>{price} F CFA</strong>{" "}
+                couvre la réservation de ta place, la collation et
+                l&apos;organisation de l&apos;atelier.
+              </p>
+              <EventInfo {...eventInfo} className="mt-5" />
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 text-center lg:text-left">
               <div className="space-y-3">
                 <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
-                <PaymentLogos />
+                <PaymentLogos className="justify-center lg:justify-start" />
               </div>
               <p>
-                ⚠️ Les frais d&apos;inscription servent à confirmer ta présence
-                : les places sont limitées à {workshop.capacity}.
+                ⚠️ Les places sont limitées à {workshop.capacity} : ta
+                contribution confirme ta présence.
               </p>
               <WorkshopCtaBlock />
               <p className="text-muted-foreground text-sm">
@@ -579,12 +582,12 @@ export default async function AtelierVideoIaPage() {
                 informations pratiques ainsi que le lien du groupe WhatsApp des
                 participants.
               </p>
-              <p>📍 Lieu : {workshop.venue}</p>
             </div>
           </div>
-        </Section>
+        </Block>
 
-        <section>
+        {/* 9. Objections. */}
+        <section className="bg-muted/40">
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
             <h2 className="text-center text-2xl font-semibold tracking-tight sm:text-3xl">
               Questions fréquentes
@@ -593,8 +596,8 @@ export default async function AtelierVideoIaPage() {
                 question only pushes down its own column. */}
             <div className="mt-8 grid gap-4 lg:grid-cols-2 lg:items-start lg:gap-6">
               {[
-                FAQS.slice(0, Math.ceil(FAQS.length / 2)),
-                FAQS.slice(Math.ceil(FAQS.length / 2)),
+                faqs.slice(0, Math.ceil(faqs.length / 2)),
+                faqs.slice(Math.ceil(faqs.length / 2)),
               ].map((column, i) => (
                 <div
                   key={i}
@@ -624,27 +627,22 @@ export default async function AtelierVideoIaPage() {
           </div>
         </section>
 
+        {/* 10. Last call. */}
         <section>
           <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
             <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Les compétences d&apos;aujourd&apos;hui ouvrent les opportunités
-              de demain.
+              En une matinée, crée ta première{" "}
+              <span className="text-brand-accent">
+                publicité vidéo avec l&apos;IA
+              </span>
+              .
             </h2>
-            <p className="mt-4">
-              En une matinée, tu peux savoir faire ce que la plupart des
-              entreprises cherchent en ce moment.
+            <p className="mt-3">
+              Et repars avec la méthode pour vendre cette compétence aux
+              entreprises.
             </p>
-            <p className="mt-2">
-              La seule question :{" "}
-              <strong className="text-brand-accent">
-                seras-tu dans la salle le 14 novembre ?
-              </strong>
-            </p>
-            <WorkshopCta
-              label="OUI, JE RÉSERVE MA PLACE"
-              className="mt-7 w-full sm:w-auto"
-            />
-            <CtaNote className="mt-3" />
+            <EventInfo {...eventInfo} className="mt-6" />
+            <CtaRow label="OUI, JE RÉSERVE MA PLACE" className="mt-7" />
             <p className="mt-7 font-semibold">Apprends. Crée. Évolue.</p>
             <p className="text-muted-foreground mt-1 text-sm italic">
               Kinetix AI Video Masterclass

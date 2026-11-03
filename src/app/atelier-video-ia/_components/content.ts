@@ -2,21 +2,29 @@
 export const WHATSAPP_REGISTER_TEXT =
   "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.";
 
-// The page's text, kept word for word as supplied: shared with the
-// confirmation page, which repeats what to bring.
+// The page's text. TO_BRING is shared with the confirmation page.
 export const AUDIENCES = [
   {
-    title: "🏪 Tu es entrepreneur ou commerçant",
-    text: "Tu veux promouvoir tes produits pour les fêtes sans dépendre d'un prestataire à chaque fois. Tu repars capable de créer toi-même tes pubs.",
+    title: "🏪 Entrepreneurs et commerçants",
+    text: "Crée toi-même les pubs de tes produits, **sans dépendre d'un prestataire** à chaque fois.",
   },
   {
-    title: "🎓 Tu es étudiant ou jeune diplômé",
-    text: "Tu cherches une compétence concrète qui se vend. Arrête de seulement consommer des vidéos : **apprends à en produire pour les entreprises**, et commence ton portfolio dès le jour même.",
+    title: "💼 Freelances et prestataires",
+    text: "Ajoute la création de vidéos publicitaires à tes services et **commence ton portfolio dès le jour même**.",
   },
   {
-    title: "🎥 Tu es créateur de contenu ou passionné de numérique",
-    text: "Tu veux passer un cap dans la qualité de tes vidéos et maîtriser les outils IA que la plupart des gens ne savent pas encore utiliser.",
+    title: "🎥 Créateurs de contenu et débutants",
+    text: "Apprends à produire des vidéos avec l'IA, **même si tu pars de zéro**.",
   },
+];
+
+// The five skills the morning teaches, one per module of the programme.
+export const SKILLS = [
+  "Concevoir une publicité vidéo avec l'IA",
+  "Transformer une idée en scénario vidéo",
+  "Générer des images et des scènes avec l'IA",
+  "Assembler le tout en une vidéo publicitaire",
+  "Découvrir comment vendre cette compétence",
 ];
 
 export const OUTCOMES = [
@@ -27,37 +35,26 @@ export const OUTCOMES = [
 ];
 
 export const PROGRAM = [
-  { time: "8 h 00", text: "Accueil, installation, vérification des comptes" },
   {
-    time: "8 h 20",
-    text: "**Module 1 : Penser comme un publicitaire.** Ce qui fait qu'une pub accroche, trouver l'idée, écrire un scénario court avec l'IA",
+    title: "Penser comme un publicitaire",
+    text: "Ce qui fait qu'une pub accroche, trouver l'idée, écrire un scénario court avec l'IA.",
   },
   {
-    time: "8 h 50",
-    text: "**Module 2 : Générer des visuels professionnels.** Mettre en scène ton produit, créer une identité visuelle cohérente",
+    title: "Générer des visuels professionnels",
+    text: "Mettre en scène ton produit et créer une identité visuelle cohérente.",
   },
   {
-    time: "9 h 40",
-    text: "**Module 3 : Transformer les images en vidéo.** Démonstration des outils de génération, animation de tes visuels",
-  },
-  { time: "10 h 30", text: "☕ Pause collation" },
-  {
-    time: "10 h 45",
-    text: "**Module 4 : Le montage final.** Voix off, musique, textes, export pour les réseaux sociaux",
+    title: "Transformer les images en vidéo",
+    text: "Les outils de génération en démonstration, puis l'animation de tes visuels.",
   },
   {
-    time: "11 h 45",
-    text: "🎉 Projection des pubs réalisées, retours personnalisés",
+    title: "Le montage final",
+    text: "Voix off, musique, textes, export pour les réseaux sociaux. Puis projection des pubs réalisées et retours personnalisés.",
   },
   {
-    time: "12 h 10",
-    text: "**Module 5 : Vendre ta compétence.** Quelles entreprises ont besoin de toi, construire ton offre, prospecter",
+    title: "Vendre ta compétence",
+    text: "Quelles entreprises ont besoin de toi, construire ton offre, prospecter.",
   },
-  {
-    time: "12 h 35",
-    text: "**Et après ?** Présentation de Kinetix Africa",
-  },
-  { time: "13 h 00", text: "Fin" },
 ];
 
 export const TO_BRING = [
@@ -68,66 +65,77 @@ export const TO_BRING = [
 ];
 
 export const INCLUDED = [
-  "Formation pratique encadrée.",
-  "Création de ta propre publicité.",
-  "Collation.",
-  "Modèle d'offre commerciale.",
-  "Accompagnement groupe WhatsApp pendant 1 mois.",
-  "Attestation de participation.",
+  "Formation pratique encadrée, en présentiel",
+  "Création de ta propre publicité",
+  "Collation",
+  "Modèle d'offre commerciale",
+  "Accompagnement groupe WhatsApp pendant 1 mois",
+  "Attestation de participation",
 ];
 
-export const FAQS = [
-  {
-    question: "Pourquoi la formation est-elle gratuite ?",
-    answer:
-      "Kinetix Africa offre cet atelier pour faire découvrir sa méthode et son catalogue de formations. À la fin, nous te présenterons la plateforme et le programme ambassadeur. Rien n'est obligatoire : tu repars avec ta pub et la méthode, que tu t'abonnes ou non.",
-  },
-  {
-    question:
-      "Est-ce que je peux participer même si je n'ai jamais utilisé l'intelligence artificielle ?",
-    answer:
-      "Absolument ! La formation est accessible aux débutants. Nous allons t'accompagner étape par étape, depuis la conception de ton idée jusqu'à la réalisation de ta publicité vidéo. Tu n'as pas besoin d'avoir une expérience préalable en montage ou en intelligence artificielle.",
-  },
-  {
-    question: "Faut-il des connaissances en IA ou en montage ?",
-    answer:
-      "Non. L'atelier part de zéro et chaque étape est faite avec toi, avec de l'aide si tu bloques.",
-  },
-  {
-    question: "Dois-je apporter un ordinateur ?",
-    answer:
-      "Pas forcément. Ton ordinateur portable ou ton smartphone : les deux permettent de réaliser ta pub.",
-  },
-  {
-    question: "Les outils sont-ils payants ?",
-    answer:
-      "Pendant l'atelier, tu travailles avec des outils gratuits. Les étapes qui nécessitent des outils payants sont réalisées en démonstration par le formateur, et on te montre les alternatives gratuites pour continuer chez toi.",
-  },
-  {
-    question: "Vais-je vraiment repartir avec une vidéo ?",
-    answer:
-      "Oui. C'est tout l'objectif de la matinée : chaque participant travaille sur sa propre pub, accompagné jusqu'à l'export final.",
-  },
-  {
-    question: "Pourrai-je vendre cette compétence ensuite ?",
-    answer:
-      "Tu repars avec les bases pratiques, un premier élément de portfolio et une méthode pour prospecter. Tes résultats dépendront ensuite de ta pratique, de la qualité de ton travail et de ta capacité à trouver des clients : personne ne peut te garantir de revenus, et nous ne le ferons pas.",
-  },
-  {
-    question:
-      "Est-ce que les 5 000 F CFA représentent le prix total de la formation ?",
-    answer:
-      "Les 5 000 F CFA correspondent uniquement aux frais d'inscription pour confirmer ta participation à cette édition de la masterclass, offerte par Kinetix Africa. Aucun autre paiement n'est obligatoire pour participer à l'atelier.",
-  },
-  {
-    question: "Comment se passe le paiement ?",
-    answer:
-      "En ligne, par Mobile Money, au moment de ta réservation. Ta place est confirmée immédiatement et tu reçois le lien du groupe WhatsApp des participants.",
-  },
-  {
-    question:
-      "Je ne peux pas venir le 14 novembre. Y aura-t-il d'autres sessions ?",
-    answer: "Inscris-toi sur la liste d'attente, tu seras prévenu en priorité.",
-    waitlist: true,
-  },
-];
+export type Faq = { question: string; answer: string; waitlist?: boolean };
+
+// The questions that answer the usual objections. The price, the place and
+// the date come from the workshop's settings.
+export function workshopFaqs({
+  price,
+  venue,
+  date,
+}: {
+  price: string;
+  venue: string;
+  date: string;
+}): Faq[] {
+  return [
+    {
+      question:
+        "Faut-il avoir des connaissances en intelligence artificielle ?",
+      answer:
+        "Non. La formation est accessible aux débutants : l'atelier part de zéro et chaque étape est faite avec toi, depuis l'idée jusqu'à ta publicité terminée, avec de l'aide si tu bloques.",
+    },
+    {
+      question: "Faut-il savoir faire du montage vidéo ?",
+      answer:
+        "Non plus. Le montage (voix off, musique, textes, export) fait partie du programme et se fait pas à pas.",
+    },
+    {
+      question: "Quel matériel faut-il apporter ?",
+      answer:
+        "Ton ordinateur portable ou ton smartphone, chargé à 100 % : les deux permettent de réaliser ta pub. Ajoute ton chargeur, des écouteurs et des photos du produit pour lequel tu veux créer ta pub (sinon, on t'en fournit un). Après ton inscription, tu reçois la liste des comptes gratuits à créer avant l'atelier.",
+    },
+    {
+      question: "Que vais-je réaliser pendant la formation ?",
+      answer:
+        "Ta propre publicité vidéo, sur un produit de ton choix, accompagné jusqu'à l'export final. Tu repars aussi avec la méthode complète, la première pièce de ton portfolio et un plan d'action pour trouver tes premiers clients.",
+    },
+    {
+      question: "Comment réserver ma place ?",
+      answer: `Clique sur « Je réserve ma place » et paie ${price} F CFA en ligne par Mobile Money. Ta place est confirmée immédiatement et tu reçois les informations pratiques ainsi que le lien du groupe WhatsApp des participants.`,
+    },
+    {
+      question: "Où se déroule la masterclass ?",
+      answer: `${venue}, le ${date}.`,
+    },
+    {
+      question: `Pourquoi seulement ${price} F CFA ?`,
+      answer: `Kinetix Africa prend en charge le coût de la formation pour faire découvrir sa méthode et son catalogue de formations. Ta contribution de ${price} F CFA couvre la réservation de ta place, la collation et l'organisation de l'atelier ; aucun autre paiement n'est demandé. À la fin, nous te présentons la plateforme et le programme ambassadeur : rien n'est obligatoire.`,
+    },
+    {
+      question: "Les outils sont-ils payants ?",
+      answer:
+        "Pendant l'atelier, tu travailles avec des outils gratuits. Les étapes qui nécessitent des outils payants sont réalisées en démonstration par le formateur, et on te montre les alternatives gratuites pour continuer chez toi.",
+    },
+    {
+      question: "Pourrai-je vendre cette compétence ensuite ?",
+      answer:
+        "Tu repars avec les bases pratiques, un premier élément de portfolio et une méthode pour prospecter. Tes résultats dépendront ensuite de ta pratique, de la qualité de ton travail et de ta capacité à trouver des clients : personne ne peut te garantir de revenus, et nous ne le ferons pas.",
+    },
+    {
+      question:
+        "Je ne peux pas venir à cette date. Y aura-t-il d'autres sessions ?",
+      answer:
+        "Inscris-toi sur la liste d'attente, tu seras prévenu en priorité.",
+      waitlist: true,
+    },
+  ];
+}

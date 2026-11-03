@@ -9,7 +9,8 @@ function subscribe(onTick: () => void) {
 }
 const nowInSeconds = () => Math.floor(Date.now() / 1000);
 // On the server (and the first client render) there's no "now" to count
-// from: the boxes show dashes, then the real time once hydrated.
+// from: the boxes keep their place but stay hidden until the real time is
+// known, rather than showing dashes on a slow phone.
 const noTime = () => null;
 
 const UNITS = [
@@ -41,7 +42,7 @@ export function LaunchCountdown({
 
   const left = now === null ? null : end - now;
   const parts = UNITS.map((unit, i) => {
-    if (left === null) return { label: unit.label, value: "––" };
+    if (left === null) return { label: unit.label, value: "00" };
     // Whole units left once the larger units are taken out (days are not
     // capped).
     const larger = i === 0 ? Infinity : UNITS[i - 1].seconds;
@@ -51,7 +52,11 @@ export function LaunchCountdown({
 
   return (
     <div
-      className={cn("flex justify-center gap-2", className)}
+      className={cn(
+        "flex justify-center gap-2",
+        left === null && "invisible",
+        className,
+      )}
       role="timer"
       aria-label={label}
     >
