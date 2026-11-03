@@ -51,7 +51,8 @@ const PIXEL_WAIT_TRIES = 10;
 
 // Meta's Purchase, once per registration, and only ever rendered for a
 // registration the server marked paid. The pixel loads a moment after the
-// page, and not at all without the visitor's consent.
+// page, and not at all for a visitor who refused it (or, where the law asks
+// for it, didn't accept it).
 export function PurchaseTracker({
   registrationId,
   value,

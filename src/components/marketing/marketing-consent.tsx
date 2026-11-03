@@ -53,13 +53,17 @@ function loadMetaPixel(pixelId: string) {
   fbq("init", pixelId);
 }
 
-// The Meta (Facebook) pixel, set in Admin → Marketing, only ever loaded
-// after the visitor accepts it: until then this shows a consent banner,
-// and nothing is sent to Meta. A refusal is remembered too. With no pixel
-// configured, there's nothing to ask and nothing shown.
+// The Meta (Facebook) pixel, set in Admin → Marketing. Where the law asks
+// for it (consentRequired, from api/marketing/config), it only loads once
+// the visitor accepts it, and nothing goes to Meta before. Everywhere else
+// it runs from the start, and the banner is a notice with a way to refuse:
+// a refusal stops it at once (Meta's own "revoke") and on later visits.
+// Either choice is remembered. With no pixel configured, there's nothing
+// to ask and nothing shown.
 export function MarketingConsent() {
   const pathname = usePathname();
   const [pixelId, setPixelId] = useState<string | null>(null);
+  const [consentRequired, setConsentRequired] = useState(true);
   const [consent, setConsent] = useState<"granted" | "denied" | null>(null);
   const [ready, setReady] = useState(false);
   const lastTracked = useRef<string | null>(null);
@@ -68,26 +72,41 @@ export function MarketingConsent() {
     let cancelled = false;
     fetch("/api/marketing/config")
       .then((r) => (r.ok ? r.json() : { metaPixelId: null }))
-      .then((config: { metaPixelId: string | null }) => {
-        if (cancelled) return;
-        setPixelId(config.metaPixelId);
-        setConsent(readConsent());
-        setReady(true);
-      })
+      .then(
+        (config: { metaPixelId: string | null; consentRequired?: boolean }) => {
+          if (cancelled) return;
+          setPixelId(config.metaPixelId);
+          // Missing (an older cached answer): the careful way.
+          setConsentRequired(config.consentRequired !== false);
+          setConsent(readConsent());
+          setReady(true);
+        },
+      )
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // A page view per page, once accepted.
+  const active =
+    !!pixelId &&
+    (consent === "granted" || (!consentRequired && consent === null));
+
+  // A page view per page, while it runs.
   useEffect(() => {
-    if (!pixelId || consent !== "granted") return;
+    if (!active || !pixelId) return;
     loadMetaPixel(pixelId);
     if (lastTracked.current === pathname) return;
     lastTracked.current = pathname;
     (window as unknown as { fbq: Fbq }).fbq("track", "PageView");
-  }, [pixelId, consent, pathname]);
+  }, [active, pixelId, pathname]);
+
+  // Refused after it started: Meta stops sending anything from this page.
+  useEffect(() => {
+    if (consent !== "denied") return;
+    const w = window as unknown as { fbq?: Fbq };
+    w.fbq?.("consent", "revoke");
+  }, [consent]);
 
   if (!ready || !pixelId || consent !== null) return null;
 
@@ -104,8 +123,10 @@ export function MarketingConsent() {
     >
       <p className="text-sm leading-relaxed">
         Nous utilisons le pixel de Meta (Facebook) pour mesurer
-        l&apos;efficacité de nos publicités. Il n&apos;est activé que si tu
-        l&apos;acceptes.{" "}
+        l&apos;efficacité de nos publicités.{" "}
+        {consentRequired
+          ? "Il n'est activé que si tu l'acceptes."
+          : "Tu peux le refuser."}{" "}
         <Link
           href="/confidentialite"
           className="text-primary underline underline-offset-4"
@@ -118,7 +139,7 @@ export function MarketingConsent() {
           Refuser
         </Button>
         <Button size="sm" onClick={() => choose("granted")}>
-          Accepter
+          {consentRequired ? "Accepter" : "J'ai compris"}
         </Button>
       </div>
     </div>

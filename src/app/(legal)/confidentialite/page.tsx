@@ -253,12 +253,15 @@ export default function ConfidentialitePage() {
             ;
           </li>
           <li>
-            <strong>le pixel de Meta (Facebook)</strong>, uniquement si vous
-            l&apos;acceptez dans le bandeau qui s&apos;affiche à votre première
-            visite : il mesure l&apos;efficacité de nos publicités (pages vues,
-            inscription terminée, abonnement payé) et transmet ces informations
-            à Meta. Vous pouvez le refuser sans que cela change quoi que ce soit
-            à votre utilisation du site ;
+            <strong>le pixel de Meta (Facebook)</strong> : il mesure
+            l&apos;efficacité de nos publicités (pages vues, réservation,
+            inscription terminée, paiement) et transmet ces informations à Meta.
+            Un bandeau vous en informe à votre première visite et vous permet de
+            le refuser ; il cesse alors immédiatement de fonctionner. Si vous
+            vous connectez depuis l&apos;Union européenne, l&apos;Espace
+            économique européen, le Royaume-Uni ou la Suisse, il n&apos;est
+            activé que si vous l&apos;acceptez. Le refuser ne change rien à
+            votre utilisation du site ;
           </li>
           <li>
             un stockage local dans votre navigateur pour mémoriser le thème
