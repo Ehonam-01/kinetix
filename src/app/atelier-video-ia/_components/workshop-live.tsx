@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { trackMarketingEvent } from "@/lib/marketing-events";
+import { trackMarketingEvent, whenPixelReady } from "@/lib/marketing-events";
 import { cn } from "@/lib/utils";
 
 const REFRESH_MS = 30_000;
@@ -115,8 +115,9 @@ export function WhatsappButton({
 }
 
 // Every "reserve" button, its label followed by the price, leading to the
-// form alone on its own page. Once the online sale stops it becomes a WhatsApp link: explicit user decision, a visitor
-// past the capacity is never offered a payment.
+// form alone on its own page, where InitiateCheckoutTracker counts the
+// arrival. Once the online sale stops it becomes a WhatsApp link: explicit
+// user decision, a visitor past the capacity is never offered a payment.
 export function WorkshopCta({
   label,
   className,
@@ -138,12 +139,6 @@ export function WorkshopCta({
   return (
     <Link
       href="/atelier-video-ia/inscription"
-      onClick={() =>
-        trackMarketingEvent("InitiateCheckout", {
-          value: price,
-          currency: "XOF",
-        })
-      }
       className={cn(
         buttonVariants({ size: "lg" }),
         "bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-12 px-6 py-3 text-center text-base font-bold whitespace-normal shadow-lg",
@@ -282,4 +277,17 @@ export function StickyCta() {
       </div>
     </div>
   );
+}
+
+// Meta's InitiateCheckout, on reaching the registration form (from the
+// sales page or a link straight to it), once per visit of the page.
+export function InitiateCheckoutTracker({ value }: { value: number }) {
+  useEffect(
+    () =>
+      whenPixelReady(() =>
+        trackMarketingEvent("InitiateCheckout", { value, currency: "XOF" }),
+      ),
+    [value],
+  );
+  return null;
 }

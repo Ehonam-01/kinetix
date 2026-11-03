@@ -8,7 +8,10 @@ import { getWorkshop, getWorkshopAvailability } from "@/repositories/workshops";
 import { WHATSAPP_REGISTER_TEXT } from "../_components/content";
 import { PaymentLogos } from "../_components/payment-logos";
 import { RegistrationForm } from "../_components/registration-form";
-import { WorkshopLiveProvider } from "../_components/workshop-live";
+import {
+  InitiateCheckoutTracker,
+  WorkshopLiveProvider,
+} from "../_components/workshop-live";
 
 // The search result to show is the sales page, not its form.
 export const metadata: Metadata = {
@@ -41,6 +44,7 @@ export default async function AtelierInscriptionPage() {
           : null
       }
     >
+      <InitiateCheckoutTracker value={workshop.priceCfa} />
       <main className="mx-auto max-w-md px-4 py-6 sm:py-10">
         <Link
           href="/atelier-video-ia"

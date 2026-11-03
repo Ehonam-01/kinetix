@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { trackMarketingEvent } from "@/lib/marketing-events";
+import { trackMarketingEvent, whenPixelReady } from "@/lib/marketing-events";
 import { checkWorkshopRegistrationAction } from "../actions";
 
 const POLL_INTERVAL_MS = 4000;
@@ -47,12 +47,14 @@ export function StatusWatcher({ token }: { token: string }) {
   );
 }
 
-const PIXEL_WAIT_TRIES = 10;
-
-// Meta's Purchase, once per registration, and only ever rendered for a
-// registration the server marked paid. The pixel loads a moment after the
-// page, and not at all for a visitor who refused it (or, where the law asks
-// for it, didn't accept it).
+// Meta's Purchase and CompleteRegistration for a paid seat, and only ever
+// rendered for a registration the server marked paid (the browser never
+// decides it, see StatusWatcher). Once per registration: remembered in
+// localStorage, which outlives the tab (a reload or the link opened again
+// later sends nothing), and the registration id as eventID, so Meta itself
+// counts a repeat once. The pixel loads a moment after the page, and not at
+// all for a visitor who refused it (or, where the law asks for it, didn't
+// accept it).
 export function PurchaseTracker({
   registrationId,
   value,
@@ -65,23 +67,25 @@ export function PurchaseTracker({
     try {
       if (localStorage.getItem(key)) return;
     } catch {
-      // No storage: it may count twice, never blocks the page.
+      // No storage: the eventID still keeps Meta from counting it twice.
     }
-    let tries = 0;
-    const interval = setInterval(() => {
-      tries += 1;
-      const loaded = "fbq" in window;
-      if (loaded) {
-        trackMarketingEvent("Purchase", { value, currency: "XOF" });
-        try {
-          localStorage.setItem(key, "1");
-        } catch {
-          // See above.
-        }
+    return whenPixelReady(() => {
+      trackMarketingEvent("Purchase", { value, currency: "XOF" });
+      trackMarketingEvent(
+        "CompleteRegistration",
+        {
+          value,
+          currency: "XOF",
+          content_name: "Kinetix AI Video Masterclass",
+        },
+        { eventID: registrationId },
+      );
+      try {
+        localStorage.setItem(key, "1");
+      } catch {
+        // See above.
       }
-      if (loaded || tries >= PIXEL_WAIT_TRIES) clearInterval(interval);
-    }, 1000);
-    return () => clearInterval(interval);
+    });
   }, [registrationId, value]);
   return null;
 }
