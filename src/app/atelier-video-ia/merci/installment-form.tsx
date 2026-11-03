@@ -9,6 +9,7 @@ import {
   MIN_WORKSHOP_INSTALLMENT,
   type WorkshopInstallmentInput,
 } from "@/schemas/workshop";
+import { NON_REFUNDABLE_NOTE } from "../_components/content";
 import { SELECT_CLASS } from "../_components/registration-form";
 import { payMoreForWorkshopAction } from "../actions";
 
@@ -93,6 +94,8 @@ export function InstallmentForm({
           onChange={(e) => setPaymentPhone(e.target.value)}
         />
       </div>
+
+      <p className="text-muted-foreground text-xs">{NON_REFUNDABLE_NOTE}</p>
 
       {error && (
         <p className="text-destructive text-sm" role="alert">

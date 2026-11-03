@@ -2,6 +2,11 @@
 export const WHATSAPP_REGISTER_TEXT =
   "Bonjour, je souhaite m'inscrire à l'atelier vidéo IA du 14 novembre.";
 
+// Shown above every payment button, the whole price or a part (explicit
+// user decision: the same everywhere).
+export const NON_REFUNDABLE_NOTE =
+  "Les montants payés ne sont pas remboursables.";
+
 // The page's text. TO_BRING is shared with the confirmation page.
 export const AUDIENCES = [
   {
@@ -114,7 +119,7 @@ export function workshopFaqs({
     },
     {
       question: "Puis-je payer en plusieurs fois ?",
-      answer: `Oui. Fais un premier versement à partir de 1 000 F CFA : ta place est réservée tout de suite. Ensuite, tu verses ce que tu veux, quand tu veux, depuis le lien de ta réservation, jusqu'au jour de la masterclass. S'il te reste un montant à payer le jour J, tu le règles sur place.`,
+      answer: `Oui. Fais un premier versement à partir de 1 000 F CFA : ta place est réservée tout de suite. Ensuite, tu verses ce que tu veux, quand tu veux, depuis le lien de ta réservation, jusqu'au jour de la masterclass. S'il te reste un montant à payer le jour J, tu le règles sur place. Les montants payés ne sont pas remboursables.`,
     },
     {
       question: "Où se déroule la masterclass ?",

@@ -10,6 +10,7 @@ import {
   type WorkshopRegistrationInput,
 } from "@/schemas/workshop";
 import { registerForWorkshopAction } from "../actions";
+import { NON_REFUNDABLE_NOTE } from "./content";
 import { useWorkshopLive, WhatsappButton } from "./workshop-live";
 
 type Values = Omit<WorkshopRegistrationInput, "amount">;
@@ -198,6 +199,8 @@ export function RegistrationForm() {
           </div>
         )}
       </fieldset>
+
+      <p className="text-muted-foreground text-xs">{NON_REFUNDABLE_NOTE}</p>
 
       {error && (
         <p className="text-destructive text-sm" role="alert">
