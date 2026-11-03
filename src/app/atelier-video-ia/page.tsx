@@ -543,9 +543,11 @@ export default async function AtelierVideoIaPage() {
                   🎁 Offert par Kinetix Africa
                 </p>
                 <p className="mt-4 text-sm sm:text-base">
-                  Pour confirmer ta participation, seuls{" "}
-                  <strong>{fmt(workshop.priceCfa)} F CFA</strong> de frais
-                  d&apos;inscription sont demandés.
+                  Kinetix Africa prend en charge le coût de cette formation
+                  pratique. Ta contribution de{" "}
+                  <strong>{fmt(workshop.priceCfa)} F CFA</strong> couvre la
+                  réservation de ta place, la collation et l&apos;organisation
+                  de l&apos;atelier.
                 </p>
               </div>
               <p className="font-semibold">Tu bénéficies de :</p>
