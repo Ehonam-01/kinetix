@@ -5,6 +5,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   SUBSCRIPTION_CREDIT_GRANTED: "Abonnement accordé (admin)",
   WORKSHOP_UPDATED: "Atelier modifié",
   WORKSHOP_REGISTRATION_ADDED: "Participant ajouté à l'atelier",
+  WORKSHOP_BALANCE_RECEIVED: "Solde de l'atelier reçu sur place",
   BALANCE_CREDITED: "Solde crédité manuellement (admin)",
   REWARD_DELIVERY_UPDATED: "Statut de livraison mis à jour",
   COURSE_CREATED: "Cours créé",

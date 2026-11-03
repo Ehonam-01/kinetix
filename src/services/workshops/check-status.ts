@@ -1,7 +1,10 @@
 import "server-only";
 import { db } from "@/db/client";
 import { findPaymentById } from "@/repositories/payments";
-import { findRegistrationByToken } from "@/repositories/workshops";
+import {
+  findLatestRegistrationPayment,
+  findRegistrationByToken,
+} from "@/repositories/workshops";
 import { alertAmountMismatch } from "@/services/notifications/admin-alerts";
 import { processWebhookEvent } from "@/services/payments/process-webhook-event";
 import { getPaymentProviderByName } from "@/services/payments/provider-selector";
@@ -11,15 +14,27 @@ import { getPaymentProviderByName } from "@/services/payments/provider-selector"
 // only waiting for a webhook, so a webhook that never arrives can't leave a
 // real payment stuck. Only a status the provider reports is ever written,
 // through the same path as a webhook.
+//
+// For a seat already held, it follows the part being paid, if any: "PAID"
+// once that one is in, "FAILED" if it didn't go through (the seat stays).
 export async function checkWorkshopRegistration(
   token: string,
 ): Promise<"PAID" | "FAILED" | "PENDING" | null> {
   const registration = await findRegistrationByToken(db, token);
   if (!registration) return null;
-  if (registration.status !== "PENDING") return registration.status;
-  if (!registration.paymentId) return "PENDING";
+  if (registration.status === "FAILED") return "FAILED";
 
-  const payment = await findPaymentById(db, registration.paymentId);
+  let payment;
+  if (registration.status === "PENDING") {
+    if (!registration.paymentId) return "PENDING";
+    payment = await findPaymentById(db, registration.paymentId);
+  } else {
+    payment = await findLatestRegistrationPayment(db, registration.id);
+    if (payment?.status === "FAILED" || payment?.status === "CANCELLED") {
+      return "FAILED";
+    }
+    if (payment?.status !== "PENDING") return "PAID";
+  }
   if (!payment?.provider || !payment.providerReference) return "PENDING";
 
   const provider = getPaymentProviderByName(payment.provider);

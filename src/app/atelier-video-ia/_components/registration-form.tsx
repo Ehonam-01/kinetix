@@ -5,11 +5,16 @@ import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { WorkshopRegistrationInput } from "@/schemas/workshop";
+import {
+  MIN_WORKSHOP_INSTALLMENT,
+  type WorkshopRegistrationInput,
+} from "@/schemas/workshop";
 import { registerForWorkshopAction } from "../actions";
 import { useWorkshopLive, WhatsappButton } from "./workshop-live";
 
-const EMPTY: WorkshopRegistrationInput = {
+type Values = Omit<WorkshopRegistrationInput, "amount">;
+
+const EMPTY: Values = {
   fullName: "",
   whatsapp: "",
   email: "",
@@ -17,16 +22,26 @@ const EMPTY: WorkshopRegistrationInput = {
   paymentPhone: "",
 };
 
-const SELECT_CLASS =
+export const SELECT_CLASS =
   "border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-11 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3";
 
 export function RegistrationForm() {
   const { open, price, whatsappUrl, markClosed } = useWorkshopLive();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(EMPTY);
+  // Payment in parts (explicit user decision): the whole price, or a first
+  // part from MIN_WORKSHOP_INSTALLMENT, the rest later or at the door.
+  const [inParts, setInParts] = useState(false);
+  const [part, setPart] = useState(String(MIN_WORKSHOP_INSTALLMENT));
   const [error, setError] = useState<string | null>(null);
+  const partAmount = Number(part);
+  const amount = inParts ? partAmount : price;
+  const amountValid =
+    Number.isInteger(amount) &&
+    amount >= Math.min(MIN_WORKSHOP_INSTALLMENT, price) &&
+    amount <= price;
 
-  function set(field: keyof WorkshopRegistrationInput, value: string) {
+  function set(field: keyof Values, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
   }
 
@@ -34,7 +49,7 @@ export function RegistrationForm() {
     event.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await registerForWorkshopAction(values);
+      const result = await registerForWorkshopAction({ ...values, amount });
       if (result.full) markClosed();
       else if (result.error) setError(result.error);
     });
@@ -121,6 +136,69 @@ export function RegistrationForm() {
         />
       </div>
 
+      <fieldset className="space-y-2">
+        <legend className="mb-1.5 text-sm font-medium">
+          Comment veux-tu payer ?
+        </legend>
+        <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
+          <input
+            type="radio"
+            name="atelier-plan"
+            className="accent-brand-accent mt-1 size-4"
+            checked={!inParts}
+            onChange={() => setInParts(false)}
+          />
+          <span>
+            <span className="block font-medium">
+              Tout payer maintenant : {price.toLocaleString("fr-FR")} F
+            </span>
+          </span>
+        </label>
+        <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
+          <input
+            type="radio"
+            name="atelier-plan"
+            className="accent-brand-accent mt-1 size-4"
+            checked={inParts}
+            onChange={() => setInParts(true)}
+          />
+          <span>
+            <span className="block font-medium">Payer petit à petit</span>
+            <span className="text-muted-foreground block text-sm">
+              Dès {MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F. Ta place
+              est réservée dès ce premier versement, et tu complètes quand tu
+              veux jusqu&apos;au jour de la masterclass, ou sur place le jour
+              même.
+            </span>
+          </span>
+        </label>
+        {inParts && (
+          <div className="space-y-1.5 pt-1">
+            <Label htmlFor="atelier-part">
+              Montant de ce premier versement (F CFA)
+            </Label>
+            <Input
+              id="atelier-part"
+              required
+              type="number"
+              inputMode="numeric"
+              min={Math.min(MIN_WORKSHOP_INSTALLMENT, price)}
+              max={price}
+              step={1}
+              className="h-11 text-base"
+              value={part}
+              onChange={(e) => setPart(e.target.value)}
+            />
+            {amountValid && amount < price && (
+              <p className="text-muted-foreground text-xs">
+                Il te restera {(price - amount).toLocaleString("fr-FR")} F à
+                payer.
+              </p>
+            )}
+          </div>
+        )}
+      </fieldset>
+
       {error && (
         <p className="text-destructive text-sm" role="alert">
           {error}
@@ -129,7 +207,7 @@ export function RegistrationForm() {
 
       <Button
         type="submit"
-        disabled={pending}
+        disabled={pending || !amountValid}
         className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-14 w-full rounded-xl py-3 text-base font-bold whitespace-normal shadow-lg"
       >
         {pending ? (
@@ -137,7 +215,7 @@ export function RegistrationForm() {
         ) : (
           <>
             <Lock className="size-5" />
-            Payer {price.toLocaleString("fr-FR")} F
+            Payer {(amountValid ? amount : price).toLocaleString("fr-FR")} F
           </>
         )}
       </Button>

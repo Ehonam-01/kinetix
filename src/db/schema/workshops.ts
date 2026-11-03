@@ -86,7 +86,15 @@ export const workshopRegistrations = pgTable(
     source: workshopRegistrationSourceEnum("source")
       .notNull()
       .default("ONLINE"),
+    // What the seat costs this participant (the price, or what an admin
+    // recorded), and what has been received towards it so far. A seat is
+    // PAID, held, from its first confirmed payment (explicit user decision:
+    // participants may pay in parts, from 1 000 F, until the day, and the
+    // rest at the door); paid in full once amountPaid reaches amount.
     amount: integer("amount").notNull(),
+    amountPaid: integer("amount_paid").notNull().default(0),
+    // The first payment. Later ones point back here through their
+    // metadata.workshopRegistrationId (repositories/workshops.ts).
     paymentId: uuid("payment_id")
       .unique()
       .references(() => payments.id),

@@ -547,6 +547,13 @@
       "when": 1793629176723,
       "tag": "0077_workshop_slider_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1793738029373,
+      "tag": "0078_workshop_amount_paid",
+      "breakpoints": true
     }
   ]
 }

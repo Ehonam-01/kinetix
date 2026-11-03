@@ -110,7 +110,11 @@ export function workshopFaqs({
     },
     {
       question: "Comment réserver ma place ?",
-      answer: `Clique sur « Je réserve ma place » et paie ${price} F CFA en ligne par Mobile Money. Ta place est confirmée immédiatement et tu reçois les informations pratiques ainsi que le lien du groupe WhatsApp des participants.`,
+      answer: `Clique sur « Je réserve ma place » et paie en ligne par Mobile Money : les ${price} F CFA en une fois, ou un premier versement. Ta place est réservée immédiatement et tu reçois les informations pratiques ainsi que le lien du groupe WhatsApp des participants.`,
+    },
+    {
+      question: "Puis-je payer en plusieurs fois ?",
+      answer: `Oui. Fais un premier versement à partir de 1 000 F CFA : ta place est réservée tout de suite. Ensuite, tu verses ce que tu veux, quand tu veux, depuis le lien de ta réservation, jusqu'au jour de la masterclass. S'il te reste un montant à payer le jour J, tu le règles sur place.`,
     },
     {
       question: "Où se déroule la masterclass ?",
@@ -118,7 +122,7 @@ export function workshopFaqs({
     },
     {
       question: `Pourquoi seulement ${price} F CFA ?`,
-      answer: `Kinetix Africa prend en charge le coût de la formation pour faire découvrir sa méthode et son catalogue de formations. Ta contribution de ${price} F CFA couvre la réservation de ta place, la collation et l'organisation de l'atelier ; aucun autre paiement n'est demandé. À la fin, nous te présentons la plateforme et le programme ambassadeur : rien n'est obligatoire.`,
+      answer: `Kinetix Africa prend en charge le coût de la formation pour faire découvrir sa méthode et son catalogue de formations. Ta contribution de ${price} F CFA couvre la réservation de ta place, la collation et l'organisation de l'atelier ; aucun autre paiement n'est demandé, et tu peux la régler en plusieurs fois. À la fin, nous te présentons la plateforme et le programme ambassadeur : rien n'est obligatoire.`,
     },
     {
       question: "Les outils sont-ils payants ?",

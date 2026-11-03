@@ -71,7 +71,7 @@ export default async function AtelierInscriptionPage() {
 
         <PaymentLogos className="mt-6 lg:justify-center" />
         <p className="text-muted-foreground mt-4 text-center text-sm">
-          Après ton paiement, ta place est confirmée et tu reçois les
+          Après ton paiement, ta place est réservée et tu reçois les
           informations pratiques ainsi que le lien du groupe WhatsApp des
           participants.
         </p>

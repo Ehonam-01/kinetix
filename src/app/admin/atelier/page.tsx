@@ -4,7 +4,11 @@ import { formatWhatsapp, whatsappHref } from "@/lib/whatsapp";
 import { getWorkshop, listRegistrations } from "@/repositories/workshops";
 import { requireAdmin } from "@/services/auth/current-user";
 import { buttonVariants } from "@/components/ui/button";
-import { AddRegistrationForm, WorkshopSettingsForm } from "./workshop-forms";
+import {
+  AddRegistrationForm,
+  BalancePaidButton,
+  WorkshopSettingsForm,
+} from "./workshop-forms";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "En attente",
@@ -47,6 +51,8 @@ export default async function AdminWorkshopPage() {
   const workshop = await getWorkshop(db);
   const registrations = await listRegistrations(db, workshop.id);
   const paid = registrations.filter((r) => r.status === "PAID");
+  const owing = paid.filter((r) => r.amountPaid < r.amount);
+  const owed = owing.reduce((sum, r) => sum + (r.amount - r.amountPaid), 0);
 
   return (
     <div className="space-y-8">
@@ -56,6 +62,12 @@ export default async function AdminWorkshopPage() {
           {paid.length} inscrit(s) payé(s) sur {workshop.capacity} places. À la
           capacité, la page de vente dirige les visiteurs vers WhatsApp.
         </p>
+        {owing.length > 0 && (
+          <p className="text-sm">
+            Dont {owing.length} qui paie(nt) par versements : il reste{" "}
+            <strong>{owed.toLocaleString("fr-FR")} F</strong> à encaisser.
+          </p>
+        )}
         <WorkshopSettingsForm current={workshop} />
       </section>
 
@@ -90,6 +102,7 @@ export default async function AdminWorkshopPage() {
                     "WhatsApp",
                     "Ville",
                     "Statut",
+                    "Versé",
                     "Date",
                     "Code",
                     "Code utilisé",
@@ -112,6 +125,33 @@ export default async function AdminWorkshopPage() {
                     <td className="px-3 py-2">
                       {STATUS_LABEL[r.status]}
                       {r.source === "ADMIN" && " (ajouté)"}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">
+                      {r.status === "PAID" ? (
+                        r.amountPaid < r.amount ? (
+                          <div className="space-y-1">
+                            <p>
+                              {r.amountPaid.toLocaleString("fr-FR")} /{" "}
+                              {r.amount.toLocaleString("fr-FR")} F
+                            </p>
+                            <p className="text-destructive text-xs font-medium">
+                              Reste{" "}
+                              {(r.amount - r.amountPaid).toLocaleString(
+                                "fr-FR",
+                              )}{" "}
+                              F
+                            </p>
+                            <BalancePaidButton
+                              registrationId={r.id}
+                              left={r.amount - r.amountPaid}
+                            />
+                          </div>
+                        ) : (
+                          `${r.amountPaid.toLocaleString("fr-FR")} F`
+                        )
+                      ) : (
+                        "—"
+                      )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {fmtDate(r.createdAt)}

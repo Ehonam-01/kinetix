@@ -1,6 +1,6 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { profiles } from "@/db/schema/profiles";
@@ -62,6 +62,7 @@ export async function addWorkshopRegistration(
         workshopId: workshop.id,
         ...values,
         status: "PAID",
+        amountPaid: values.amount,
         source: "ADMIN",
         accessToken: randomBytes(24).toString("base64url"),
         discountCode: generateDiscountCode(),
@@ -76,5 +77,44 @@ export async function addWorkshopRegistration(
       metadata: { amount: values.amount, whatsapp: values.whatsapp },
     });
     return registration;
+  });
+}
+
+// The rest of a seat paid at the door, or by any other way off-site
+// (explicit user decision): the seat counts as paid in full, and its code
+// comes with it. No payments row: no provider was involved.
+export async function markWorkshopBalancePaid(
+  adminUserId: string,
+  registrationId: string,
+) {
+  return db.transaction(async (tx) => {
+    await assertAdmin(tx, adminUserId);
+    const registration = await tx.query.workshopRegistrations.findFirst({
+      where: eq(workshopRegistrations.id, registrationId),
+    });
+    if (!registration || registration.status !== "PAID") {
+      throw new Error("Réservation introuvable.");
+    }
+    const left = registration.amount - registration.amountPaid;
+    if (left <= 0) throw new Error("Cette place est déjà entièrement payée.");
+    await tx
+      .update(workshopRegistrations)
+      .set({
+        amountPaid: registration.amount,
+        discountCode: registration.discountCode ?? generateDiscountCode(),
+      })
+      .where(
+        and(
+          eq(workshopRegistrations.id, registrationId),
+          eq(workshopRegistrations.amountPaid, registration.amountPaid),
+        ),
+      );
+    await logAdminAction(tx, {
+      actorUserId: adminUserId,
+      action: "WORKSHOP_BALANCE_RECEIVED",
+      targetType: "workshop_registration",
+      targetId: registrationId,
+      metadata: { amount: left, whatsapp: registration.whatsapp },
+    });
   });
 }

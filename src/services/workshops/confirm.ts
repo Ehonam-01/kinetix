@@ -10,7 +10,7 @@ import { escapeHtml } from "@/lib/escape-html";
 import {
   countPaidRegistrations,
   findOtherPaidRegistration,
-  findRegistrationByPaymentId,
+  findRegistrationForPayment,
 } from "@/repositories/workshops";
 import { alertAdmins } from "@/services/notifications/admin-alerts";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
@@ -33,25 +33,41 @@ const fmtDateTime = (date: Date) =>
     timeZone: "Africa/Lome",
   });
 
+const fmtCfa = (value: number) => `${value.toLocaleString("fr-FR")} F`;
+
+// One email per confirmed payment: the seat held by the first, then each
+// part received, until it is paid in full.
 async function sendConfirmationEmail(
   registration: typeof workshopRegistrations.$inferSelect,
   workshop: typeof workshops.$inferSelect,
+  part: { amount: number; first: boolean },
 ) {
   if (!registration.email) return;
   const url = `${getSiteEnv().SITE_URL}/atelier-video-ia/merci?t=${registration.accessToken}`;
+  const left = Math.max(0, registration.amount - registration.amountPaid);
+  const subject = part.first
+    ? "Ta place à la Kinetix AI Video Masterclass est réservée"
+    : left > 0
+      ? `Versement de ${fmtCfa(part.amount)} reçu pour la Kinetix AI Video Masterclass`
+      : "Ta place à la Kinetix AI Video Masterclass est entièrement payée";
+  const balance =
+    left > 0
+      ? `<p>Tu as versé <strong>${fmtCfa(registration.amountPaid)}</strong> sur ${fmtCfa(registration.amount)}. Il te reste <strong>${fmtCfa(left)}</strong> à payer, en ligne depuis le lien ci-dessous quand tu veux d'ici la masterclass, ou sur place le jour même.</p>`
+      : `<p>Ta place est entièrement payée (${fmtCfa(registration.amountPaid)}).</p>`;
   try {
     await resendEmailProvider.sendEmail({
       to: registration.email,
-      subject: "Ta place à la Kinetix AI Video Masterclass est confirmée",
+      subject,
       html: `
       <p>Bonjour ${escapeHtml(registration.fullName)},</p>
-      <p>Ta place est confirmée pour le <strong>${fmtDateTime(workshop.startsAt)}</strong>.</p>
+      <p>Ta place est réservée pour le <strong>${fmtDateTime(workshop.startsAt)}</strong>.</p>
+      ${balance}
       <p>Lieu : ${escapeHtml(workshop.venue)}</p>
-      <p><a href="${url}">Voir ma confirmation, rejoindre le groupe WhatsApp et ajouter l'atelier à mon agenda</a></p>
+      <p><a href="${url}">Voir ma réservation${left > 0 ? ", faire un versement" : ""}, rejoindre le groupe WhatsApp et ajouter l'atelier à mon agenda</a></p>
     `,
     });
   } catch (err) {
-    // The seat is paid: its confirmation page doesn't depend on this email.
+    // The payment is recorded: the confirmation page doesn't depend on this.
     console.error(
       `Email de confirmation de l'atelier non envoyé (${registration.id}) :`,
       err,
@@ -59,9 +75,10 @@ async function sendConfirmationEmail(
   }
 }
 
-// Payment confirmed -> seat confirmed, reached from processWebhookEvent
-// only, so whichever path confirms first (webhook, the confirmation page's
-// check, an admin reconcile) is the only one that does anything. A payment
+// Payment confirmed -> seat held, or one more part of it paid. Reached
+// from processWebhookEvent only, so whichever path confirms first
+// (webhook, the confirmation page's check, an admin reconcile) is the only
+// one that does anything. A payment
 // never fails for lack of a seat: the money is taken, and past the capacity
 // the seat is kept and the admins are told (explicit user decision).
 export async function confirmWorkshopRegistration(
@@ -80,7 +97,7 @@ export async function confirmWorkshopRegistration(
     .set({ status: "CONFIRMED", confirmedAt: sql`now()` })
     .where(eq(payments.id, paymentId));
 
-  const registration = await findRegistrationByPaymentId(tx, paymentId);
+  const registration = await findRegistrationForPayment(tx, payment);
   if (!registration) {
     alertAdmins(
       `workshop-orphan:${paymentId}`,
@@ -90,44 +107,72 @@ export async function confirmWorkshopRegistration(
     return;
   }
 
-  const [paid] = await tx
+  // The first payment holds the seat; every one adds to what was received,
+  // and the discount code (worth the whole price) only comes once all of it
+  // is in. A payment arriving after the registration was marked FAILED (a
+  // late confirmation) still holds the seat: the money was taken.
+  const first = registration.status !== "PAID";
+  // Added in SQL, not from the row read above: two parts confirmed at the
+  // same moment must both count.
+  let [paid] = await tx
     .update(workshopRegistrations)
     .set({
       status: "PAID",
-      confirmedAt: sql`now()`,
-      discountCode: generateDiscountCode(),
+      amountPaid: sql`${workshopRegistrations.amountPaid} + ${payment.amount}`,
+      confirmedAt: sql`coalesce(${workshopRegistrations.confirmedAt}, now())`,
     })
     .where(eq(workshopRegistrations.id, registration.id))
     .returning();
+  const amountPaid = paid.amountPaid;
+  if (amountPaid >= paid.amount && !paid.discountCode) {
+    [paid] = await tx
+      .update(workshopRegistrations)
+      .set({ discountCode: generateDiscountCode() })
+      .where(eq(workshopRegistrations.id, registration.id))
+      .returning();
+  }
 
   const workshop = await tx.query.workshops.findFirst({
     where: eq(workshops.id, registration.workshopId),
   });
   if (!workshop) return;
 
-  const paidCount = await countPaidRegistrations(tx, workshop.id);
-  if (paidCount > workshop.capacity) {
-    alertAdmins(
-      `workshop-over-capacity:${workshop.id}:${paidCount}`,
-      "Atelier : capacité dépassée",
-      [
-        `${paidCount} inscrits payés pour ${workshop.capacity} places.`,
-        `Dernier inscrit : ${registration.fullName} (${registration.whatsapp}).`,
-      ],
-    );
+  if (first) {
+    const paidCount = await countPaidRegistrations(tx, workshop.id);
+    if (paidCount > workshop.capacity) {
+      alertAdmins(
+        `workshop-over-capacity:${workshop.id}:${paidCount}`,
+        "Atelier : capacité dépassée",
+        [
+          `${paidCount} inscrits payés pour ${workshop.capacity} places.`,
+          `Dernier inscrit : ${registration.fullName} (${registration.whatsapp}).`,
+        ],
+      );
+    }
+    if (await findOtherPaidRegistration(tx, registration)) {
+      alertAdmins(
+        `workshop-duplicate:${registration.id}`,
+        "Atelier : numéro inscrit et payé deux fois",
+        [
+          `${registration.fullName} (${registration.whatsapp}) a deux inscriptions payées.`,
+          "L'une des deux est à rembourser manuellement.",
+        ],
+      );
+    }
   }
-  if (await findOtherPaidRegistration(tx, registration)) {
+  if (amountPaid > paid.amount) {
     alertAdmins(
-      `workshop-duplicate:${registration.id}`,
-      "Atelier : numéro inscrit et payé deux fois",
+      `workshop-overpaid:${registration.id}:${amountPaid}`,
+      "Atelier : participant qui a payé plus que le prix",
       [
-        `${registration.fullName} (${registration.whatsapp}) a deux inscriptions payées.`,
-        "L'une des deux est à rembourser manuellement.",
+        `${registration.fullName} (${registration.whatsapp}) a versé ${amountPaid} F pour ${paid.amount} F.`,
+        "Le surplus est à rembourser manuellement.",
       ],
     );
   }
 
-  const send = () => sendConfirmationEmail(paid, workshop);
+  const send = () =>
+    sendConfirmationEmail(paid, workshop, { amount: payment.amount, first });
   try {
     // After the response, once this transaction is committed.
     after(send);

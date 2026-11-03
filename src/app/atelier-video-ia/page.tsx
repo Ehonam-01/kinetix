@@ -577,13 +577,17 @@ export default async function AtelierVideoIaPage() {
                 <p>💳 Paiement sécurisé en ligne par Mobile Money</p>
                 <PaymentLogos className="justify-center lg:justify-start" />
               </div>
+              <p className="font-medium">
+                ✅ Paiement possible en plusieurs fois, dès 1&nbsp;000&nbsp;F :
+                ta place est réservée dès le premier versement.
+              </p>
               <p>
                 ⚠️ Les places sont limitées à {workshop.capacity} : ta
                 contribution confirme ta présence.
               </p>
               <WorkshopCtaBlock />
               <p className="text-muted-foreground text-sm">
-                Après ton paiement, ta place est confirmée et tu reçois les
+                Après ton paiement, ta place est réservée et tu reçois les
                 informations pratiques ainsi que le lien du groupe WhatsApp des
                 participants.
               </p>

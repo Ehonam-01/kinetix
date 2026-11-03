@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   addWorkshopRegistrationAction,
+  markWorkshopBalancePaidAction,
   updateWorkshopSettingsAction,
 } from "./actions";
 
@@ -252,5 +253,44 @@ export function AddRegistrationForm() {
         {message && <p className="text-sm">{message}</p>}
       </div>
     </form>
+  );
+}
+
+// The rest of a seat, received at the door: one tap, confirmed first.
+export function BalancePaidButton({
+  registrationId,
+  left,
+}: {
+  registrationId: string;
+  left: number;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="space-y-1">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={pending}
+        onClick={() => {
+          if (
+            !window.confirm(
+              `Confirmer que les ${left.toLocaleString("fr-FR")} F restants ont été reçus ?`,
+            )
+          ) {
+            return;
+          }
+          setError(null);
+          startTransition(async () => {
+            const result = await markWorkshopBalancePaidAction(registrationId);
+            if (result.error) setError(result.error);
+          });
+        }}
+      >
+        Solde reçu sur place
+      </Button>
+      {error && <p className="text-destructive text-xs">{error}</p>}
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import "server-only";
-import { and, count, desc, eq, gte, ne } from "drizzle-orm";
+import { and, count, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
+import { payments } from "@/db/schema/payments";
 import { workshopRegistrations, workshops } from "@/db/schema/workshops";
 
 export const WORKSHOP_SLUG = "atelier-video-ia";
@@ -57,13 +58,44 @@ export function findRegistrationByToken(executor: Executor, token: string) {
   });
 }
 
-export function findRegistrationByPaymentId(
+// The registration a payment is for: its first payment (paymentId), or a
+// later part, which names it in its metadata (services/workshops/pay-more.ts).
+export function findRegistrationForPayment(
   executor: Executor,
-  paymentId: string,
+  payment: { id: string; metadata: unknown },
 ) {
+  const registrationId = (
+    payment.metadata as { workshopRegistrationId?: unknown } | null
+  )?.workshopRegistrationId;
   return executor.query.workshopRegistrations.findFirst({
-    where: eq(workshopRegistrations.paymentId, paymentId),
+    where:
+      typeof registrationId === "string"
+        ? or(
+            eq(workshopRegistrations.paymentId, payment.id),
+            eq(workshopRegistrations.id, registrationId),
+          )
+        : eq(workshopRegistrations.paymentId, payment.id),
   });
+}
+
+// The registration's latest payment: its first one, or the last part
+// started from its confirmation page.
+export async function findLatestRegistrationPayment(
+  executor: Executor,
+  registrationId: string,
+) {
+  const [row] = await executor
+    .select()
+    .from(payments)
+    .where(
+      and(
+        eq(payments.purpose, "WORKSHOP"),
+        sql`${payments.metadata}->>'workshopRegistrationId' = ${registrationId}`,
+      ),
+    )
+    .orderBy(desc(payments.createdAt))
+    .limit(1);
+  return row ?? null;
 }
 
 // The number's registration that stops a new one: already paid, or a

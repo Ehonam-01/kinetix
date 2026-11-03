@@ -43,6 +43,8 @@ let providerFails = false;
 const charges: { amount: number; address?: string; email: string }[] = [];
 let verifiedStatus: "PENDING" | "CONFIRMED" | "FAILED" = "PENDING";
 let lastReference = "";
+// What each charge was for: a part or the whole price.
+const amountOf = new Map<string, number>();
 const provider = {
   name: "PAYDUNYA",
   createPayment: async (input: {
@@ -57,6 +59,7 @@ const provider = {
       email: input.customer.email,
     });
     lastReference = `ref-${randomUUID()}`;
+    amountOf.set(lastReference, input.amount);
     return {
       providerReference: lastReference,
       checkoutUrl: null,
@@ -66,7 +69,7 @@ const provider = {
   verifyPayment: async (providerReference: string) => ({
     providerReference,
     status: verifiedStatus,
-    amount: 2000,
+    amount: amountOf.get(providerReference) ?? 2000,
   }),
 };
 vi.mock("@/services/payments/provider-selector", () => ({
@@ -77,20 +80,40 @@ process.env.SITE_URL ??= "https://kinetix.example";
 
 const ORIGIN = "https://kinetix.example";
 
-function participant(whatsapp: string, email: string | null = null) {
+function participant(
+  whatsapp: string,
+  email: string | null = null,
+  amount = 2000,
+) {
   return {
     fullName: "Ama Mensah",
     whatsapp,
     email,
     operator: "TOGOCELL",
     paymentPhone: whatsapp,
+    amount,
     origin: ORIGIN,
   };
 }
 
-async function register(whatsapp: string, email: string | null = null) {
+async function register(
+  whatsapp: string,
+  email: string | null = null,
+  amount = 2000,
+) {
   const { registerForWorkshop } = await import("@/services/workshops/register");
-  return registerForWorkshop(participant(whatsapp, email));
+  return registerForWorkshop(participant(whatsapp, email, amount));
+}
+
+async function payMore(token: string, amount: number) {
+  const { payMoreForWorkshop } = await import("@/services/workshops/pay-more");
+  return payMoreForWorkshop({
+    token,
+    amount,
+    operator: "TOGOCELL",
+    paymentPhone: "22890000099",
+    origin: ORIGIN,
+  });
 }
 
 async function registrationOf(whatsapp: string) {
@@ -110,7 +133,7 @@ async function webhook(status: "CONFIRMED" | "FAILED", reference: string) {
       eventType: "test",
       dedupeKey: `test:${reference}:${status}:${randomUUID()}`,
       raw: {},
-      amount: 2000,
+      amount: amountOf.get(reference) ?? 2000,
     }),
   );
 }
@@ -374,6 +397,123 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       payment.id,
     );
     expect(subscription?.pricePaid).toBe(payment.amount);
+  });
+
+  it("a first part holds the seat; the code waits for the whole price", async () => {
+    const { getWorkshop, getWorkshopAvailability } =
+      await import("@/repositories/workshops");
+    expect((await register("22890000030", null, 2500)).outcome).toBe(
+      "TOO_MUCH",
+    );
+    expect(charges).toHaveLength(0);
+
+    await register("22890000030", "esi@example.test", 1000);
+    expect(charges.at(-1)?.amount).toBe(1000);
+    await webhook("CONFIRMED", lastReference);
+
+    const held = await registrationOf("22890000030");
+    expect(held).toMatchObject({
+      status: "PAID",
+      amount: 2000,
+      amountPaid: 1000,
+      discountCode: null,
+    });
+    const workshop = await getWorkshop(localDb);
+    expect((await getWorkshopAvailability(localDb, workshop)).remaining).toBe(
+      49,
+    );
+    await vi.waitFor(() => expect(sentEmails).toHaveLength(1));
+    expect(sentEmails[0].html).toContain("1\u202f000 F");
+    // Paying more goes through the reservation link, not the form again.
+    expect((await register("22890000030")).outcome).toBe("ALREADY_PAID");
+
+    expect(await payMore(held.accessToken, 1500)).toMatchObject({
+      outcome: "REFUSED",
+    });
+    expect(await payMore(held.accessToken, 500)).toMatchObject({
+      outcome: "REFUSED",
+    });
+    expect(await payMore(held.accessToken, 1000)).toEqual({
+      outcome: "STARTED",
+      checkoutUrl: null,
+    });
+    // A prompt is still on the phone: no second one.
+    expect(await payMore(held.accessToken, 1000)).toMatchObject({
+      outcome: "REFUSED",
+    });
+    await webhook("CONFIRMED", lastReference);
+    await webhook("CONFIRMED", lastReference);
+
+    const full = await registrationOf("22890000030");
+    expect(full.amountPaid).toBe(2000);
+    expect(full.discountCode).toMatch(/^ATELIER-[A-Z2-9]{8}$/);
+    expect(await payMore(held.accessToken, 1000)).toMatchObject({
+      outcome: "REFUSED",
+    });
+    expect(alerts).toEqual([]);
+  });
+
+  it("a part that fails leaves the seat; the page's check follows a part", async () => {
+    const { checkWorkshopRegistration } =
+      await import("@/services/workshops/check-status");
+    await register("22890000031", null, 1200);
+    await webhook("CONFIRMED", lastReference);
+    const { accessToken } = await registrationOf("22890000031");
+
+    await payMore(accessToken, 300);
+    expect(await registrationOf("22890000031")).toMatchObject({
+      amountPaid: 1200,
+    });
+    // 800 left: less than the minimum is refused, all of it is not.
+    expect(charges.at(-1)?.amount).toBe(1200);
+    expect(await payMore(accessToken, 800)).toMatchObject({
+      outcome: "STARTED",
+    });
+    await webhook("FAILED", lastReference);
+    expect(await registrationOf("22890000031")).toMatchObject({
+      status: "PAID",
+      amountPaid: 1200,
+    });
+    expect(await checkWorkshopRegistration(accessToken)).toBe("FAILED");
+
+    // The failed part no longer blocks: another one starts.
+    await payMore(accessToken, 800);
+    expect(await checkWorkshopRegistration(accessToken)).toBe("PENDING");
+    verifiedStatus = "CONFIRMED";
+    expect(await checkWorkshopRegistration(accessToken)).toBe("PAID");
+    expect(await registrationOf("22890000031")).toMatchObject({
+      amountPaid: 2000,
+    });
+    expect(await checkWorkshopRegistration(accessToken)).toBe("PAID");
+  });
+
+  it("no part online once the workshop started; an admin records the rest", async () => {
+    const { markWorkshopBalancePaid } =
+      await import("@/services/workshops/admin");
+    const admin = await makeMember();
+    await localDb
+      .update(schema.profiles)
+      .set({ role: "ADMIN" })
+      .where(eq(schema.profiles.id, admin));
+    await register("22890000032", null, 1000);
+    await webhook("CONFIRMED", lastReference);
+    const held = await registrationOf("22890000032");
+
+    await setWorkshop({ startsAt: new Date(Date.now() - 60_000) });
+    expect(await payMore(held.accessToken, 1000)).toMatchObject({
+      outcome: "REFUSED",
+    });
+
+    await expect(
+      markWorkshopBalancePaid(await makeMember(), held.id),
+    ).rejects.toThrow("administrateur");
+    await markWorkshopBalancePaid(admin, held.id);
+    const full = await registrationOf("22890000032");
+    expect(full.amountPaid).toBe(2000);
+    expect(full.discountCode).toMatch(/^ATELIER-/);
+    await expect(markWorkshopBalancePaid(admin, held.id)).rejects.toThrow(
+      "entièrement",
+    );
   });
 
   it("an admin adds someone paid off-site, past the capacity if needed", async () => {

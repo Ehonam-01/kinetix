@@ -18,16 +18,16 @@ const PENDING_WINDOW_MS = 5 * 60 * 1000;
 
 // Moov Togo requires an address and this form doesn't ask for one: where the
 // workshop takes place, like the fallback email below.
-const PAYMENT_ADDRESS = "Lomé";
+export const PAYMENT_ADDRESS = "Lomé";
 
-function splitName(fullName: string) {
+export function splitName(fullName: string) {
   const [firstName, ...rest] = fullName.trim().split(/\s+/);
   return { firstName, lastName: rest.join(" ") || firstName };
 }
 
 // PayDunya requires an email and this form doesn't: a mailbox of ours, never
 // shown to the participant and never written to.
-function paymentEmail(email: string | null) {
+export function paymentEmail(email: string | null) {
   return email ?? `atelier@${new URL(getSiteEnv().SITE_URL).hostname}`;
 }
 
@@ -37,6 +37,7 @@ type RegisterInput = {
   email: string | null;
   operator: string;
   paymentPhone: string;
+  amount: number;
   origin: string;
 };
 
@@ -44,6 +45,7 @@ type RegisterResult =
   | { outcome: "FULL" }
   | { outcome: "ALREADY_PAID" }
   | { outcome: "IN_PROGRESS" }
+  | { outcome: "TOO_MUCH"; price: number }
   | {
       outcome: "STARTED";
       token: string;
@@ -65,6 +67,11 @@ export async function registerForWorkshop(
   const workshop = await getWorkshop(db);
   const { open } = await getWorkshopAvailability(db, workshop);
   if (!open) return { outcome: "FULL" };
+  // The whole price, or a first part of it (schemas/workshop.ts checks the
+  // minimum).
+  if (input.amount > workshop.priceCfa) {
+    return { outcome: "TOO_MUCH", price: workshop.priceCfa };
+  }
 
   const blocking = await findBlockingRegistration(
     db,
@@ -88,7 +95,7 @@ export async function registerForWorkshop(
     .values({
       purpose: "WORKSHOP",
       method: "MOBILE_MONEY",
-      amount: workshop.priceCfa,
+      amount: input.amount,
       provider: provider.name,
       idempotencyKey,
       status: "PENDING",
@@ -114,7 +121,7 @@ export async function registerForWorkshop(
 
   try {
     const intent = await provider.createPayment({
-      amount: workshop.priceCfa,
+      amount: input.amount,
       description: workshop.title,
       customer: {
         email: paymentEmail(input.email),

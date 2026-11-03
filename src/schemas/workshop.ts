@@ -28,6 +28,22 @@ const cityField = z
   .min(2, "Indique ta ville.")
   .max(80, "Ce nom de ville est trop long.");
 
+// The smallest part a participant may pay at once (explicit user
+// decision), unless what is left is less.
+export const MIN_WORKSHOP_INSTALLMENT = 1000;
+
+const installmentField = z.coerce
+  .number({ error: "Indique le montant à payer." })
+  .int("Indique un montant en francs, sans virgule.")
+  .min(
+    MIN_WORKSHOP_INSTALLMENT,
+    `Le montant minimum est de ${MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F.`,
+  );
+
+const operatorField = z.enum(["TOGOCELL", "MOOV_MONEY"], {
+  error: "Choisis ton opérateur Mobile Money.",
+});
+
 export const workshopRegistrationSchema = z.object({
   fullName: z
     .string()
@@ -38,15 +54,34 @@ export const workshopRegistrationSchema = z.object({
   email: z
     .union([z.literal(""), z.email("Adresse e-mail invalide.")])
     .transform((value) => value || null),
-  operator: z.enum(["TOGOCELL", "MOOV_MONEY"], {
-    error: "Choisis ton opérateur Mobile Money.",
-  }),
+  operator: operatorField,
   // Blank: the WhatsApp number pays.
   paymentPhone: z.union([z.literal(""), phoneField]),
+  // The first payment: the whole price, or a part of it. Its upper bound,
+  // the price, is checked by the service, which knows it.
+  amount: installmentField,
 });
 
 export type WorkshopRegistrationInput = z.input<
   typeof workshopRegistrationSchema
+>;
+
+// Another part, from the confirmation page: the token is the participant's
+// proof of identity there.
+export const workshopInstallmentSchema = z.object({
+  token: z.string().min(1).max(200),
+  operator: operatorField,
+  paymentPhone: phoneField,
+  // The service also accepts less than the minimum when that is all that
+  // is left; this only rules out nonsense.
+  amount: z.coerce
+    .number({ error: "Indique le montant à payer." })
+    .int("Indique un montant en francs, sans virgule.")
+    .min(1, "Indique le montant à payer."),
+});
+
+export type WorkshopInstallmentInput = z.input<
+  typeof workshopInstallmentSchema
 >;
 
 export const workshopSettingsSchema = z.object({

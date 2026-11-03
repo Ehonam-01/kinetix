@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/services/auth/current-user";
 import {
   addWorkshopRegistration,
+  markWorkshopBalancePaid,
   updateWorkshopSettings,
 } from "@/services/workshops/admin";
 
@@ -31,6 +32,17 @@ export async function addWorkshopRegistrationAction(input: RegistrationInput) {
   const { profile } = await requireAdmin();
   try {
     await addWorkshopRegistration(profile.id, input);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidatePath("/admin/atelier");
+  return { error: null };
+}
+
+export async function markWorkshopBalancePaidAction(registrationId: string) {
+  const { profile } = await requireAdmin();
+  try {
+    await markWorkshopBalancePaid(profile.id, registrationId);
   } catch (err) {
     return { error: errorMessage(err) };
   }
