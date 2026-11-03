@@ -50,6 +50,8 @@ import {
   WorkshopCta,
   WorkshopCtaBlock,
   WorkshopLiveProvider,
+  QuestionWhatsapp,
+  QuestionWhatsappButton,
 } from "./_components/workshop-live";
 
 const TITLE = `Kinetix AI Video Masterclass — ${SITE_NAME}`;
@@ -279,6 +281,9 @@ export default async function AtelierVideoIaPage() {
   const exampleVideos = workshop.exampleVideoUrls
     .map(toExampleVideo)
     .filter((video) => video !== null);
+  const questionUrl = whatsappUrl(
+    "Bonjour, j'ai une question sur la Kinetix AI Video Masterclass avant de réserver ma place.",
+  );
   const waitlistUrl = whatsappUrl(
     "Bonjour, je ne peux pas venir à l'atelier du 14 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
   );
@@ -624,6 +629,14 @@ export default async function AtelierVideoIaPage() {
                 </div>
               ))}
             </div>
+            {questionUrl && (
+              <div className="mt-8 flex flex-col items-center gap-3 text-center">
+                <p className="font-medium">
+                  Tu as une autre question ? Écris-nous, on te répond.
+                </p>
+                <QuestionWhatsappButton url={questionUrl} />
+              </div>
+            )}
           </div>
         </section>
 
@@ -651,6 +664,7 @@ export default async function AtelierVideoIaPage() {
         </section>
       </main>
       <StickyCta />
+      {questionUrl && <QuestionWhatsapp url={questionUrl} />}
     </WorkshopLiveProvider>
   );
 }

@@ -89,16 +89,19 @@ export function WhatsappButton({
   url,
   label,
   className,
+  onClick,
 }: {
   url: string;
   label: string;
   className?: string;
+  onClick?: () => void;
 }) {
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={onClick}
       className={cn(
         buttonVariants({ size: "lg" }),
         "h-auto min-h-12 bg-[#128C7E] px-6 py-3 text-center text-base font-semibold whitespace-normal text-white hover:bg-[#128C7E]/90",
@@ -207,6 +210,39 @@ export function SeatsLeft({ className }: { className?: string }) {
         ? `${remaining} place${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}`
         : "Inscriptions en ligne terminées"}
     </span>
+  );
+}
+
+// A visitor with a question before booking writes to the support number.
+// Counted as a Meta "Contact" when the pixel runs.
+const trackContact = () => trackMarketingEvent("Contact");
+
+// Always in reach, bottom right: above the phones' booking bar, below the
+// pixel banner while that one is open.
+export function QuestionWhatsapp({ url }: { url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={trackContact}
+      aria-label="Une question ? Écris-nous sur WhatsApp"
+      className="fixed right-3 bottom-24 z-30 flex items-center gap-2 rounded-full bg-[#25D366] py-2.5 pr-4 pl-3 text-sm font-semibold text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 sm:right-5 sm:bottom-5"
+    >
+      <MessageCircle aria-hidden="true" className="size-5" />
+      Une question&nbsp;?
+    </a>
+  );
+}
+
+// The same, inline: under the questions answered on the page.
+export function QuestionWhatsappButton({ url }: { url: string }) {
+  return (
+    <WhatsappButton
+      url={url}
+      label="Poser ma question sur WhatsApp"
+      onClick={trackContact}
+    />
   );
 }
 

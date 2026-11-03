@@ -6,7 +6,12 @@ type Fbq = (...args: unknown[]) => void;
 export const MARKETING_CONSENT_KEY = "kx-consent-marketing";
 
 export function trackMarketingEvent(
-  name: "CompleteRegistration" | "InitiateCheckout" | "Purchase" | "Lead",
+  name:
+    | "CompleteRegistration"
+    | "InitiateCheckout"
+    | "Purchase"
+    | "Lead"
+    | "Contact",
   params?: Record<string, unknown>,
 ) {
   if (typeof window === "undefined") return;
