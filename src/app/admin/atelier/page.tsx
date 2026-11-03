@@ -42,6 +42,34 @@ function codeMessage(
   ].join("\n\n");
 }
 
+const fmtDay = (date: Date) =>
+  date.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Africa/Lome",
+  });
+
+// A payment that didn't go through (or a prompt never validated): an admin
+// writes to the person to help them pay, from their own WhatsApp.
+function retryMessage(fullName: string, startsAt: Date) {
+  const firstName = fullName.trim().split(/\s+/)[0];
+  return [
+    `Bonjour ${firstName}, c'est l'équipe Kinetix Africa.`,
+    `Nous avons vu que ton paiement pour la Kinetix AI Video Masterclass du ${fmtDay(startsAt)} n'a pas abouti. Tu as rencontré un souci ? On peut t'aider à finaliser ta réservation.`,
+    `Tu peux réessayer ici : ${getSiteEnv().SITE_URL}/atelier-video-ia/inscription`,
+    `Tu peux aussi payer en plusieurs fois, dès 1 000 F.`,
+  ].join("\n\n");
+}
+
+// A prompt left this long without an answer won't be validated anymore.
+const STALE_PENDING_MS = 30 * 60 * 1000;
+
+// Read per request: this page is rendered for each visit.
+function isStale(date: Date) {
+  return Date.now() - date.getTime() > STALE_PENDING_MS;
+}
+
 // The paid workshop (/atelier-video-ia): its settings, who registered, and
 // the people added by hand after writing on WhatsApp.
 export default async function AdminWorkshopPage() {
@@ -53,6 +81,20 @@ export default async function AdminWorkshopPage() {
   const paid = registrations.filter((r) => r.status === "PAID");
   const owing = paid.filter((r) => r.amountPaid < r.amount);
   const owed = owing.reduce((sum, r) => sum + (r.amount - r.amountPaid), 0);
+  // Who to write to after a failed payment: once per number (its latest
+  // attempt, the list being newest first), and not someone who paid since.
+  const paidNumbers = new Set(paid.map((r) => r.whatsapp));
+  const toRetry = new Set<string>();
+  const seen = new Set<string>();
+  for (const r of registrations) {
+    if (seen.has(r.whatsapp)) continue;
+    seen.add(r.whatsapp);
+    const stalled =
+      r.status === "FAILED" || (r.status === "PENDING" && isStale(r.createdAt));
+    if (stalled && !paidNumbers.has(r.whatsapp)) toRetry.add(r.id);
+  }
+  const retriedThenPaid = (r: (typeof registrations)[number]) =>
+    r.status !== "PAID" && paidNumbers.has(r.whatsapp);
 
   return (
     <div className="space-y-8">
@@ -106,7 +148,7 @@ export default async function AdminWorkshopPage() {
                     "Date",
                     "Code",
                     "Code utilisé",
-                    "Envoyer le code",
+                    "WhatsApp",
                   ].map((label) => (
                     <th key={label} className="px-3 py-2 font-medium">
                       {label}
@@ -125,6 +167,11 @@ export default async function AdminWorkshopPage() {
                     <td className="px-3 py-2">
                       {STATUS_LABEL[r.status]}
                       {r.source === "ADMIN" && " (ajouté)"}
+                      {retriedThenPaid(r) && (
+                        <span className="text-muted-foreground block text-xs">
+                          a payé ensuite
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
                       {r.status === "PAID" ? (
@@ -163,7 +210,19 @@ export default async function AdminWorkshopPage() {
                       {r.discountUsedAt ? "Oui" : "Non"}
                     </td>
                     <td className="px-3 py-2">
-                      {r.discountCode && !r.discountUsedAt ? (
+                      {toRetry.has(r.id) ? (
+                        <a
+                          href={whatsappHref(
+                            r.whatsapp,
+                            retryMessage(r.fullName, workshop.startsAt),
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary font-medium whitespace-nowrap underline-offset-4 hover:underline"
+                        >
+                          Relancer
+                        </a>
+                      ) : r.discountCode && !r.discountUsedAt ? (
                         <a
                           href={whatsappHref(
                             r.whatsapp,
@@ -176,7 +235,7 @@ export default async function AdminWorkshopPage() {
                           rel="noopener noreferrer"
                           className="text-primary font-medium whitespace-nowrap underline-offset-4 hover:underline"
                         >
-                          WhatsApp
+                          Envoyer le code
                         </a>
                       ) : (
                         "—"
