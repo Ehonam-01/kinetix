@@ -20,7 +20,54 @@ const PAGES = [
   { value: "/businessplan", label: "Business Plan (ambassadeurs)" },
   { value: "/formations", label: "Catalogue des formations" },
   { value: "/register", label: "Inscription" },
+  { value: "/atelier-video-ia", label: "Masterclass vidéo IA" },
 ];
+
+// The choice that opens a field to paste the link of any page of the site.
+const CUSTOM_PAGE = "custom";
+
+const sameSite = (a: string, b: string) =>
+  a.replace(/^www\./, "") === b.replace(/^www\./, "");
+
+// The page to send people to: one from the list, or a pasted link (a full
+// address or a path) that has to stay on this site, the only place the
+// utm_* are read. Its own parameters and #anchor are kept; any utm_* it
+// already carries gives way to the ones built here.
+function targetUrl(
+  siteUrl: string,
+  page: string,
+  pasted: string,
+): { url: URL } | { error: string } {
+  const site = new URL(siteUrl);
+  if (page !== CUSTOM_PAGE) return { url: new URL(page, site) };
+  const input = pasted.trim();
+  if (!input) return { error: "Collez le lien de la page." };
+  // "kinetix-africa.com/..." pasted without its https://: an address, not
+  // a path of this site.
+  const withScheme =
+    input.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(input)
+      ? input
+      : `https://${input}`;
+  let url: URL;
+  try {
+    url = new URL(withScheme, site);
+  } catch {
+    return { error: "Ce lien n'est pas valide." };
+  }
+  if (
+    !["http:", "https:"].includes(url.protocol) ||
+    !sameSite(url.hostname, site.hostname)
+  ) {
+    return {
+      error: `Le lien doit mener à une page de ${site.hostname.replace(/^www\./, "")} : c'est là que les visites sont comptées.`,
+    };
+  }
+  const target = new URL(url.pathname + url.search + url.hash, site);
+  for (const key of [...target.searchParams.keys()]) {
+    if (key.startsWith("utm_")) target.searchParams.delete(key);
+  }
+  return { url: target };
+}
 
 const SELECT_CLASS =
   "border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-9 w-full rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3";
@@ -40,18 +87,26 @@ const slug = (s: string) =>
 export function LinkBuilder({ siteUrl }: { siteUrl: string }) {
   const [source, setSource] = useState("facebook");
   const [page, setPage] = useState("/");
+  const [pasted, setPasted] = useState("");
   const [campaign, setCampaign] = useState("");
   const [content, setContent] = useState("");
   const [copied, setCopied] = useState(false);
 
   const campaignSlug = slug(campaign);
-  const params = new URLSearchParams({
+  const params = {
     utm_source: source,
     utm_medium: source === "whatsapp" ? "message" : "paid_social",
     ...(campaignSlug ? { utm_campaign: campaignSlug } : {}),
     ...(slug(content) ? { utm_content: slug(content) } : {}),
-  });
-  const url = `${siteUrl}${page}?${params.toString()}`;
+  };
+  const target = targetUrl(siteUrl, page, pasted);
+  let url = "";
+  if ("url" in target) {
+    for (const [key, value] of Object.entries(params)) {
+      target.url.searchParams.set(key, value);
+    }
+    url = target.url.toString();
+  }
 
   async function copy() {
     try {
@@ -94,8 +149,22 @@ export function LinkBuilder({ siteUrl }: { siteUrl: string }) {
                 {p.label}
               </option>
             ))}
+            <option value={CUSTOM_PAGE}>Autre page : coller son lien</option>
           </select>
         </div>
+        {page === CUSTOM_PAGE && (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="lb-pasted">Lien de la page</Label>
+            <Input
+              id="lb-pasted"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              placeholder={`${siteUrl}/atelier-video-ia`}
+              inputMode="url"
+              autoFocus
+            />
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="lb-campaign">Nom de la campagne</Label>
           <Input
@@ -121,8 +190,12 @@ export function LinkBuilder({ siteUrl }: { siteUrl: string }) {
         </div>
       </div>
       <div className="bg-muted/50 space-y-2 rounded-xl border p-3">
-        <p className="text-sm break-all select-all">{url}</p>
-        <Button size="sm" onClick={copy} disabled={!campaignSlug}>
+        {"error" in target ? (
+          <p className="text-destructive text-sm">{target.error}</p>
+        ) : (
+          <p className="text-sm break-all select-all">{url}</p>
+        )}
+        <Button size="sm" onClick={copy} disabled={!campaignSlug || !url}>
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           {copied ? "Copié" : "Copier le lien"}
         </Button>
