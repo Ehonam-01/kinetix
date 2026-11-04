@@ -11,6 +11,7 @@ import {
 } from "@/schemas/workshop";
 import { registerForWorkshopAction } from "../actions";
 import { NON_REFUNDABLE_NOTE } from "./content";
+import { OperatorPicker } from "./payment-logos";
 import { useWorkshopLive, WhatsappButton } from "./workshop-live";
 
 type Values = Omit<WorkshopRegistrationInput, "amount">;
@@ -22,9 +23,6 @@ const EMPTY: Values = {
   operator: "" as WorkshopRegistrationInput["operator"],
   paymentPhone: "",
 };
-
-export const SELECT_CLASS =
-  "border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-11 w-full rounded-lg border bg-transparent px-2.5 py-1 text-base outline-none focus-visible:ring-3";
 
 export function RegistrationForm() {
   const { open, price, whatsappUrl, markClosed } = useWorkshopLive();
@@ -109,20 +107,11 @@ export function RegistrationForm() {
           onChange={(e) => set("email", e.target.value)}
         />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="atelier-operator">Opérateur Mobile Money</Label>
-        <select
-          id="atelier-operator"
-          required
-          className={SELECT_CLASS}
-          value={values.operator}
-          onChange={(e) => set("operator", e.target.value)}
-        >
-          <option value="">Choisir</option>
-          <option value="TOGOCELL">Mixx by Yas (ex T-Money)</option>
-          <option value="MOOV_MONEY">Moov Money (ex Flooz)</option>
-        </select>
-      </div>
+      <OperatorPicker
+        name="atelier-operator"
+        value={values.operator}
+        onChange={(operator) => set("operator", operator)}
+      />
       <div className="space-y-1.5">
         <Label htmlFor="atelier-payment-phone">
           Numéro Mobile Money (si différent du WhatsApp)

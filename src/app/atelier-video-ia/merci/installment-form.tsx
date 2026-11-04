@@ -10,7 +10,7 @@ import {
   type WorkshopInstallmentInput,
 } from "@/schemas/workshop";
 import { NON_REFUNDABLE_NOTE } from "../_components/content";
-import { SELECT_CLASS } from "../_components/registration-form";
+import { OperatorPicker } from "../_components/payment-logos";
 import { payMoreForWorkshopAction } from "../actions";
 
 // Another part towards a seat already held: any amount from the minimum
@@ -68,20 +68,11 @@ export function InstallmentForm({
           {left.toLocaleString("fr-FR")} F.
         </p>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="versement-operator">Opérateur Mobile Money</Label>
-        <select
-          id="versement-operator"
-          required
-          className={SELECT_CLASS}
-          value={operator}
-          onChange={(e) => setOperator(e.target.value)}
-        >
-          <option value="">Choisir</option>
-          <option value="TOGOCELL">Mixx by Yas (ex T-Money)</option>
-          <option value="MOOV_MONEY">Moov Money (ex Flooz)</option>
-        </select>
-      </div>
+      <OperatorPicker
+        name="versement-operator"
+        value={operator}
+        onChange={setOperator}
+      />
       <div className="space-y-1.5">
         <Label htmlFor="versement-phone">Numéro Mobile Money</Label>
         <Input
