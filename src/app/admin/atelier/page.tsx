@@ -62,6 +62,28 @@ function retryMessage(fullName: string, startsAt: Date) {
   ].join("\n\n");
 }
 
+// A seat held with something left to pay: a reminder, with the
+// participant's own reservation link (sent to their own number), where
+// they pay the rest.
+function balanceMessage(
+  registration: {
+    fullName: string;
+    amount: number;
+    amountPaid: number;
+    accessToken: string;
+  },
+  startsAt: Date,
+) {
+  const firstName = registration.fullName.trim().split(/\s+/)[0];
+  const fmt = (value: number) => `${value.toLocaleString("fr-FR")} F`;
+  return [
+    `Bonjour ${firstName}, c'est l'équipe Kinetix Africa.`,
+    `Ta place pour la Kinetix AI Video Masterclass du ${fmtDay(startsAt)} est bien réservée. Tu as versé ${fmt(registration.amountPaid)} sur ${fmt(registration.amount)} : il te reste ${fmt(registration.amount - registration.amountPaid)} à payer.`,
+    `Tu peux faire ton prochain versement ici : ${getSiteEnv().SITE_URL}/atelier-video-ia/merci?t=${registration.accessToken}`,
+    `Tu peux aussi régler le reste sur place le jour J.`,
+  ].join("\n\n");
+}
+
 // A prompt left this long without an answer won't be validated anymore.
 const STALE_PENDING_MS = 30 * 60 * 1000;
 
@@ -93,6 +115,17 @@ export default async function AdminWorkshopPage() {
       r.status === "FAILED" || (r.status === "PENDING" && isStale(r.createdAt));
     if (stalled && !paidNumbers.has(r.whatsapp)) toRetry.add(r.id);
   }
+  // The number opens WhatsApp with what this person needs to hear: help
+  // after a failed payment, a reminder of what is left, or nothing.
+  const contactMessage = (r: (typeof registrations)[number]) => {
+    if (r.status === "PAID" && r.amountPaid < r.amount) {
+      return balanceMessage(r, workshop.startsAt);
+    }
+    if (r.status !== "PAID" && !paidNumbers.has(r.whatsapp)) {
+      return retryMessage(r.fullName, workshop.startsAt);
+    }
+    return undefined;
+  };
   const retriedThenPaid = (r: (typeof registrations)[number]) =>
     r.status !== "PAID" && paidNumbers.has(r.whatsapp);
 
@@ -161,7 +194,14 @@ export default async function AdminWorkshopPage() {
                   <tr key={r.id}>
                     <td className="px-3 py-2">{r.fullName}</td>
                     <td className="px-3 py-2 whitespace-nowrap">
-                      {formatWhatsapp(r.whatsapp)}
+                      <a
+                        href={whatsappHref(r.whatsapp, contactMessage(r))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        {formatWhatsapp(r.whatsapp)}
+                      </a>
                     </td>
                     <td className="px-3 py-2">{r.city || "—"}</td>
                     <td className="px-3 py-2">
