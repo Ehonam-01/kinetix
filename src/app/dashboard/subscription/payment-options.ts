@@ -76,6 +76,8 @@ export async function getPaymentOptions(userId: string) {
 
   return {
     price,
+    // The "tarif normal", shown struck through next to the price.
+    regularPrice: offer.nextPrice,
     // The programmed end of the launch price, shown above the methods.
     launchOffer:
       offer.endsAt && offer.nextPrice

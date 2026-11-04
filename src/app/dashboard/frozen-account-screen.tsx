@@ -11,6 +11,7 @@ import { PendingPaymentWatcher } from "./subscription/pending-payment-watcher";
 import { LaunchOfferNotice } from "./subscription/launch-offer-notice";
 import { SubscriptionPanel } from "./subscription/subscription-panel";
 import type { PaymentOptions } from "./subscription/payment-options";
+import { PriceTag } from "./subscription/price-tag";
 import { LogoutButton } from "./logout-button";
 
 // Replaces the entire dashboard shell (sidebar, topbar, every nested route)
@@ -47,6 +48,7 @@ export function FrozenAccountScreen({
 }) {
   const panel = (
     <div className="space-y-4">
+      <PriceTag price={options.price} regularPrice={options.regularPrice} />
       {options.launchOffer && <LaunchOfferNotice offer={options.launchOffer} />}
       <SubscriptionPanel
         price={options.price}

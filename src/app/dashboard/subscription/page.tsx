@@ -4,6 +4,7 @@ import { CountrySupportHint } from "@/components/support/country-support-hint";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { requireUser } from "@/services/auth/current-user";
 import { getPaymentOptions } from "./payment-options";
+import { PriceTag } from "./price-tag";
 import {
   Card,
   CardContent,
@@ -31,6 +32,7 @@ export default async function SubscriptionPage() {
     expiredPlan,
     watchedPaymentId,
     launchOffer,
+    regularPrice,
   } = options;
 
   return (
@@ -112,13 +114,14 @@ export default async function SubscriptionPage() {
               ? "Renouveler l'abonnement"
               : "Souscrire"}
           </CardTitle>
-          <CardDescription>
-            {price.toLocaleString("fr-FR")} F CFA / an.
-            {status.active &&
-              " Un renouvellement anticipé prolonge l'abonnement à partir de sa date d'expiration actuelle, sans perte de jours payés."}
-            {status.inGracePeriod &&
-              " La nouvelle année démarre à la date d'expiration de votre abonnement précédent."}
-          </CardDescription>
+          <PriceTag price={price} regularPrice={regularPrice} />
+          {(status.active || status.inGracePeriod) && (
+            <CardDescription>
+              {status.active
+                ? "Un renouvellement anticipé prolonge l'abonnement à partir de sa date d'expiration actuelle, sans perte de jours payés."
+                : "La nouvelle année démarre à la date d'expiration de votre abonnement précédent."}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {launchOffer && <LaunchOfferNotice offer={launchOffer} />}
