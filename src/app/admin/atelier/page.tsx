@@ -1,6 +1,7 @@
 import { db } from "@/db/client";
 import { getSiteEnv } from "@/config/env.site";
 import { formatWhatsapp, whatsappHref } from "@/lib/whatsapp";
+import { onePerParticipant } from "@/lib/workshop-participants";
 import { getWorkshop, listRegistrations } from "@/repositories/workshops";
 import { requireAdmin } from "@/services/auth/current-user";
 import { buttonVariants } from "@/components/ui/button";
@@ -103,31 +104,24 @@ export default async function AdminWorkshopPage() {
   const paid = registrations.filter((r) => r.status === "PAID");
   const owing = paid.filter((r) => r.amountPaid < r.amount);
   const owed = owing.reduce((sum, r) => sum + (r.amount - r.amountPaid), 0);
-  // Who to write to after a failed payment: once per number (its latest
-  // attempt, the list being newest first), and not someone who paid since.
-  const paidNumbers = new Set(paid.map((r) => r.whatsapp));
-  const toRetry = new Set<string>();
-  const seen = new Set<string>();
-  for (const r of registrations) {
-    if (seen.has(r.whatsapp)) continue;
-    seen.add(r.whatsapp);
-    const stalled =
-      r.status === "FAILED" || (r.status === "PENDING" && isStale(r.createdAt));
-    if (stalled && !paidNumbers.has(r.whatsapp)) toRetry.add(r.id);
-  }
+  // The list shows each person once (explicit user decision), however many
+  // times they tried: a row still not PAID is someone who never paid.
+  const participants = onePerParticipant(registrations);
+  type Participant = (typeof participants)[number];
+  // Who to write to after a failed payment.
+  const stalled = (r: Participant) =>
+    r.status === "FAILED" || (r.status === "PENDING" && isStale(r.createdAt));
   // The number opens WhatsApp with what this person needs to hear: help
   // after a failed payment, a reminder of what is left, or nothing.
-  const contactMessage = (r: (typeof registrations)[number]) => {
+  const contactMessage = (r: Participant) => {
     if (r.status === "PAID" && r.amountPaid < r.amount) {
       return balanceMessage(r, workshop.startsAt);
     }
-    if (r.status !== "PAID" && !paidNumbers.has(r.whatsapp)) {
+    if (r.status !== "PAID") {
       return retryMessage(r.fullName, workshop.startsAt);
     }
     return undefined;
   };
-  const retriedThenPaid = (r: (typeof registrations)[number]) =>
-    r.status !== "PAID" && paidNumbers.has(r.whatsapp);
 
   return (
     <div className="space-y-8">
@@ -157,7 +151,7 @@ export default async function AdminWorkshopPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">Inscrits ({registrations.length})</h2>
+          <h2 className="font-semibold">Inscrits ({participants.length})</h2>
           <a
             href="/admin/atelier/export"
             className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -165,7 +159,7 @@ export default async function AdminWorkshopPage() {
             Exporter en CSV
           </a>
         </div>
-        {registrations.length === 0 ? (
+        {participants.length === 0 ? (
           <p className="text-muted-foreground text-sm">Aucune inscription.</p>
         ) : (
           <div className="overflow-x-auto rounded-2xl border">
@@ -190,7 +184,7 @@ export default async function AdminWorkshopPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {registrations.map((r) => (
+                {participants.map((r) => (
                   <tr key={r.id}>
                     <td className="px-3 py-2">{r.fullName}</td>
                     <td className="px-3 py-2 whitespace-nowrap">
@@ -207,9 +201,14 @@ export default async function AdminWorkshopPage() {
                     <td className="px-3 py-2">
                       {STATUS_LABEL[r.status]}
                       {r.source === "ADMIN" && " (ajouté)"}
-                      {retriedThenPaid(r) && (
+                      {r.attempts > 1 && (
                         <span className="text-muted-foreground block text-xs">
-                          a payé ensuite
+                          {r.attempts} tentatives
+                        </span>
+                      )}
+                      {r.paidCount > 1 && (
+                        <span className="text-destructive block text-xs font-medium">
+                          Payé {r.paidCount} fois : à rembourser
                         </span>
                       )}
                     </td>
@@ -250,7 +249,7 @@ export default async function AdminWorkshopPage() {
                       {r.discountUsedAt ? "Oui" : "Non"}
                     </td>
                     <td className="px-3 py-2">
-                      {toRetry.has(r.id) ? (
+                      {stalled(r) ? (
                         <a
                           href={whatsappHref(
                             r.whatsapp,
