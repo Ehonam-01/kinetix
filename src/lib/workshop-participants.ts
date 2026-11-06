@@ -2,7 +2,7 @@
 // register.ts), so someone who tried three times appears three times. The
 // admin list shows each person once, by WhatsApp number: their paid seat if
 // they have one, else their latest attempt. Rows come newest first
-// (listRegistrations), and so does the result.
+// (listRegistrations).
 export function onePerParticipant<
   T extends { whatsapp: string; status: string },
 >(registrations: T[]) {
@@ -26,5 +26,11 @@ export function onePerParticipant<
     const shown = kept.status !== "PAID" && r.status === "PAID" ? r : kept;
     byNumber.set(r.whatsapp, { ...shown, attempts, paidCount });
   }
-  return [...byNumber.values()];
+  // Paid seats first, then everyone who never paid (explicit user
+  // decision), each group newest first.
+  const people = [...byNumber.values()];
+  return [
+    ...people.filter((p) => p.status === "PAID"),
+    ...people.filter((p) => p.status !== "PAID"),
+  ];
 }

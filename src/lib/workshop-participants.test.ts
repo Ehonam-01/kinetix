@@ -31,6 +31,21 @@ describe("Workshop participants", () => {
     ]);
   });
 
+  it("lists paid seats first, then the others, each newest first", () => {
+    const rows = [
+      row("d", "22890000004", "FAILED"),
+      row("c", "22890000003", "PAID"),
+      row("b", "22890000002", "PENDING"),
+      row("a", "22890000001", "PAID"),
+    ];
+    expect(onePerParticipant(rows).map((r) => r.id)).toEqual([
+      "c",
+      "a",
+      "d",
+      "b",
+    ]);
+  });
+
   it("counts a number paid twice, to refund one", () => {
     const rows = [
       row("b", "22890000000", "PAID"),
