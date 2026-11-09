@@ -51,7 +51,8 @@ export default async function NetworkPage(
   );
 
   const [network, ancestors, searchResults] = await Promise.all([
-    getNetworkView(db, profile.id, maxDepth),
+    // Above level 1, the member's own network at that level.
+    getNetworkView(db, profile.id, maxDepth, selectedLevel),
     getAncestorNames(db, profile.id),
     query ? searchDownlineMembers(db, profile.id, query) : Promise.resolve([]),
   ]);
@@ -64,7 +65,7 @@ export default async function NetworkPage(
   const searchedMember =
     query && searchResults.length === 1 ? searchResults[0] : null;
   const searchedMemberNetwork = searchedMember
-    ? await getNetworkView(db, searchedMember.userId, maxDepth)
+    ? await getNetworkView(db, searchedMember.userId, maxDepth, selectedLevel)
     : null;
 
   if (!network) {

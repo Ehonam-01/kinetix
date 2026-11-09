@@ -131,3 +131,43 @@ export async function findNetworkRootUserId(
   `);
   return rows[0]?.userId ?? null;
 }
+
+// Everyone below the member in the level 1 tree, at any depth, who has
+// reached levelCode, with the side of the member they are on, in the
+// order they reached it: what lib/level-network.ts arranges into the
+// member's own network at that level.
+export async function listLevelArrivals(
+  executor: Executor,
+  userId: string,
+  levelCode: number,
+) {
+  return executor.execute<{ userId: string; side: "LEFT" | "RIGHT" }>(sql`
+    SELECT d.user_id AS "userId", c.binary_position AS "side"
+    FROM binary_nodes x
+    JOIN binary_nodes d ON d.path <@ x.path AND d.id <> x.id
+    JOIN binary_nodes c ON c.path = subpath(d.path, 0, nlevel(x.path) + 1)
+    JOIN member_levels ml
+      ON ml.user_id = d.user_id AND ml.level_code = ${levelCode}
+    WHERE x.user_id = ${userId}
+    ORDER BY ml.started_at, ml.id
+  `);
+}
+
+// The members above this one in the level 1 tree, at any depth, who have
+// reached levelCode: whose own network at that level they may join.
+export async function listAncestorsAtLevel(
+  executor: Executor,
+  userId: string,
+  levelCode: number,
+) {
+  const rows = await executor.execute<{ userId: string }>(sql`
+    SELECT a.user_id AS "userId"
+    FROM binary_nodes y
+    JOIN binary_nodes a ON a.path @> y.path AND a.id <> y.id
+    JOIN member_levels ml
+      ON ml.user_id = a.user_id AND ml.level_code = ${levelCode}
+    WHERE y.user_id = ${userId}
+    ORDER BY a.depth DESC
+  `);
+  return rows.map((r) => r.userId);
+}

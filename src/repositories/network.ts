@@ -3,10 +3,12 @@ import { eq, inArray } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { memberLevels } from "@/db/schema/member-levels";
 import { profiles } from "@/db/schema/profiles";
+import { arrangeLevelNetwork, type LevelSlot } from "@/lib/level-network";
 import {
   findAncestors,
   findBinaryNodeByUserId,
   findDescendantsAtDepths,
+  listLevelArrivals,
   searchDescendants,
   type BinaryNodeWithGeneration,
 } from "./binary-nodes";
@@ -73,13 +75,20 @@ function toChild(
 // levels.config.generationSizes) rather than a fixed constant, since a
 // member's own generation structure now differs by which level they're
 // viewing.
+//
+// Above level 1, the member's own network at that level
+// (lib/level-network.ts), not the level 1 tree.
 export async function getNetworkView(
   executor: Executor,
   userId: string,
   maxDepth: number,
+  levelCode = 1,
 ): Promise<NetworkView | null> {
   const node = await findBinaryNodeByUserId(executor, userId);
   if (!node) return null;
+  if (levelCode > 1) {
+    return getLevelNetworkView(executor, userId, maxDepth, levelCode);
+  }
 
   const depths = Array.from({ length: maxDepth }, (_, i) => i + 1);
   const [self, descendants] = await Promise.all([
@@ -183,4 +192,69 @@ export async function searchDownlineMembers(
     ...m,
     currentLevelCode: levelByUserId.get(m.userId) ?? null,
   }));
+}
+
+async function getLevelNetworkView(
+  executor: Executor,
+  userId: string,
+  generations: number,
+  levelCode: number,
+): Promise<NetworkView> {
+  const arrivals = await listLevelArrivals(executor, userId, levelCode);
+  const slots = arrangeLevelNetwork([...arrivals], generations);
+  const relatedUserIds = slots.map((slot) => slot.userId);
+  const [self, relatedProfiles, levelByUserId] = await Promise.all([
+    executor.query.profiles.findFirst({ where: eq(profiles.id, userId) }),
+    relatedUserIds.length
+      ? executor.query.profiles.findMany({
+          where: inArray(profiles.id, relatedUserIds),
+        })
+      : Promise.resolve([]),
+    getHighestLevelCodes(executor, [userId, ...relatedUserIds]),
+  ]);
+  const profileById = new Map(relatedProfiles.map((p) => [p.id, p]));
+
+  // The places right under each one (null: the network's owner), and how
+  // many sit below a place, in this network.
+  const byParent = new Map<string | null, LevelSlot[]>();
+  for (const slot of slots) {
+    byParent.set(slot.parentUserId, [
+      ...(byParent.get(slot.parentUserId) ?? []),
+      slot,
+    ]);
+  }
+  const below = (id: string | null, side: "LEFT" | "RIGHT"): number =>
+    (byParent.get(id) ?? [])
+      .filter((slot) => slot.position === side)
+      .reduce(
+        (sum, slot) =>
+          sum + 1 + below(slot.userId, "LEFT") + below(slot.userId, "RIGHT"),
+        0,
+      );
+
+  // The tree finds each child by its position.
+  function build(parent: string | null): NetworkChild[] {
+    return (byParent.get(parent) ?? []).map((slot) => {
+      const profile = profileById.get(slot.userId);
+      return {
+        id: `${levelCode}:${slot.userId}`,
+        userId: slot.userId,
+        fullName: profile?.fullName ?? "Membre",
+        username: profile?.username ?? "—",
+        position: slot.position,
+        leftSubtreeCount: below(slot.userId, "LEFT"),
+        rightSubtreeCount: below(slot.userId, "RIGHT"),
+        currentLevelCode: levelByUserId.get(slot.userId) ?? null,
+        children: build(slot.userId),
+      };
+    });
+  }
+
+  return {
+    username: self?.username ?? "—",
+    currentLevelCode: levelByUserId.get(userId) ?? null,
+    leftSubtreeCount: below(null, "LEFT"),
+    rightSubtreeCount: below(null, "RIGHT"),
+    children: build(null),
+  };
 }

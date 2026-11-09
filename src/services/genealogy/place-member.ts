@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { binaryNodes } from "@/db/schema/binary-nodes";
 import { childPath, toLtreeLabel } from "./ltree";
@@ -59,9 +59,20 @@ export async function placeMember(
       ),
     });
 
+  // Each leg counted from the tree itself rather than read from the
+  // stored counters (see findPlacementSlot).
+  const subtreeSize = async (child: PlacementNode) => {
+    const [row] = await tx
+      .select({ value: count() })
+      .from(binaryNodes)
+      .where(sql`${binaryNodes.path} <@ ${child.path}::ltree`);
+    return row?.value ?? 0;
+  };
+
   const { parent, position } = await findPlacementSlot(
     sponsorNode as PlacementNode,
     getChild,
+    subtreeSize,
   );
 
   const id = randomUUID();

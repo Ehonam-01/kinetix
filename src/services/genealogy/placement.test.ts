@@ -12,6 +12,41 @@ function fakeTree(nodes: Record<string, FakeNode>) {
 }
 
 describe("findPlacementSlot", () => {
+  it("weighs each leg by counting it, whatever the stored counters say", async () => {
+    // A's counters claim the left leg is the heavier one; it really holds
+    // one member against three on the right.
+    const A: FakeNode = {
+      id: "A",
+      path: "a",
+      depth: 0,
+      leftSubtreeCount: 33,
+      rightSubtreeCount: 32,
+      left: "B",
+      right: "C",
+    };
+    const B: FakeNode = {
+      id: "B",
+      path: "a.b",
+      depth: 1,
+      leftSubtreeCount: 0,
+      rightSubtreeCount: 0,
+    };
+    const C: FakeNode = {
+      id: "C",
+      path: "a.c",
+      depth: 1,
+      leftSubtreeCount: 1,
+      rightSubtreeCount: 1,
+    };
+    const sizes: Record<string, number> = { B: 1, C: 3 };
+    const slot = await findPlacementSlot(
+      A,
+      fakeTree({ A, B, C }),
+      async (child) => sizes[child.id],
+    );
+    expect(slot).toEqual({ parent: B, position: "LEFT" });
+  });
+
   it("fills the sponsor's LEFT slot first", async () => {
     const A: FakeNode = {
       id: "A",

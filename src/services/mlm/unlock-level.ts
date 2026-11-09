@@ -10,7 +10,10 @@ import {
   findAncestors,
   findBinaryNodeByUserId,
   findDescendantsAtDepths,
+  listAncestorsAtLevel,
+  listLevelArrivals,
 } from "@/repositories/binary-nodes";
+import { arrangeLevelNetwork, countByGeneration } from "@/lib/level-network";
 import {
   computeGenerationCommission,
   getEffectiveGenerationRule,
@@ -225,6 +228,39 @@ export async function incrementGenerationBv(
   await maybeCompleteGeneration(tx, row);
 }
 
+// A level above 1 is counted on the member's own network at that level
+// (lib/level-network.ts), rebuilt from who has reached it below them:
+// each generation's count is raised to what that network holds, never
+// lowered, and checked for completion like any increment.
+async function syncLevelProgress(
+  tx: Executor,
+  userId: string,
+  levelCode: number,
+  generations: number,
+) {
+  const arrivals = await listLevelArrivals(tx, userId, levelCode);
+  const counts = countByGeneration(
+    arrangeLevelNetwork([...arrivals], generations),
+    generations,
+  );
+  for (const [index, count] of counts.entries()) {
+    const [row] = await tx
+      .update(generationProgress)
+      .set({
+        currentCount: sql`greatest(${generationProgress.currentCount}, ${count})`,
+      })
+      .where(
+        and(
+          eq(generationProgress.userId, userId),
+          eq(generationProgress.levelCode, levelCode),
+          eq(generationProgress.generation, index + 1),
+        ),
+      )
+      .returning();
+    if (row) await maybeCompleteGeneration(tx, row);
+  }
+}
+
 async function completeLevel(tx: Executor, userId: string, levelCode: number) {
   await tx
     .update(memberLevels)
@@ -320,6 +356,22 @@ export async function unlockLevel(
     throw new Error(
       "Ce membre n'a pas encore de position dans l'arbre binaire.",
     );
+  }
+
+  if (levelCode > 1) {
+    // Above level 1, each member's own network at the level
+    // (lib/level-network.ts): theirs, holding whoever below them reached
+    // it before they did, and that of everyone above them who has
+    // reached it, which this member now joins.
+    await syncLevelProgress(tx, userId, levelCode, gens.length);
+    for (const ancestorId of await listAncestorsAtLevel(
+      tx,
+      userId,
+      levelCode,
+    )) {
+      await syncLevelProgress(tx, ancestorId, levelCode, gens.length);
+    }
+    return memberLevel;
   }
 
   // (a) Rattrapage — some of this member's fixed descendant positions may
