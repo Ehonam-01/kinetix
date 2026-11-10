@@ -5,6 +5,7 @@ import {
   getLaunchOffer,
   lastLaunchDayLabel,
 } from "@/services/pricing/launch-offer";
+import { listHomeReviews } from "@/services/lms/course-reviews";
 import { SITE_NAME } from "@/config/site";
 import { Navbar } from "./_components/navbar";
 import { HeroSection } from "./_components/hero-section";
@@ -12,6 +13,7 @@ import { ProblemSection } from "./_components/problem-section";
 import { ValueSection } from "./_components/value-section";
 import { GoalSection } from "./_components/goal-section";
 import { FeaturedCourses } from "./_components/featured-courses";
+import { ReviewsBand } from "./_components/reviews-band";
 import { AiSection } from "./_components/ai-section";
 import { CommunityMentorshipSection } from "./_components/community-mentorship-section";
 import { ProjectsOpportunitiesSection } from "./_components/projects-opportunities-section";
@@ -56,9 +58,10 @@ export const metadata: Metadata = {
 export const revalidate = 600;
 
 export default async function HomePage() {
-  const [courses, launchOffer] = await Promise.all([
+  const [courses, launchOffer, reviews] = await Promise.all([
     listPublishedCoursesForMarketing(db, 6),
     getLaunchOffer(db),
+    listHomeReviews(db),
   ]);
 
   return (
@@ -70,6 +73,7 @@ export default async function HomePage() {
         <ValueSection />
         <GoalSection />
         <FeaturedCourses courses={courses} />
+        <ReviewsBand reviews={reviews} />
         <AiSection />
         <CommunityMentorshipSection />
         <ProjectsOpportunitiesSection />

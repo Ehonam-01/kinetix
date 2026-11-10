@@ -28,9 +28,10 @@ function getReducedMotionServerSnapshot() {
 }
 
 // One of the few animated pieces on this page (the brief explicitly warns
-// against over-animating) — fades a section up the first time it crosses
-// into view. useSyncExternalStore (not a bare useEffect+useState "mounted"
-// check) is what keeps this SSR-safe and avoids the classic
+// against over-animating) — brings a section up out of a slight blur the
+// first time it crosses into view. useSyncExternalStore (not a bare
+// useEffect+useState "mounted" check) is what keeps this SSR-safe and
+// avoids the classic
 // set-state-in-effect footgun for reading prefers-reduced-motion.
 export function Reveal({
   children,
@@ -73,8 +74,13 @@ export function Reveal({
     <div
       ref={ref}
       className={cn(
-        "transition-all duration-700 ease-out",
-        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
+        "transition-[opacity,translate,scale,filter] duration-700 ease-[cubic-bezier(0.2,0.7,0.2,1)]",
+        // Comes up out of a slight blur and shrink. Once in, filter-none
+        // (not blur-0): any filter would make the block the containing box
+        // of fixed-position descendants.
+        visible
+          ? "translate-y-0 scale-100 opacity-100 filter-none"
+          : "translate-y-7 scale-[0.96] opacity-0 blur-[6px]",
         className,
       )}
       style={{ transitionDelay: visible ? `${delayMs}ms` : "0ms" }}

@@ -434,3 +434,49 @@ html.kx-launch-on .kx-launch {
       0 0 40px -4px color-mix(in oklab, var(--brand-accent) 60%, transparent);
   }
 }
+
+/* Home page reviews band (app/_components/reviews-band.tsx): the list is
+   rendered twice side by side and the track slides by exactly one copy, so
+   the loop joins up. Each list carries its own trailing gap for that. Slow
+   on purpose (ambient, not demanding attention), paused on hover, faded at
+   both edges. Under reduced motion: no movement, scrolled by hand. */
+@keyframes kx-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.kx-marquee {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 6%,
+    #000 94%,
+    transparent
+  );
+}
+.kx-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: kx-marquee 60s linear infinite;
+}
+.kx-marquee:hover .kx-marquee-track {
+  animation-play-state: paused;
+}
+.kx-marquee-list {
+  display: flex;
+  gap: 1.5rem;
+  padding-right: 1.5rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kx-marquee {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .kx-marquee-track {
+    animation: none;
+    padding-inline: 1rem;
+  }
+  .kx-marquee-list[aria-hidden] {
+    display: none;
+  }
+}

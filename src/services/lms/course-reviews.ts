@@ -166,6 +166,41 @@ export async function listCourseReviews(
   }));
 }
 
+// The home page's reviews band: recent visible reviews of any course with a
+// real comment and 4 stars or more, from members still on the platform,
+// first name only. Read as-is — never padded with invented ones.
+export async function listHomeReviews(executor: Executor, limit = 12) {
+  const rows = await executor
+    .select({
+      id: courseReviews.id,
+      rating: courseReviews.rating,
+      comment: courseReviews.comment,
+      courseTitle: courses.title,
+      fullName: profiles.fullName,
+    })
+    .from(courseReviews)
+    .innerJoin(profiles, eq(profiles.id, courseReviews.userId))
+    .innerJoin(courses, eq(courses.id, courseReviews.courseId))
+    .where(
+      and(
+        isNull(courseReviews.hiddenAt),
+        sql`${courseReviews.rating} >= 4`,
+        sql`length(trim(coalesce(${courseReviews.comment}, ''))) >= 20`,
+        sql`${profiles.status} <> 'DELETED'`,
+        eq(courses.status, "PUBLISHED"),
+      ),
+    )
+    .orderBy(desc(courseReviews.updatedAt))
+    .limit(limit);
+  return rows.map(({ fullName, comment, ...r }) => ({
+    ...r,
+    comment: (comment ?? "").trim(),
+    author: fullName.trim().split(/\s+/)[0] || "Membre",
+  }));
+}
+
+export type HomeReview = Awaited<ReturnType<typeof listHomeReviews>>[number];
+
 // ----------------------------------------------------------------- admin
 
 export async function listReviewsForAdmin(limit = 100) {
