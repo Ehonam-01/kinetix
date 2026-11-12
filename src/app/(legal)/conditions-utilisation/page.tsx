@@ -130,8 +130,7 @@ export default function ConditionsUtilisationPage() {
             Les commissions restent dues pendant la période de grâce. À compter
             de la désactivation, le compte ne perçoit plus aucune commission :
             celles qui lui seraient revenues pendant cette période sont
-            définitivement perdues, y compris en cas de réactivation
-            ultérieure.
+            définitivement perdues, y compris en cas de réactivation ultérieure.
           </li>
           <li>
             Seul le support peut réactiver un compte désactivé. La réactivation
@@ -166,21 +165,22 @@ export default function ConditionsUtilisationPage() {
           au titre d&apos;un paiement remboursé sont annulées.
         </p>
         <p>
-          <strong>Paiement en plusieurs fois (cagnotte).</strong> Lors de sa
-          première souscription, le Membre peut régler l&apos;Abonnement en
-          plusieurs versements, au prix en vigueur à l&apos;ouverture de la
-          cagnotte. L&apos;Abonnement n&apos;est activé, et aucun contenu
-          n&apos;est accessible, qu&apos;une fois la totalité du prix versée.
-          Le Membre dispose de trois (3) mois à compter de son premier
-          versement pour compléter la cagnotte. Passé ce délai, la cagnotte
-          est clôturée, l&apos;inscription n&apos;est pas activée et les
-          sommes versées sont remboursées sur le compte mobile money du
-          dernier versement, déduction faite des frais de retrait en vigueur.
-          Après une cagnotte clôturée, l&apos;Abonnement ne peut plus être
-          réglé qu&apos;en une seule fois. La cagnotte ne peut servir à aucun
-          renouvellement : si l&apos;Abonnement est réglé par un autre moyen
-          alors qu&apos;une cagnotte est en cours, celle-ci est clôturée et
-          remboursée dans les mêmes conditions.
+          <strong>Paiement en 3 fois.</strong> Lors de sa première souscription,
+          le Membre peut régler l&apos;Abonnement en trois paiements, au prix en
+          vigueur au premier paiement : une première tranche de
+          25&nbsp;000&nbsp;F, puis le reste en deux tranches égales, qu&apos;il
+          règle quand il le souhaite, séparément ou en une fois, dans les trois
+          (3) mois qui suivent la première. L&apos;Abonnement est activé dès la
+          première tranche, jusqu&apos;à la fin de ce délai, puis prolongé à une
+          année complète à compter de la première tranche dès que le prix est
+          entièrement réglé. Si le solde n&apos;est pas réglé dans le délai,
+          l&apos;accès au compte est suspendu, dans les mêmes conditions
+          qu&apos;un Abonnement expiré, jusqu&apos;à son règlement ; les sommes
+          déjà versées ne sont pas remboursées. Tant qu&apos;un paiement en 3
+          fois est en cours, l&apos;Abonnement ne peut pas être réglé ni
+          renouvelé d&apos;une autre manière. Une cagnotte (versements libres)
+          ouverte avant la mise en place du paiement en 3 fois reste soumise aux
+          règles en vigueur à son ouverture.
         </p>
       </Section>
 
@@ -339,15 +339,14 @@ export default function ConditionsUtilisationPage() {
       <Section title="13. Droit applicable et litiges">
         <p>
           Les présentes conditions sont régies par le droit anglais (droit de
-          l&apos;Angleterre et du pays de Galles). En cas de
-          différend, les parties recherchent d&apos;abord une solution amiable
-          en écrivant à{" "}
+          l&apos;Angleterre et du pays de Galles). En cas de différend, les
+          parties recherchent d&apos;abord une solution amiable en écrivant à{" "}
           <a href={`mailto:${e.email}`} className="underline">
             {e.email}
           </a>
           . À défaut d&apos;accord, le litige relève des tribunaux{" "}
-          {e.jurisdiction}. Ces choix ne privent pas le Membre qui agit en
-          tant que consommateur de la protection que lui accordent les règles
+          {e.jurisdiction}. Ces choix ne privent pas le Membre qui agit en tant
+          que consommateur de la protection que lui accordent les règles
           impératives de son pays de résidence, ni de la possibilité de saisir
           les tribunaux de ce pays lorsque la loi le lui permet.
         </p>

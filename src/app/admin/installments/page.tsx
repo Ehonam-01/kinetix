@@ -119,6 +119,7 @@ export default async function AdminInstallmentsPage() {
                   <span className="text-muted-foreground">({username})</span>
                 </p>
                 <p className="text-muted-foreground tabular-nums">
+                  {plan.split ? "En 3 fois · " : "Cagnotte · "}
                   {fmt(plan.paidAmount)} / {fmt(plan.targetAmount)} · échéance{" "}
                   {fmtDate(plan.deadlineAt)}
                 </p>

@@ -17,6 +17,7 @@ import {
 } from "@/services/wallet/otp";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
 import { escapeHtml } from "@/lib/escape-html";
+import { assertNoOpenSplitPlan } from "./open-split-plan";
 
 const MAX_REQUESTS_PER_WALLET_PER_HOUR = 3;
 const THIRD_PARTY_OTP_TTL_MINUTES = 30;
@@ -41,6 +42,7 @@ export async function requestSubscriptionWithWallet(input: {
   walletUsername: string;
   visitorToken?: string;
 }) {
+  await assertNoOpenSplitPlan(db, input.buyerUserId);
   const amount = await getCurrentParameterValue(
     db,
     "subscription.price_in_cfa",

@@ -13,6 +13,7 @@ import {
   getLaunchOffer,
   lastLaunchDayLabel,
 } from "@/services/pricing/launch-offer";
+import { splitPaymentChoices, splitTranches } from "@/lib/split-payment";
 import {
   INSTALLMENT_MONTHS,
   depositBounds,
@@ -57,6 +58,8 @@ export async function getPaymentOptions(userId: string) {
   // (installmentIneligibility), through PayDunya
   // (services/subscriptions/installments.ts).
   const openPlan = latestPlan?.status === "OPEN" ? latestPlan : null;
+  // A new plan is always a payment in 3 times (lib/split-payment.ts).
+  const newPlanChoices = splitPaymentChoices(price, 0, 0);
   const installments =
     activeProvider === "PAYDUNYA" && !ineligibility
       ? {
@@ -65,14 +68,27 @@ export async function getPaymentOptions(userId: string) {
                 targetAmount: openPlan.targetAmount,
                 paidAmount: openPlan.paidAmount,
                 deadlineAt: openPlan.deadlineAt?.toISOString() ?? null,
+                split: openPlan.split,
+                overdue:
+                  !!openPlan.deadlineAt &&
+                  openPlan.deadlineAt.getTime() < Date.now(),
               }
             : null,
           bounds: openPlan
             ? await depositBounds(db, openPlan)
-            : { min: Math.min(1000, price), max: price },
+            : {
+                min: newPlanChoices[0] ?? 0,
+                max: newPlanChoices[0] ?? 0,
+                choices: newPlanChoices,
+              },
           months: INSTALLMENT_MONTHS,
+          tranches: splitTranches(openPlan?.targetAmount ?? price),
         }
       : undefined;
+  // Paying the rest of a payment in 3 times already started: that is all
+  // this member can pay until it's settled.
+  const settling =
+    !!openPlan?.split && openPlan.paidAmount > 0 && !!installments;
 
   return {
     price,
@@ -92,6 +108,7 @@ export async function getPaymentOptions(userId: string) {
         : null,
     activeProvider,
     installments,
+    settling,
     workshopDiscount,
     // "Autre pays / carte bancaire": switched on by the admin, and SasPay
     // configured on the server.

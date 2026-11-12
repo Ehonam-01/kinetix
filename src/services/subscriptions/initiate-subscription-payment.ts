@@ -14,6 +14,7 @@ import {
   releaseWorkshopDiscount,
   reserveWorkshopDiscount,
 } from "@/services/workshops/discount";
+import { assertNoOpenSplitPlan } from "./open-split-plan";
 
 function splitFullName(fullName: string): {
   firstName: string;
@@ -62,6 +63,7 @@ export async function initiateSubscriptionPayment(input: {
   // what they paid for the workshop off the full price. Not for a deposit.
   workshopCode?: string;
 }) {
+  if (!input.installment) await assertNoOpenSplitPlan(db, input.buyerUserId);
   const workshopCode =
     !input.installment && input.workshopCode
       ? normalizeWorkshopCode(input.workshopCode)

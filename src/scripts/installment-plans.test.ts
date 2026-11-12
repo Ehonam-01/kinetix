@@ -204,10 +204,12 @@ describe("installment plans (pglite)", () => {
     );
   });
 
-  it("checks each deposit's amount", async () => {
+  it("checks each deposit's amount on a cagnotte opened before", async () => {
     const { initiateInstallmentDeposit } =
       await import("@/services/subscriptions/installments");
     const member = await makeProfile("kossi");
+    // Opened before the payment in 3 times: free deposits, its own target.
+    await openPlan(member);
     const base = {
       buyerUserId: member,
       email: "kossi@example.test",
@@ -217,19 +219,12 @@ describe("installment plans (pglite)", () => {
       operator: "TMONEY",
       phone: "90000000",
     };
-    // The plan opens at the current price parameter.
-    const { getCurrentParameterValue } =
-      await import("@/repositories/parameter-versions");
-    const price = await getCurrentParameterValue(
-      localDb,
-      "subscription.price_in_cfa",
-    );
     await expect(
       initiateInstallmentDeposit({ ...base, amount: 500 }),
-    ).rejects.toThrow(`entre ${F(1000)} et ${F(price)}`);
+    ).rejects.toThrow(`entre ${F(1000)} et ${F(PRICE)}`);
     await expect(
-      initiateInstallmentDeposit({ ...base, amount: price + 500 }),
-    ).rejects.toThrow(`entre ${F(1000)} et ${F(price)}`);
+      initiateInstallmentDeposit({ ...base, amount: PRICE + 500 }),
+    ).rejects.toThrow(`entre ${F(1000)} et ${F(PRICE)}`);
 
     const intent = await initiateInstallmentDeposit({ ...base, amount: 5000 });
     expect(intent.payment).toMatchObject({
@@ -239,8 +234,8 @@ describe("installment plans (pglite)", () => {
     });
     // The pending 5 000 F is set aside for now.
     await expect(
-      initiateInstallmentDeposit({ ...base, amount: price - 4000 }),
-    ).rejects.toThrow(`entre ${F(1000)} et ${F(price - 5000)}`);
+      initiateInstallmentDeposit({ ...base, amount: PRICE - 4000 }),
+    ).rejects.toThrow(`entre ${F(1000)} et ${F(PRICE - 5000)}`);
   });
 
   it("expires past the deadline, with the refund minus withdrawal fees", async () => {

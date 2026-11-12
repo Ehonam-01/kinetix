@@ -33,6 +33,7 @@ export default async function SubscriptionPage() {
     watchedPaymentId,
     launchOffer,
     regularPrice,
+    settling,
   } = options;
 
   return (
@@ -110,12 +111,21 @@ export default async function SubscriptionPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {status.active || status.inGracePeriod
-              ? "Renouveler l'abonnement"
-              : "Souscrire"}
+            {settling
+              ? "Régler le solde de mon abonnement"
+              : status.active || status.inGracePeriod
+                ? "Renouveler l'abonnement"
+                : "Souscrire"}
           </CardTitle>
-          <PriceTag price={price} regularPrice={regularPrice} />
-          {(status.active || status.inGracePeriod) && (
+          {settling ? (
+            <CardDescription>
+              Une fois le solde réglé, ton abonnement court un an à partir de
+              ton premier paiement.
+            </CardDescription>
+          ) : (
+            <PriceTag price={price} regularPrice={regularPrice} />
+          )}
+          {!settling && (status.active || status.inGracePeriod) && (
             <CardDescription>
               {status.active
                 ? "Un renouvellement anticipé prolonge l'abonnement à partir de sa date d'expiration actuelle, sans perte de jours payés."
@@ -124,7 +134,9 @@ export default async function SubscriptionPage() {
           )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {launchOffer && <LaunchOfferNotice offer={launchOffer} />}
+          {launchOffer && !settling && (
+            <LaunchOfferNotice offer={launchOffer} />
+          )}
           <SubscriptionPanel
             price={price}
             username={profile.username}

@@ -46,10 +46,22 @@ export function FrozenAccountScreen({
   username: string;
   options: PaymentOptions;
 }) {
+  // A payment in 3 times past its deadline: the rest is all there is to pay,
+  // even past the grace period — never the generic "contact support".
+  const settling = options.settling;
+  const blocked = permanentlyFrozen && !settling;
+  const left = options.installments?.plan
+    ? options.installments.plan.targetAmount -
+      options.installments.plan.paidAmount
+    : 0;
   const panel = (
     <div className="space-y-4">
-      <PriceTag price={options.price} regularPrice={options.regularPrice} />
-      {options.launchOffer && <LaunchOfferNotice offer={options.launchOffer} />}
+      {!settling && (
+        <PriceTag price={options.price} regularPrice={options.regularPrice} />
+      )}
+      {options.launchOffer && !settling && (
+        <LaunchOfferNotice offer={options.launchOffer} />
+      )}
       <SubscriptionPanel
         price={options.price}
         username={username}
@@ -73,14 +85,16 @@ export function FrozenAccountScreen({
               : "Compte inaccessible"}
           </CardTitle>
           <CardDescription>
-            {permanentlyFrozen
-              ? "Contactez le support pour plus d'informations."
-              : neverSubscribed
-                ? `Bienvenue ${memberName} ! Payez votre abonnement annuel pour accéder à la plateforme.`
-                : `Bonjour ${memberName}, votre abonnement n'est plus à jour. Renouvelez-le pour retrouver l'accès à votre compte.`}
+            {settling
+              ? `Bonjour ${memberName}, le délai pour régler le solde de votre abonnement est dépassé. Réglez les ${left.toLocaleString("fr-FR")} F restants pour retrouver l'accès à votre compte.`
+              : blocked
+                ? "Contactez le support pour plus d'informations."
+                : neverSubscribed
+                  ? `Bienvenue ${memberName} ! Payez votre abonnement annuel pour accéder à la plateforme.`
+                  : `Bonjour ${memberName}, votre abonnement n'est plus à jour. Renouvelez-le pour retrouver l'accès à votre compte.`}
           </CardDescription>
         </CardHeader>
-        {!permanentlyFrozen && (
+        {!blocked && (
           <CardContent className="space-y-4">
             {expired && (
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
@@ -106,7 +120,7 @@ export function FrozenAccountScreen({
             />
           </CardContent>
         )}
-        <CardContent className={permanentlyFrozen ? undefined : "pt-0"}>
+        <CardContent className={blocked ? undefined : "pt-0"}>
           <LogoutButton />
         </CardContent>
       </Card>

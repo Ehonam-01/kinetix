@@ -35,6 +35,11 @@ type SubscriptionPaymentMetadata = {
   referencePrice?: number | null;
   // Set when a workshop participant's code reduced this payment's amount.
   workshopCode?: string | null;
+  // The first tranche of a payment in 3 times (installments.ts): the
+  // subscription opens now but only runs until this deadline, and the
+  // sponsor's commission waits for the rest — both settled by
+  // completeSplitPlan once everything is paid.
+  splitUntil?: string | null;
 };
 
 // The direct commission on a first subscription. Without a referencePrice
@@ -73,7 +78,7 @@ export async function computeSubscriptionCommission(
 // the period crosses a leap day (e.g. 2027-09-15 -> 2028-09-15 is 366 days,
 // not 365) — caught live while verifying this function against a real
 // renewal spanning 2028.
-function addOneYear(date: Date): Date {
+export function addOneYear(date: Date): Date {
   const result = new Date(date);
   result.setFullYear(result.getFullYear() + 1);
   return result;
@@ -156,7 +161,10 @@ export async function confirmSubscriptionPurchase(
     graceEndsAtFor(priorSubscription.expiresAt).getTime() > now.getTime()
       ? priorSubscription.expiresAt
       : now;
-  const expiresAt = addOneYear(base);
+  const splitUntil = metadata?.splitUntil
+    ? new Date(metadata.splitUntil)
+    : null;
+  const expiresAt = splitUntil ?? addOneYear(base);
 
   const businessVolume = await getCurrentParameterValue(
     tx,
@@ -173,6 +181,11 @@ export async function confirmSubscriptionPurchase(
       businessVolume,
       ambassadorUserId,
       attributionId,
+      // Until the rest is paid, the deadline isn't an expiry to remind of:
+      // the payment in 3 times sends its own reminder (installments.ts).
+      ...(splitUntil
+        ? { reminder7dSentAt: new Date(), reminder1dSentAt: new Date() }
+        : {}),
     })
     .returning();
 
@@ -227,7 +240,7 @@ export async function confirmSubscriptionPurchase(
   }
 
   if (ambassadorUserId) {
-    if (isFirstSubscription) {
+    if (isFirstSubscription && !splitUntil) {
       const commission = await computeSubscriptionCommission(tx, {
         pricePaid: subscription.pricePaid,
         businessVolume: subscription.businessVolume,

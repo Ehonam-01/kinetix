@@ -16,6 +16,7 @@ import {
 import { REFERRAL_COOKIE_NAME } from "@/services/attribution/resolve-referral";
 import { initiateSubscriptionPayment } from "@/services/subscriptions/initiate-subscription-payment";
 import { initiateInstallmentDeposit } from "@/services/subscriptions/installments";
+import { findOpenSplitPlan } from "@/services/subscriptions/open-split-plan";
 import { requestSubscriptionWithWallet } from "@/services/subscriptions/request-subscription-wallet";
 import { confirmSubscriptionWithWallet } from "@/services/subscriptions/confirm-subscription-wallet";
 import {
@@ -145,7 +146,12 @@ export async function depositInstallmentAction(
     pendingWizallConfirmation: null,
   };
   const { authUser, profile } = await requireUser();
-  if (await isAccountDeactivated(profile)) {
+  // Past the deadline of a payment in 3 times, the account is frozen until
+  // its rest is paid: paying it is exactly what must stay possible.
+  if (
+    (await isAccountDeactivated(profile)) &&
+    !(await findOpenSplitPlan(db, profile.id))
+  ) {
     return { error: DEACTIVATED_ACCOUNT_MESSAGE, ...none };
   }
   if (await isRateLimited("paymentStart", `user:${profile.id}`)) {

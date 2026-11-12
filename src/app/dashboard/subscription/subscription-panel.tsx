@@ -8,6 +8,7 @@ import { SubscribeButton } from "./subscribe-button";
 import { WalletSubscribeForm } from "./wallet-subscribe-form";
 import {
   InstallmentPanel,
+  type InstallmentBounds,
   type InstallmentPlanView,
 } from "./installment-panel";
 
@@ -32,18 +33,39 @@ export function SubscriptionPanel({
   // subscription, PayDunya active) — see page.tsx.
   installments?: {
     plan: InstallmentPlanView | null;
-    bounds: { min: number; max: number };
+    bounds: InstallmentBounds;
     months: number;
+    tranches: [number, number, number] | null;
   };
 }) {
   // A member who already started a cagnotte lands back on it.
   const [method, setMethod] = useState<Method>(
     installments?.plan ? "INSTALLMENTS" : "MOBILE_MONEY",
   );
+  // A payment in 3 times already started: only its rest can be paid.
+  if (installments?.plan?.split && installments.plan.paidAmount > 0) {
+    return (
+      <InstallmentPanel
+        price={price}
+        otherCountries={otherCountries}
+        {...installments}
+      />
+    );
+  }
+  const offerSplit =
+    installments && (installments.plan || installments.tranches);
   const tabs: { value: Method; label: string }[] = [
     { value: "MOBILE_MONEY", label: "Mobile Money" },
-    ...(installments
-      ? [{ value: "INSTALLMENTS" as const, label: "En plusieurs fois" }]
+    ...(offerSplit
+      ? [
+          {
+            value: "INSTALLMENTS" as const,
+            label:
+              installments.plan?.split === false
+                ? "En plusieurs fois"
+                : "En 3 fois",
+          },
+        ]
       : []),
     { value: "WALLET", label: "Solde (wallet)" },
   ];

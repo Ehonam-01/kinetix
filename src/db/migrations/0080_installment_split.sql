@@ -1,0 +1,1 @@
+ALTER TABLE "installment_plans" ADD COLUMN "split" boolean DEFAULT false NOT NULL;

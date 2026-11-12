@@ -259,6 +259,10 @@ describe("SasPay", () => {
     const { reconcilePendingSaspayPayments } =
       await import("@/services/payments/saspay-reconcile");
     const member = await makeMember("ama");
+    // A free-deposit cagnotte opened before the payment in 3 times.
+    await localDb
+      .insert(schema.installmentPlans)
+      .values({ userId: member, targetAmount: 15000 });
     const intent = await initiateInstallmentDeposit({
       buyerUserId: member,
       email: "ama@example.test",

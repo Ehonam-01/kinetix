@@ -14,13 +14,29 @@ import { getWithdrawalFeeSettings } from "@/repositories/withdrawals";
 import { logAdminAction } from "@/services/admin/audit-log";
 import { resolveSaleAttribution } from "@/services/attribution/resolve-referral";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
-import { confirmSubscriptionPurchase } from "./confirm-subscription-payment";
+import { splitPaymentChoices, splitTranches } from "@/lib/split-payment";
+import { createCommissionEvent } from "@/services/mlm/commission";
+import {
+  addOneYear,
+  computeSubscriptionCommission,
+  confirmSubscriptionPurchase,
+} from "./confirm-subscription-payment";
 import { initiateSubscriptionPayment } from "./initiate-subscription-payment";
 import { alertAdmins } from "@/services/notifications/admin-alerts";
 
-// Paying the first annual subscription in several deposits — the
-// "cagnotte" (db/schema/installment-plans.ts). Rules (explicit user
-// decision):
+// Paying the first annual subscription in several deposits
+// (db/schema/installment-plans.ts). Every plan opened now is a payment in
+// 3 times (split, explicit user decision, lib/split-payment.ts):
+// - the first tranche opens the subscription right away (account, tree,
+//   courses), running until the deadline, INSTALLMENT_MONTHS after it;
+// - the two other tranches are paid whenever the member wants before the
+//   deadline; the last one extends the subscription to a full year from
+//   its start and only then pays the sponsor's commission;
+// - past the deadline unpaid, the subscription simply runs out: the
+//   account freezes like any expired one until the rest is paid — the plan
+//   never expires and nothing is refunded.
+// Older plans (split false, the free-deposit "cagnotte") keep their rules
+// until they end:
 // - a member who has never subscribed opens a plan at today's price;
 // - from the first confirmed deposit they have INSTALLMENT_MONTHS to reach
 //   the price; the subscription is activated the moment they do, exactly
@@ -80,6 +96,8 @@ export async function installmentIneligibility(
     return "Ce compte ne peut pas payer en plusieurs fois.";
   }
   if (subscription) {
+    // Their own payment in 3 times opened it: they keep paying the rest.
+    if (latest?.status === "OPEN" && latest.split) return null;
     return "Le paiement en plusieurs fois est réservé à la première inscription.";
   }
   if (latest?.status === "EXPIRED") {
@@ -87,6 +105,15 @@ export async function installmentIneligibility(
   }
   if (latest?.status === "COMPLETED") {
     return "Votre cagnotte est déjà complète.";
+  }
+  if (latest?.status !== "OPEN") {
+    const price = await getCurrentParameterValue(
+      executor,
+      "subscription.price_in_cfa",
+    );
+    if (!splitTranches(price)) {
+      return "Le paiement en 3 fois n'est pas proposé à ce prix.";
+    }
   }
   return null;
 }
@@ -111,22 +138,37 @@ async function pendingDepositsTotal(executor: Executor, planId: string) {
 }
 
 // What the member can deposit right now: between min and max (both
-// inclusive), or max = 0 when nothing more can be started.
+// inclusive), or max = 0 when nothing more can be started. For a payment
+// in 3 times, only the amounts in `choices` (the next tranche, or all
+// that's left).
 export async function depositBounds(
   executor: Executor,
   plan: {
     id: string;
     targetAmount: number;
     paidAmount: number;
+    split: boolean;
   },
-) {
-  const remaining = Math.max(
-    0,
-    plan.targetAmount -
-      plan.paidAmount -
-      (await pendingDepositsTotal(executor, plan.id)),
-  );
-  return { min: Math.min(INSTALLMENT_MIN_DEPOSIT, remaining), max: remaining };
+): Promise<{ min: number; max: number; choices: number[] | null }> {
+  const pending = await pendingDepositsTotal(executor, plan.id);
+  if (plan.split) {
+    const choices = splitPaymentChoices(
+      plan.targetAmount,
+      plan.paidAmount,
+      pending,
+    );
+    return {
+      min: choices.length ? Math.min(...choices) : 0,
+      max: choices.length ? Math.max(...choices) : 0,
+      choices,
+    };
+  }
+  const remaining = Math.max(0, plan.targetAmount - plan.paidAmount - pending);
+  return {
+    min: Math.min(INSTALLMENT_MIN_DEPOSIT, remaining),
+    max: remaining,
+    choices: null,
+  };
 }
 
 // Starts one deposit by mobile money, opening the plan on the first one.
@@ -163,6 +205,7 @@ export async function initiateInstallmentDeposit(input: {
       .values({
         userId: input.buyerUserId,
         targetAmount: price,
+        split: true,
         ambassadorUserId: attribution?.ambassadorUserId ?? null,
         attributionId: attribution?.attributionId ?? null,
       })
@@ -176,16 +219,27 @@ export async function initiateInstallmentDeposit(input: {
       ),
     });
     if (!plan) throw new Error("Impossible d'ouvrir la cagnotte.");
-  } else if (plan.deadlineAt && plan.deadlineAt.getTime() < Date.now()) {
+  } else if (
+    !plan.split &&
+    plan.deadlineAt &&
+    plan.deadlineAt.getTime() < Date.now()
+  ) {
     throw new Error(
       "Le délai de votre cagnotte est dépassé : elle va être clôturée et remboursée.",
     );
   }
 
-  const { min, max } = await depositBounds(db, plan);
+  const { min, max, choices } = await depositBounds(db, plan);
   if (max === 0) {
     throw new Error(
       "Un versement est déjà en cours de confirmation pour le montant restant. Patientez quelques minutes.",
+    );
+  }
+  if (choices && !choices.includes(input.amount)) {
+    throw new Error(
+      choices.length === 1
+        ? `Le montant à payer est de ${fmt(choices[0])}.`
+        : `Le montant à payer est de ${fmt(choices[0])}, ou ${fmt(choices[1])} pour tout régler.`,
     );
   }
   if (
@@ -284,16 +338,27 @@ export async function applyInstallmentDeposit(tx: Executor, paymentId: string) {
   }
 
   const firstDepositAt = plan.firstDepositAt ?? now;
+  const deadlineAt =
+    plan.deadlineAt ?? addMonths(firstDepositAt, INSTALLMENT_MONTHS);
   await tx
     .update(installmentPlans)
     .set({
       paidAmount,
       firstDepositAt,
-      deadlineAt:
-        plan.deadlineAt ?? addMonths(firstDepositAt, INSTALLMENT_MONTHS),
+      deadlineAt,
       refundPayout: metadata.payout ?? plan.refundPayout,
     })
     .where(eq(installmentPlans.id, plan.id));
+
+  if (plan.split) {
+    await applySplitTranche(tx, plan, {
+      amount: payment.amount,
+      paidAmount,
+      deadlineAt,
+      now,
+    });
+    return;
+  }
 
   if (paidAmount < plan.targetAmount) return;
 
@@ -323,6 +388,100 @@ export async function applyInstallmentDeposit(tx: Executor, paymentId: string) {
       subscriptionPaymentId: subscriptionPayment.id,
     })
     .where(eq(installmentPlans.id, plan.id));
+}
+
+// One tranche of a payment in 3 times, already added to the plan. The
+// first one opens the subscription until the deadline; each later one adds
+// to what the subscription records as paid; the one that completes the
+// price extends it to a full year and pays the sponsor's commission.
+async function applySplitTranche(
+  tx: Executor,
+  plan: typeof installmentPlans.$inferSelect,
+  tranche: { amount: number; paidAmount: number; deadlineAt: Date; now: Date },
+) {
+  let subscriptionPaymentId = plan.subscriptionPaymentId;
+  if (!subscriptionPaymentId) {
+    const [subscriptionPayment] = await tx
+      .insert(payments)
+      .values({
+        beneficiaryUserId: plan.userId,
+        purpose: "SUBSCRIPTION",
+        method: "MOBILE_MONEY",
+        amount: tranche.amount,
+        provider: "INSTALLMENTS",
+        idempotencyKey: `INSTALLMENTS:${plan.id}`,
+        status: "PENDING",
+        metadata: {
+          ambassadorUserId: plan.ambassadorUserId,
+          attributionId: plan.attributionId,
+          installmentPlanId: plan.id,
+          splitUntil: tranche.deadlineAt.toISOString(),
+        },
+      })
+      .returning();
+    await confirmSubscriptionPurchase(tx, subscriptionPayment.id);
+    subscriptionPaymentId = subscriptionPayment.id;
+    await tx
+      .update(installmentPlans)
+      .set({ subscriptionPaymentId })
+      .where(eq(installmentPlans.id, plan.id));
+  } else {
+    await tx
+      .update(subscriptions)
+      .set({ pricePaid: sql`${subscriptions.pricePaid} + ${tranche.amount}` })
+      .where(eq(subscriptions.paymentId, subscriptionPaymentId));
+  }
+
+  if (tranche.paidAmount < plan.targetAmount) return;
+
+  const [subscription] = await tx
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.paymentId, subscriptionPaymentId));
+  if (!subscription) {
+    throw new Error(
+      `Abonnement du paiement en 3 fois introuvable : ${plan.id}`,
+    );
+  }
+  // A full year from the day the first tranche opened it; reminders of
+  // that real expiry come back on.
+  await tx
+    .update(subscriptions)
+    .set({
+      pricePaid: plan.targetAmount,
+      expiresAt: addOneYear(subscription.startedAt),
+      reminder7dSentAt: null,
+      reminder1dSentAt: null,
+    })
+    .where(eq(subscriptions.id, subscription.id));
+  await tx
+    .update(installmentPlans)
+    .set({ status: "COMPLETED", completedAt: tranche.now })
+    .where(eq(installmentPlans.id, plan.id));
+
+  // The commission held back since the first tranche: the same one, with
+  // the same dedupe key, a one-off payment would have paid.
+  if (plan.ambassadorUserId && plan.ambassadorUserId !== plan.userId) {
+    const commission = await computeSubscriptionCommission(tx, {
+      pricePaid: plan.targetAmount,
+      businessVolume: subscription.businessVolume,
+      referencePrice: null,
+    });
+    if (commission && commission.amount > 0) {
+      await createCommissionEvent(tx, {
+        beneficiaryUserId: plan.ambassadorUserId,
+        sourceUserId: plan.userId,
+        type: "DIRECT_SALE",
+        amount: commission.amount,
+        dedupeKey: `DIRECT_SALE:SUBSCRIPTION:${subscription.id}`,
+        metadata: {
+          subscriptionId: subscription.id,
+          commissionRuleId: commission.rule.id,
+          installmentPlanId: plan.id,
+        },
+      });
+    }
+  }
 }
 
 async function emailMember(
@@ -362,6 +521,8 @@ export async function processInstallmentDeadlines(): Promise<{
       .where(
         and(
           eq(installmentPlans.status, "OPEN"),
+          // A payment in 3 times never expires: its subscription runs out.
+          eq(installmentPlans.split, false),
           lt(installmentPlans.deadlineAt, new Date()),
         ),
       );
@@ -425,15 +586,25 @@ export async function processInstallmentDeadlines(): Promise<{
     for (const plan of soon) {
       if (!plan.deadlineAt) continue;
       try {
-        await emailMember(
-          plan.userId,
-          "Ta cagnotte Kinetix Africa : plus que quelques jours",
-          [
-            `Tu as versé <strong>${fmt(plan.paidAmount)}</strong> sur ${fmt(plan.targetAmount)}. Il te reste <strong>${fmt(plan.targetAmount - plan.paidAmount)}</strong> à verser avant le <strong>${fmtDate(plan.deadlineAt)}</strong> pour activer ton abonnement.`,
-            `Passé cette date, la cagnotte sera clôturée et remboursée, moins les frais de retrait.`,
-          ],
-          "Compléter ma cagnotte",
-        );
+        await (plan.split
+          ? emailMember(
+              plan.userId,
+              "Ton abonnement Kinetix Africa : il reste à régler",
+              [
+                `Tu as payé <strong>${fmt(plan.paidAmount)}</strong> sur ${fmt(plan.targetAmount)}. Il te reste <strong>${fmt(plan.targetAmount - plan.paidAmount)}</strong> à régler avant le <strong>${fmtDate(plan.deadlineAt)}</strong>.`,
+                "Passé cette date, l'accès à ton compte sera suspendu jusqu'au règlement du solde.",
+              ],
+              "Régler mon solde",
+            )
+          : emailMember(
+              plan.userId,
+              "Ta cagnotte Kinetix Africa : plus que quelques jours",
+              [
+                `Tu as versé <strong>${fmt(plan.paidAmount)}</strong> sur ${fmt(plan.targetAmount)}. Il te reste <strong>${fmt(plan.targetAmount - plan.paidAmount)}</strong> à verser avant le <strong>${fmtDate(plan.deadlineAt)}</strong> pour activer ton abonnement.`,
+                `Passé cette date, la cagnotte sera clôturée et remboursée, moins les frais de retrait.`,
+              ],
+              "Compléter ma cagnotte",
+            ));
         await db
           .update(installmentPlans)
           .set({ reminderSentAt: new Date() })

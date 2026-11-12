@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -41,6 +42,11 @@ export const installmentPlans = pgTable(
       .notNull()
       .references(() => profiles.id),
     targetAmount: integer("target_amount").notNull(),
+    // Payment in 3 times (explicit user decision, lib/split-payment.ts): a
+    // fixed first tranche opens the subscription right away, the rest in
+    // two equal tranches, at any time, before the deadline. false: an
+    // older free-deposit cagnotte, opened before, kept on its own rules.
+    split: boolean("split").notNull().default(false),
     paidAmount: integer("paid_amount").notNull().default(0),
     status: installmentPlanStatusEnum("status").notNull().default("OPEN"),
     // Attribution captured when the plan opens, used by the final

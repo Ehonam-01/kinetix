@@ -33,7 +33,7 @@ export function LaunchOfferNotice({
         Tu économises {fmt(offer.nextPrice - offer.price)} en payant avant cette
         date.
         {offer.withInstallments &&
-          ` Pas tout de suite ? Fais ton premier versement « En plusieurs fois » avant cette date : ta cagnotte garde le prix de ${fmt(offer.price)}.`}
+          ` Pas tout de suite ? Commence « En 3 fois » avant cette date : tu gardes le prix de ${fmt(offer.price)}.`}
       </p>
     </div>
   );
