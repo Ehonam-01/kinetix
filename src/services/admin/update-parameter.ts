@@ -40,7 +40,7 @@ export async function updateParameter(
     (value < SUBSCRIPTION_PRICE_MIN || value > SUBSCRIPTION_PRICE_MAX)
   ) {
     throw new Error(
-      `Le tarif normal doit être 0 (mention retirée) ou compris entre ${SUBSCRIPTION_PRICE_MIN.toLocaleString("fr-FR")} et ${SUBSCRIPTION_PRICE_MAX.toLocaleString("fr-FR")} F.`,
+      `Le prix barré doit être 0 (rien de barré) ou compris entre ${SUBSCRIPTION_PRICE_MIN.toLocaleString("fr-FR")} et ${SUBSCRIPTION_PRICE_MAX.toLocaleString("fr-FR")} F.`,
     );
   }
 

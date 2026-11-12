@@ -24,8 +24,7 @@ const PARAMETER_LABEL: Record<string, string> = {
   "commission.level_1_bonus": "Bonus fin de niveau 1",
   "bv.value_in_cfa": "Valeur d'1 point (F CFA)",
   "subscription.price_in_cfa": "Prix de l'abonnement annuel (F CFA)",
-  "subscription.regular_price_in_cfa":
-    "Tarif normal annoncé après le lancement (F CFA)",
+  "subscription.regular_price_in_cfa": "Prix barré (F CFA)",
   "subscription.business_volume": "Points générés par l'abonnement",
   "withdrawal.minimum_amount": "Montant minimum de retrait (F CFA)",
   "withdrawal.fee_percent_bp": "Frais de retrait : pourcentage du montant",
@@ -39,9 +38,11 @@ const PARAMETER_UNIT: Record<string, "percent_bp"> = {
   "withdrawal.fee_percent_bp": "percent_bp",
 };
 
+// Shown together in the "Tarif de l'abonnement" card at the top, so left
+// out of the list below.
+const PRICE_CARD_KEYS = new Set([PRICE_KEY, REGULAR_PRICE_KEY]);
+
 const PARAMETER_HINT: Record<string, string> = {
-  "subscription.regular_price_in_cfa":
-    "Affiché barré sur la page d'accueil, avec la mention « Prix de lancement ». Jamais facturé. Mettez 0 (ou une valeur égale au prix actuel) pour retirer la mention à la fin du lancement.",
   "withdrawal.fee_percent_bp":
     "Déduit du montant retiré, cumulé avec le montant fixe. Ex. 1,5 % + 100 F sur un retrait de 10 000 F : le membre reçoit 9 750 F.",
   "withdrawal.fee_fixed":
@@ -53,11 +54,14 @@ export default async function AdminParametersPage() {
   // re-run on every navigation, so it can't be the only gate (Next.js
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
-  const [parameters, scheduled, regularPrice] = await Promise.all([
+  const [parameters, scheduled, price, regularPrice] = await Promise.all([
     listCurrentParameters(db),
     getScheduledParameterVersion(db, PRICE_KEY),
+    getCurrentParameterValueOrNull(db, PRICE_KEY),
     getCurrentParameterValueOrNull(db, REGULAR_PRICE_KEY),
   ]);
+  const struckThrough =
+    price !== null && regularPrice !== null && regularPrice > price;
   const scheduledEnd = scheduled
     ? {
         value: scheduled.value,
@@ -76,6 +80,55 @@ export default async function AdminParametersPage() {
         aucune commission déjà versée n&apos;est recalculée (non-rétroactivité,
         voir MLM_RULES.md).
       </p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tarif de l&apos;abonnement</CardTitle>
+          <CardDescription>
+            Le prix barré s&apos;affiche à côté du prix sur la page
+            d&apos;accueil, la page Business Plan et les écrans de paiement,
+            avec la mention « Prix de lancement ». Il n&apos;est jamais facturé.
+            Mettez 0 pour ne rien barrer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Prix (F CFA)</p>
+              <EditParameterForm
+                parameterKey={PRICE_KEY}
+                currentValue={price ?? 0}
+              />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Prix barré (F CFA)</p>
+              <EditParameterForm
+                parameterKey={REGULAR_PRICE_KEY}
+                currentValue={regularPrice ?? 0}
+              />
+            </div>
+          </div>
+          <div className="bg-muted/50 rounded-lg px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Affiché aux visiteurs :{" "}
+            </span>
+            {struckThrough && (
+              <span className="text-muted-foreground mr-2 line-through">
+                {regularPrice!.toLocaleString("fr-FR")} F
+              </span>
+            )}
+            <span className="font-semibold">
+              {(price ?? 0).toLocaleString("fr-FR")} F
+            </span>
+            {!struckThrough && (
+              <span className="text-muted-foreground">
+                {" "}
+                (aucun prix barré : il doit être plus élevé que le prix)
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-brand-accent/40">
         <CardHeader>
@@ -98,33 +151,35 @@ export default async function AdminParametersPage() {
       </Card>
 
       <div className="space-y-3">
-        {parameters.map((param) => (
-          <Card key={param.id}>
-            <CardHeader>
-              <CardTitle>
-                {PARAMETER_LABEL[param.parameterKey] ?? param.parameterKey}
-              </CardTitle>
-              <CardDescription>
-                {param.parameterKey} · effectif depuis le{" "}
-                {param.effectiveFrom.toLocaleDateString("fr-FR", {
-                  dateStyle: "medium",
-                })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {PARAMETER_HINT[param.parameterKey] && (
-                <p className="text-muted-foreground mb-3 text-xs">
-                  {PARAMETER_HINT[param.parameterKey]}
-                </p>
-              )}
-              <EditParameterForm
-                parameterKey={param.parameterKey}
-                currentValue={param.value}
-                unit={PARAMETER_UNIT[param.parameterKey]}
-              />
-            </CardContent>
-          </Card>
-        ))}
+        {parameters
+          .filter((param) => !PRICE_CARD_KEYS.has(param.parameterKey))
+          .map((param) => (
+            <Card key={param.id}>
+              <CardHeader>
+                <CardTitle>
+                  {PARAMETER_LABEL[param.parameterKey] ?? param.parameterKey}
+                </CardTitle>
+                <CardDescription>
+                  {param.parameterKey} · effectif depuis le{" "}
+                  {param.effectiveFrom.toLocaleDateString("fr-FR", {
+                    dateStyle: "medium",
+                  })}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {PARAMETER_HINT[param.parameterKey] && (
+                  <p className="text-muted-foreground mb-3 text-xs">
+                    {PARAMETER_HINT[param.parameterKey]}
+                  </p>
+                )}
+                <EditParameterForm
+                  parameterKey={param.parameterKey}
+                  currentValue={param.value}
+                  unit={PARAMETER_UNIT[param.parameterKey]}
+                />
+              </CardContent>
+            </Card>
+          ))}
       </div>
     </div>
   );
