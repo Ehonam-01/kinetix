@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  BUNNY_HINT,
   DRIVE_SHARING_HINT,
   VIDEO_PROVIDER_LABEL,
 } from "@/lib/lesson-media-labels";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { updateLessonAction } from "./actions";
 
-const PROVIDERS = ["YOUTUBE", "VIMEO", "OTHER"] as const;
+const PROVIDERS = ["YOUTUBE", "VIMEO", "BUNNY", "OTHER"] as const;
 const LESSON_TYPES = ["VIDEO", "TEXT"] as const;
 const LESSON_TYPE_LABEL: Record<(typeof LESSON_TYPES)[number], string> = {
   VIDEO: "Vidéo ou Google Drive",
@@ -128,7 +129,9 @@ export function EditLessonForm({
             <Label htmlFor="lesson-video-url">
               {videoProvider === "OTHER"
                 ? "Lien Google Drive"
-                : "URL de la vidéo"}
+                : videoProvider === "BUNNY"
+                  ? "Lien ou code d'intégration Bunny"
+                  : "URL de la vidéo"}
             </Label>
             <Input
               id="lesson-video-url"
@@ -139,6 +142,11 @@ export function EditLessonForm({
           {videoProvider === "OTHER" && (
             <p className="text-muted-foreground col-span-2 text-xs">
               {DRIVE_SHARING_HINT}
+            </p>
+          )}
+          {videoProvider === "BUNNY" && (
+            <p className="text-muted-foreground col-span-2 text-xs">
+              {BUNNY_HINT}
             </p>
           )}
         </div>

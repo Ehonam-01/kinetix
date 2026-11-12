@@ -55,7 +55,7 @@ const reportOnlyCsp = [
   "font-src 'self' data:",
   `connect-src 'self' ${supabaseOrigin} https://www.facebook.com https://connect.facebook.net`,
   `media-src 'self' ${supabaseOrigin}`,
-  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com https://docs.google.com",
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com https://docs.google.com https://iframe.mediadelivery.net https://player.mediadelivery.net",
   "worker-src 'self'",
   "manifest-src 'self'",
   "form-action 'self'",

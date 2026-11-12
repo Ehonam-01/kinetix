@@ -15,6 +15,7 @@ import {
   LONG_TEXT_MAX,
   SHORT_TEXT_MAX,
 } from "@/services/admin/input-limits";
+import { cleanVideoUrl } from "@/lib/video-embed";
 
 type VideoProvider = (typeof videoProviderEnum.enumValues)[number];
 type LessonType = (typeof lessonTypeEnum.enumValues)[number];
@@ -54,7 +55,7 @@ export async function createLesson(
     // whole course first): the link is added later from the lesson page,
     // and learners see "pas encore disponible" until then.
     const lessonType = input.lessonType ?? "VIDEO";
-    const videoUrl = input.videoUrl?.trim() || null;
+    const videoUrl = cleanVideoUrl(input.videoUrl ?? "") || null;
 
     const existingLessons = await tx.query.lessons.findMany({
       where: eq(lessons.moduleId, input.moduleId),

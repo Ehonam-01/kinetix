@@ -5,7 +5,7 @@
 // null — the caller falls back to a plain "open in new tab" link, since
 // there's no safe way to guess an embed format for an unknown provider.
 export function getVideoEmbedUrl(
-  provider: "YOUTUBE" | "VIMEO" | "OTHER" | null,
+  provider: "YOUTUBE" | "VIMEO" | "OTHER" | "BUNNY" | null,
   url: string,
 ): string | null {
   let parsed: URL;
@@ -42,6 +42,8 @@ export function getVideoEmbedUrl(
       ? `https://player.vimeo.com/video/${id}?h=${hash}`
       : `https://player.vimeo.com/video/${id}`;
   }
+
+  if (provider === "BUNNY") return getBunnyEmbedUrl(parsed);
 
   // OTHER: a Google Drive link is the one other host embedded in the page
   // (see getGoogleDriveEmbed); anything else stays a plain link.
@@ -115,4 +117,31 @@ export function getGoogleDriveEmbed(url: string): GoogleDriveEmbed | null {
   }
 
   return null;
+}
+
+const BUNNY_HOSTS = new Set([
+  "iframe.mediadelivery.net",
+  "player.mediadelivery.net",
+]);
+const BUNNY_VIDEO_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// A Bunny Stream video: its embed link (/embed/{library}/{video}) or the
+// "play" page link (/play/{library}/{video}), on either player host. The
+// query is kept as is — a library with token authentication adds
+// ?token=…&expires=… there, and player options (autoplay…) live there too.
+function getBunnyEmbedUrl(parsed: URL): string | null {
+  if (!BUNNY_HOSTS.has(parsed.hostname)) return null;
+  const match = parsed.pathname.match(/^\/(?:embed|play)\/(\d+)\/([^/]+)\/?$/);
+  if (!match || !BUNNY_VIDEO_ID.test(match[2])) return null;
+  return `https://iframe.mediadelivery.net/embed/${match[1]}/${match[2]}${parsed.search}`;
+}
+
+// What the admin pasted as a video link, ready to store: Bunny (like
+// others) hands out a whole <iframe …> embed code, from which only its src
+// is kept. Anything else is returned trimmed, unchanged.
+export function cleanVideoUrl(input: string): string {
+  const value = input.trim();
+  const src = value.match(/<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i)?.[1];
+  return (src ?? value).replace(/&amp;/g, "&").trim();
 }

@@ -14,6 +14,7 @@ import {
   LONG_TEXT_MAX,
   SHORT_TEXT_MAX,
 } from "@/services/admin/input-limits";
+import { cleanVideoUrl } from "@/lib/video-embed";
 
 type VideoProvider = (typeof videoProviderEnum.enumValues)[number];
 type LessonType = (typeof lessonTypeEnum.enumValues)[number];
@@ -54,7 +55,7 @@ export async function updateLesson(
     }
 
     // The video link may stay empty for now (see create-lesson.ts).
-    const videoUrl = input.videoUrl?.trim() || null;
+    const videoUrl = cleanVideoUrl(input.videoUrl ?? "") || null;
 
     const [lesson] = await tx
       .update(lessons)

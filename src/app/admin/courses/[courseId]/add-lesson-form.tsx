@@ -4,13 +4,14 @@ import { useId, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  BUNNY_HINT,
   DRIVE_SHARING_HINT,
   VIDEO_PROVIDER_LABEL,
 } from "@/lib/lesson-media-labels";
 import { Input } from "@/components/ui/input";
 import { createLessonAction } from "./actions";
 
-const PROVIDERS = ["YOUTUBE", "VIMEO", "OTHER"] as const;
+const PROVIDERS = ["YOUTUBE", "VIMEO", "BUNNY", "OTHER"] as const;
 const LESSON_TYPES = ["VIDEO", "TEXT"] as const;
 const LESSON_TYPE_LABEL: Record<(typeof LESSON_TYPES)[number], string> = {
   VIDEO: "Vidéo ou Google Drive",
@@ -143,7 +144,9 @@ export function AddLessonForm({
           >
             {videoProvider === "OTHER"
               ? "Lien Google Drive"
-              : "Lien de la vidéo"}{" "}
+              : videoProvider === "BUNNY"
+                ? "Lien ou code d'intégration Bunny"
+                : "Lien de la vidéo"}{" "}
             <span className="opacity-70">
               (facultatif, à ajouter plus tard)
             </span>
@@ -153,7 +156,9 @@ export function AddLessonForm({
             placeholder={
               videoProvider === "OTHER"
                 ? "https://drive.google.com/…"
-                : "https://www.youtube.com/watch?v=…"
+                : videoProvider === "BUNNY"
+                  ? "https://iframe.mediadelivery.net/embed/…"
+                  : "https://www.youtube.com/watch?v=…"
             }
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
@@ -162,6 +167,9 @@ export function AddLessonForm({
             <p className="text-muted-foreground text-xs">
               {DRIVE_SHARING_HINT}
             </p>
+          )}
+          {videoProvider === "BUNNY" && (
+            <p className="text-muted-foreground text-xs">{BUNNY_HINT}</p>
           )}
         </div>
       ) : (

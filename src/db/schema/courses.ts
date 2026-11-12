@@ -109,10 +109,13 @@ export const modules = pgTable(
 // to avoid a new paid vendor. Trade-off accepted knowingly: a leaked
 // video_url bypasses level gating, since we only hide the link rather than
 // issuing expiring signed access — see DATABASE.md.
+// BUNNY: Bunny Stream (lib/video-embed.ts) — the embed / play link of a
+// video in a Bunny Stream library.
 export const videoProviderEnum = pgEnum("video_provider", [
   "YOUTUBE",
   "VIMEO",
   "OTHER",
+  "BUNNY",
 ]);
 
 // Added for AI-assisted course generation (ARCHITECTURE.md, "Génération de

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getGoogleDriveEmbed, getVideoEmbedUrl } from "./video-embed";
+import {
+  cleanVideoUrl,
+  getGoogleDriveEmbed,
+  getVideoEmbedUrl,
+} from "./video-embed";
 
 describe("getVideoEmbedUrl", () => {
   it("builds an embed URL from a YouTube watch link", () => {
@@ -99,5 +103,58 @@ describe("getGoogleDriveEmbed", () => {
     ).toBe(`https://drive.google.com/file/d/${ID}/preview`);
     expect(getGoogleDriveEmbed("https://drive.google.com/")).toBeNull();
     expect(getGoogleDriveEmbed("https://example.com/file/d/x")).toBeNull();
+  });
+});
+
+describe("Bunny Stream", () => {
+  const video = "0b7b7d4e-1c2a-4f3e-9a8b-123456789abc";
+
+  it("embeds a Bunny embed link, keeping its options and token", () => {
+    expect(
+      getVideoEmbedUrl(
+        "BUNNY",
+        `https://iframe.mediadelivery.net/embed/123456/${video}?autoplay=false&token=abc&expires=99`,
+      ),
+    ).toBe(
+      `https://iframe.mediadelivery.net/embed/123456/${video}?autoplay=false&token=abc&expires=99`,
+    );
+  });
+
+  it("turns a play page link, on either host, into the embed link", () => {
+    for (const host of [
+      "iframe.mediadelivery.net",
+      "player.mediadelivery.net",
+    ]) {
+      expect(
+        getVideoEmbedUrl("BUNNY", `https://${host}/play/123456/${video}`),
+      ).toBe(`https://iframe.mediadelivery.net/embed/123456/${video}`);
+    }
+  });
+
+  it("refuses any other host or a malformed link", () => {
+    expect(
+      getVideoEmbedUrl("BUNNY", `https://evil.example/embed/123456/${video}`),
+    ).toBeNull();
+    expect(
+      getVideoEmbedUrl(
+        "BUNNY",
+        "https://iframe.mediadelivery.net/embed/123456/not-a-video",
+      ),
+    ).toBeNull();
+  });
+
+  it("keeps only the src of a pasted <iframe> embed code", () => {
+    const code = `<div style="position:relative;padding-top:56.25%;"><iframe src="https://iframe.mediadelivery.net/embed/123456/${video}?autoplay=true&amp;loop=false" loading="lazy" style="border:0;" allowfullscreen="true"></iframe></div>`;
+    const url = cleanVideoUrl(code);
+    expect(url).toBe(
+      `https://iframe.mediadelivery.net/embed/123456/${video}?autoplay=true&loop=false`,
+    );
+    expect(getVideoEmbedUrl("BUNNY", url)).toBe(url);
+  });
+
+  it("leaves a plain link as it is, trimmed", () => {
+    expect(cleanVideoUrl("  https://youtu.be/abc  ")).toBe(
+      "https://youtu.be/abc",
+    );
   });
 });
