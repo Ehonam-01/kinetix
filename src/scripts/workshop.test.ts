@@ -40,7 +40,12 @@ vi.mock("@/services/notifications/admin-alerts", () => ({
 }));
 
 let providerFails = false;
-const charges: { amount: number; address?: string; email: string }[] = [];
+const charges: {
+  amount: number;
+  address?: string;
+  email: string;
+  returnUrl?: string;
+}[] = [];
 let verifiedStatus: "PENDING" | "CONFIRMED" | "FAILED" = "PENDING";
 let lastReference = "";
 // What each charge was for: a part or the whole price.
@@ -50,6 +55,7 @@ const provider = {
   createPayment: async (input: {
     amount: number;
     address?: string;
+    returnUrl?: string;
     customer: { email: string };
   }) => {
     if (providerFails) throw new Error("Fournisseur indisponible");
@@ -57,6 +63,7 @@ const provider = {
       amount: input.amount,
       address: input.address,
       email: input.customer.email,
+      returnUrl: input.returnUrl,
     });
     lastReference = `ref-${randomUUID()}`;
     amountOf.set(lastReference, input.amount);
@@ -424,8 +431,12 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     );
     await vi.waitFor(() => expect(sentEmails).toHaveLength(1));
     expect(sentEmails[0].html).toContain("1\u202f000 F");
-    // Paying more goes through the reservation link, not the form again.
-    expect((await register("22890000030")).outcome).toBe("ALREADY_PAID");
+    // The form again, with the same number: it shows what's left to pay.
+    expect(await register("22890000030")).toEqual({
+      outcome: "BALANCE_DUE",
+      left: 1000,
+      firstName: "Ama",
+    });
 
     expect(await payMore(held.accessToken, 1500)).toMatchObject({
       outcome: "REFUSED",
@@ -451,6 +462,38 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       outcome: "REFUSED",
     });
     expect(alerts).toEqual([]);
+  });
+
+  it("the balance can be paid from the form, by WhatsApp number", async () => {
+    const { payWorkshopBalanceByNumber } =
+      await import("@/services/workshops/pay-more");
+    const byNumber = (whatsapp: string, amount: number) =>
+      payWorkshopBalanceByNumber({
+        whatsapp,
+        amount,
+        operator: "TOGOCELL",
+        paymentPhone: whatsapp,
+        origin: ORIGIN,
+      });
+    expect(await byNumber("22890000031", 1000)).toMatchObject({
+      outcome: "REFUSED",
+    });
+
+    await register("22890000031", null, 1000);
+    await webhook("CONFIRMED", lastReference);
+    expect(await byNumber("22890000031", 1500)).toMatchObject({
+      outcome: "REFUSED",
+    });
+    expect(await byNumber("22890000031", 1000)).toEqual({
+      outcome: "STARTED",
+      checkoutUrl: null,
+    });
+    // Brought back to the sales page, never to the reservation link.
+    expect(charges.at(-1)?.returnUrl).toBe(`${ORIGIN}/atelier-video-ia`);
+    await webhook("CONFIRMED", lastReference);
+
+    expect((await registrationOf("22890000031")).amountPaid).toBe(2000);
+    expect((await register("22890000031")).outcome).toBe("ALREADY_PAID");
   });
 
   it("a part that fails leaves the seat; the page's check follows a part", async () => {

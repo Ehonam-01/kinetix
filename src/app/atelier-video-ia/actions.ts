@@ -14,17 +14,27 @@ import {
   type WorkshopRegistrationInput,
 } from "@/schemas/workshop";
 import { checkWorkshopRegistration } from "@/services/workshops/check-status";
-import { payMoreForWorkshop } from "@/services/workshops/pay-more";
+import {
+  payMoreForWorkshop,
+  payWorkshopBalanceByNumber,
+} from "@/services/workshops/pay-more";
 import { registerForWorkshop } from "@/services/workshops/register";
 
-type RegisterResult = { error: string | null; full: boolean };
+type RegisterResult = {
+  error: string | null;
+  full: boolean;
+  // This number already holds a seat with this much left to pay.
+  balance?: { left: number; firstName: string };
+  // The balance payment was pushed to the phone (no page to go to).
+  started?: boolean;
+};
 
 // {error}-return convention, same as dashboard/subscription/actions.ts: a
 // provider refusing the charge is an expected outcome the form must show.
 // Public: there is no account here, so the limits are per number (each call
 // pushes a payment prompt to a phone) and, much wider, per IP.
 export async function registerForWorkshopAction(
-  input: WorkshopRegistrationInput,
+  input: WorkshopRegistrationInput & { payBalance?: boolean },
 ): Promise<RegisterResult> {
   const parsed = workshopRegistrationSchema.safeParse(input);
   if (!parsed.success) {
@@ -42,6 +52,29 @@ export async function registerForWorkshopAction(
 
   const origin = await getTrustedOrigin();
   let target: string;
+  if (input.payBalance === true) {
+    try {
+      const result = await payWorkshopBalanceByNumber({
+        whatsapp,
+        operator: parsed.data.operator,
+        paymentPhone: paymentPhone || whatsapp,
+        amount: parsed.data.amount,
+        origin,
+      });
+      if (result.outcome === "REFUSED") {
+        return { error: result.message, full: false };
+      }
+      if (!result.checkoutUrl)
+        return { error: null, full: false, started: true };
+      target = result.checkoutUrl;
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Une erreur est survenue.",
+        full: false,
+      };
+    }
+    redirect(target);
+  }
   try {
     const result = await registerForWorkshop({
       ...parsed.data,
@@ -49,6 +82,13 @@ export async function registerForWorkshopAction(
       origin,
     });
     if (result.outcome === "FULL") return { error: null, full: true };
+    if (result.outcome === "BALANCE_DUE") {
+      return {
+        error: null,
+        full: false,
+        balance: { left: result.left, firstName: result.firstName },
+      };
+    }
     if (result.outcome === "ALREADY_PAID") {
       return {
         error:

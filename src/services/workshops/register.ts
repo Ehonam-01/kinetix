@@ -44,6 +44,9 @@ type RegisterInput = {
 type RegisterResult =
   | { outcome: "FULL" }
   | { outcome: "ALREADY_PAID" }
+  // This number already holds a seat with something left to pay: shown,
+  // so the form offers to pay it (pay-more.ts payWorkshopBalanceByNumber).
+  | { outcome: "BALANCE_DUE"; left: number; firstName: string }
   | { outcome: "IN_PROGRESS" }
   | { outcome: "TOO_MUCH"; price: number }
   | {
@@ -65,6 +68,21 @@ export async function registerForWorkshop(
   input: RegisterInput,
 ): Promise<RegisterResult> {
   const workshop = await getWorkshop(db);
+  const existing = await findBlockingRegistration(
+    db,
+    workshop.id,
+    input.whatsapp,
+    new Date(Date.now() - PENDING_WINDOW_MS),
+  );
+  // Checked before the seat count: a seat already held stays payable even
+  // once the online sale has stopped.
+  if (existing?.status === "PAID" && existing.amountPaid < existing.amount) {
+    return {
+      outcome: "BALANCE_DUE",
+      left: existing.amount - existing.amountPaid,
+      firstName: splitName(existing.fullName).firstName,
+    };
+  }
   const { open } = await getWorkshopAvailability(db, workshop);
   if (!open) return { outcome: "FULL" };
   // The whole price, or a first part of it (schemas/workshop.ts checks the
@@ -73,12 +91,7 @@ export async function registerForWorkshop(
     return { outcome: "TOO_MUCH", price: workshop.priceCfa };
   }
 
-  const blocking = await findBlockingRegistration(
-    db,
-    workshop.id,
-    input.whatsapp,
-    new Date(Date.now() - PENDING_WINDOW_MS),
-  );
+  const blocking = existing;
   // Neither case hands back the existing confirmation link: whoever types a
   // number isn't proven to own it, and that page shows the participant's
   // discount code.

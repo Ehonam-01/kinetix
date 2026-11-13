@@ -5,10 +5,12 @@ import { db } from "@/db/client";
 import { payments } from "@/db/schema/payments";
 import { MIN_WORKSHOP_INSTALLMENT } from "@/schemas/workshop";
 import {
+  findBlockingRegistration,
   findLatestRegistrationPayment,
   findRegistrationByToken,
   getWorkshop,
 } from "@/repositories/workshops";
+import type { workshopRegistrations } from "@/db/schema/workshops";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
 import { PAYMENT_ADDRESS, paymentEmail, splitName } from "./register";
 
@@ -40,6 +42,53 @@ export async function payMoreForWorkshop(
   if (!registration || registration.status !== "PAID") {
     return { outcome: "REFUSED", message: "Réservation introuvable." };
   }
+  return startTopUp(registration, {
+    ...input,
+    returnUrl: `${input.origin}/atelier-video-ia/merci?t=${registration.accessToken}`,
+  });
+}
+
+// The same, from the registration form, for a number that already holds a
+// seat with something left to pay (explicit user decision: those who paid
+// a part come back through the same link). Whoever types a number isn't
+// proven to own it, so they only ever pay towards that seat: the provider
+// brings them back to the sales page, never to the reservation link (it
+// shows the participant's discount code).
+export async function payWorkshopBalanceByNumber(input: {
+  whatsapp: string;
+  operator: string;
+  paymentPhone: string;
+  amount: number;
+  origin: string;
+}): Promise<PayMoreResult> {
+  const workshop = await getWorkshop(db);
+  const registration = await findBlockingRegistration(
+    db,
+    workshop.id,
+    input.whatsapp,
+    new Date(),
+  );
+  if (registration?.status !== "PAID") {
+    return {
+      outcome: "REFUSED",
+      message: "Aucune place réservée avec ce numéro WhatsApp.",
+    };
+  }
+  return startTopUp(registration, {
+    ...input,
+    returnUrl: `${input.origin}/atelier-video-ia`,
+  });
+}
+
+async function startTopUp(
+  registration: typeof workshopRegistrations.$inferSelect,
+  input: {
+    operator: string;
+    paymentPhone: string;
+    amount: number;
+    returnUrl: string;
+  },
+): Promise<PayMoreResult> {
   const left = registration.amount - registration.amountPaid;
   if (left <= 0) {
     return {
@@ -108,7 +157,7 @@ export async function payMoreForWorkshop(
       ...splitName(registration.fullName),
       phone: input.paymentPhone,
     },
-    returnUrl: `${input.origin}/atelier-video-ia/merci?t=${registration.accessToken}`,
+    returnUrl: input.returnUrl,
     idempotencyKey,
     metadata: { workshop_registration_id: registration.id },
     country: "TG",
