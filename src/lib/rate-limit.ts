@@ -39,6 +39,8 @@ const LIMITS = {
   workshopRegistrationByIp: { tokens: 60, window: "15 m" },
   // The confirmation page checking its payment, per access token.
   workshopStatus: { tokens: 30, window: "1 m" },
+  // The form looking up a seat already held, as the number is typed, per IP.
+  workshopBalanceLookup: { tokens: 30, window: "15 m" },
   // Pseudo -> name previews (registration sponsor, transfer recipient).
   lookup: { tokens: 30, window: "1 m" },
   referralClick: { tokens: 30, window: "1 m" },

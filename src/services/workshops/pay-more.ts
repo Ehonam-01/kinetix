@@ -80,6 +80,26 @@ export async function payWorkshopBalanceByNumber(input: {
   });
 }
 
+// What the form shows as soon as a number is typed: the seat this number
+// already holds, if any, and what is left on it. No more than the form
+// already showed on submit (first name and amount left).
+export async function findWorkshopBalance(
+  whatsapp: string,
+): Promise<{ left: number; firstName: string } | null> {
+  const workshop = await getWorkshop(db);
+  const registration = await findBlockingRegistration(
+    db,
+    workshop.id,
+    whatsapp,
+    new Date(),
+  );
+  if (registration?.status !== "PAID") return null;
+  return {
+    left: Math.max(0, registration.amount - registration.amountPaid),
+    firstName: splitName(registration.fullName).firstName,
+  };
+}
+
 async function startTopUp(
   registration: typeof workshopRegistrations.$inferSelect,
   input: {

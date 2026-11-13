@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { CheckCircle2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   MIN_WORKSHOP_INSTALLMENT,
+  toWorkshopPhone,
   type WorkshopRegistrationInput,
 } from "@/schemas/workshop";
-import { registerForWorkshopAction } from "../actions";
+import {
+  lookupWorkshopBalanceAction,
+  registerForWorkshopAction,
+} from "../actions";
 import { NON_REFUNDABLE_NOTE } from "./content";
 import { OperatorPicker } from "./payment-logos";
 import { useWorkshopLive, WhatsappButton } from "./workshop-live";
@@ -41,6 +45,25 @@ export function RegistrationForm() {
     firstName: string;
   } | null>(null);
   const [started, setStarted] = useState(false);
+  const typedPhone = toWorkshopPhone(values.whatsapp);
+
+  // As soon as the number is complete, its situation shows: a seat already
+  // held, and what is left to pay on it.
+  useEffect(() => {
+    if (!typedPhone) return;
+    let current = true;
+    const timer = setTimeout(async () => {
+      const found = await lookupWorkshopBalanceAction(typedPhone);
+      if (!current || !found) return;
+      setBalance(found);
+      setInParts(false);
+    }, 500);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [typedPhone]);
+
   const due = balance?.left ?? price;
   const partAmount = Number(part);
   const amount = inParts ? partAmount : due;
@@ -167,101 +190,109 @@ export function RegistrationForm() {
           <p className="font-medium">
             {balance.firstName}, ta place est déjà réservée.
           </p>
-          <p>
-            Il te reste{" "}
-            <strong>{balance.left.toLocaleString("fr-FR")} F</strong> à payer.
-            Tu peux tout régler maintenant, ou une partie.
-          </p>
+          {balance.left > 0 ? (
+            <p>
+              Il te reste{" "}
+              <strong>{balance.left.toLocaleString("fr-FR")} F</strong> à payer.
+              Tu peux tout régler maintenant, ou une partie.
+            </p>
+          ) : (
+            <p>Elle est entièrement payée : il ne te reste rien à régler.</p>
+          )}
         </div>
       )}
 
-      <fieldset className="space-y-2">
-        <legend className="mb-1.5 text-sm font-medium">
-          Comment veux-tu payer ?
-        </legend>
-        <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
-          <input
-            type="radio"
-            name="atelier-plan"
-            className="accent-brand-accent mt-1 size-4"
-            checked={!inParts}
-            onChange={() => setInParts(false)}
-          />
-          <span>
-            <span className="block font-medium">
-              {balance ? "Tout régler" : "Tout payer"} maintenant :{" "}
-              {due.toLocaleString("fr-FR")} F
-            </span>
-          </span>
-        </label>
-        <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
-          <input
-            type="radio"
-            name="atelier-plan"
-            className="accent-brand-accent mt-1 size-4"
-            checked={inParts}
-            onChange={() => setInParts(true)}
-          />
-          <span>
-            <span className="block font-medium">
-              {balance ? "Payer une partie" : "Payer petit à petit"}
-            </span>
-            <span className="text-muted-foreground block text-sm">
-              {balance
-                ? `Dès ${Math.min(MIN_WORKSHOP_INSTALLMENT, due).toLocaleString("fr-FR")} F. Le reste quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`
-                : `Dès ${MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F. Ta place est réservée dès ce premier versement, et tu complètes quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`}
-            </span>
-          </span>
-        </label>
-        {inParts && (
-          <div className="space-y-1.5 pt-1">
-            <Label htmlFor="atelier-part">
-              Montant de ce {balance ? "" : "premier "}versement (F CFA)
-            </Label>
-            <Input
-              id="atelier-part"
-              required
-              type="number"
-              inputMode="numeric"
-              min={Math.min(MIN_WORKSHOP_INSTALLMENT, due)}
-              max={due}
-              step={1}
-              className="h-11 text-base"
-              value={part}
-              onChange={(e) => setPart(e.target.value)}
-            />
-            {amountValid && amount < due && (
-              <p className="text-muted-foreground text-xs">
-                Il te restera {(due - amount).toLocaleString("fr-FR")} F à
-                payer.
-              </p>
+      {balance?.left !== 0 && (
+        <>
+          <fieldset className="space-y-2">
+            <legend className="mb-1.5 text-sm font-medium">
+              Comment veux-tu payer ?
+            </legend>
+            <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
+              <input
+                type="radio"
+                name="atelier-plan"
+                className="accent-brand-accent mt-1 size-4"
+                checked={!inParts}
+                onChange={() => setInParts(false)}
+              />
+              <span>
+                <span className="block font-medium">
+                  {balance ? "Tout régler" : "Tout payer"} maintenant :{" "}
+                  {due.toLocaleString("fr-FR")} F
+                </span>
+              </span>
+            </label>
+            <label className="has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex cursor-pointer items-start gap-3 rounded-xl border p-3">
+              <input
+                type="radio"
+                name="atelier-plan"
+                className="accent-brand-accent mt-1 size-4"
+                checked={inParts}
+                onChange={() => setInParts(true)}
+              />
+              <span>
+                <span className="block font-medium">
+                  {balance ? "Payer une partie" : "Payer petit à petit"}
+                </span>
+                <span className="text-muted-foreground block text-sm">
+                  {balance
+                    ? `Dès ${Math.min(MIN_WORKSHOP_INSTALLMENT, due).toLocaleString("fr-FR")} F. Le reste quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`
+                    : `Dès ${MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F. Ta place est réservée dès ce premier versement, et tu complètes quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`}
+                </span>
+              </span>
+            </label>
+            {inParts && (
+              <div className="space-y-1.5 pt-1">
+                <Label htmlFor="atelier-part">
+                  Montant de ce {balance ? "" : "premier "}versement (F CFA)
+                </Label>
+                <Input
+                  id="atelier-part"
+                  required
+                  type="number"
+                  inputMode="numeric"
+                  min={Math.min(MIN_WORKSHOP_INSTALLMENT, due)}
+                  max={due}
+                  step={1}
+                  className="h-11 text-base"
+                  value={part}
+                  onChange={(e) => setPart(e.target.value)}
+                />
+                {amountValid && amount < due && (
+                  <p className="text-muted-foreground text-xs">
+                    Il te restera {(due - amount).toLocaleString("fr-FR")} F à
+                    payer.
+                  </p>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </fieldset>
+          </fieldset>
 
-      <p className="text-muted-foreground text-xs">{NON_REFUNDABLE_NOTE}</p>
+          <p className="text-muted-foreground text-xs">{NON_REFUNDABLE_NOTE}</p>
 
-      {error && (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
+          {error && (
+            <p className="text-destructive text-sm" role="alert">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={pending || !amountValid}
+            className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-14 w-full rounded-xl py-3 text-base font-bold whitespace-normal shadow-lg"
+          >
+            {pending ? (
+              "Envoi de la demande de paiement..."
+            ) : (
+              <>
+                <Lock className="size-5" />
+                Payer {(amountValid ? amount : due).toLocaleString("fr-FR")} F
+              </>
+            )}
+          </Button>
+        </>
       )}
-
-      <Button
-        type="submit"
-        disabled={pending || !amountValid}
-        className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-14 w-full rounded-xl py-3 text-base font-bold whitespace-normal shadow-lg"
-      >
-        {pending ? (
-          "Envoi de la demande de paiement..."
-        ) : (
-          <>
-            <Lock className="size-5" />
-            Payer {(amountValid ? amount : due).toLocaleString("fr-FR")} F
-          </>
-        )}
-      </Button>
     </form>
   );
 }

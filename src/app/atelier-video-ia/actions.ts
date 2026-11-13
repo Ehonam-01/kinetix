@@ -9,12 +9,14 @@ import {
 import { getTrustedOrigin } from "@/lib/trusted-origin";
 import {
   workshopInstallmentSchema,
+  toWorkshopPhone,
   workshopRegistrationSchema,
   type WorkshopInstallmentInput,
   type WorkshopRegistrationInput,
 } from "@/schemas/workshop";
 import { checkWorkshopRegistration } from "@/services/workshops/check-status";
 import {
+  findWorkshopBalance,
   payMoreForWorkshop,
   payWorkshopBalanceByNumber,
 } from "@/services/workshops/pay-more";
@@ -117,6 +119,20 @@ export async function registerForWorkshopAction(
     };
   }
   redirect(target);
+}
+
+// The seat a number already holds, looked up as it is typed in the form.
+export async function lookupWorkshopBalanceAction(
+  whatsapp: string,
+): Promise<{ left: number; firstName: string } | null> {
+  const phone = toWorkshopPhone(String(whatsapp).slice(0, 40));
+  if (!phone) return null;
+  if (
+    await isRateLimited("workshopBalanceLookup", `ip:${await getClientIp()}`)
+  ) {
+    return null;
+  }
+  return findWorkshopBalance(phone);
 }
 
 export async function checkWorkshopRegistrationAction(token: string) {
