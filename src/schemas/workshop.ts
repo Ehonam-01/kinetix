@@ -45,6 +45,8 @@ const operatorField = z.enum(["TOGOCELL", "MOOV_MONEY"], {
 });
 
 export const workshopRegistrationSchema = z.object({
+  // The city: one of the page's sessions (the service checks which).
+  sessionId: z.uuid("Choisis ta ville."),
   fullName: z
     .string()
     .trim()
@@ -84,19 +86,17 @@ export type WorkshopInstallmentInput = z.input<
   typeof workshopInstallmentSchema
 >;
 
-export const workshopSettingsSchema = z.object({
-  priceCfa: z.coerce.number().int().min(100).max(1_000_000),
-  regularPriceCfa: z.coerce.number().int().min(0).max(10_000_000),
-  capacity: z.coerce.number().int().min(1).max(100_000),
-  venue: z.string().trim().min(3).max(300),
-  whatsappGroupUrl: z
-    .string()
-    .trim()
-    .regex(
-      /^(https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+\/?(\?[A-Za-z0-9_=&-]*)?)?$/,
-      "Lien de groupe WhatsApp invalide (https://chat.whatsapp.com/...).",
-    )
-    .transform((value) => value || null),
+const whatsappGroupField = z
+  .string()
+  .trim()
+  .regex(
+    /^(https:\/\/chat\.whatsapp\.com\/[A-Za-z0-9]+\/?(\?[A-Za-z0-9_=&-]*)?)?$/,
+    "Lien de groupe WhatsApp invalide (https://chat.whatsapp.com/...).",
+  )
+  .transform((value) => value || null);
+
+// The sales page's own settings: its videos.
+export const workshopPageSchema = z.object({
   // Blanks dropped: a filled link is shown, whichever field it was typed in.
   exampleVideoUrls: z
     .array(
@@ -132,13 +132,50 @@ export const workshopSettingsSchema = z.object({
       "Lien YouTube invalide.",
     )
     .transform((value) => value || null),
-  registrationsOpen: z.boolean(),
 });
 
+const dayField = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Indique la date de la session.");
+const timeField = z.string().regex(/^\d{2}:\d{2}$/, "Indique l'heure.");
+
+// One city's session. Its date and hours are typed in Lomé time, which is
+// UTC.
+export const workshopSessionSchema = z
+  .object({
+    city: cityField,
+    day: dayField,
+    startTime: timeField,
+    endTime: timeField,
+    priceCfa: z.coerce.number().int().min(100).max(1_000_000),
+    regularPriceCfa: z.coerce.number().int().min(0).max(10_000_000),
+    capacity: z.coerce.number().int().min(0).max(100_000),
+    // Blank: the page shows the city until the address is set.
+    venue: z.string().trim().max(300),
+    whatsappGroupUrl: whatsappGroupField,
+    registrationsOpen: z.boolean(),
+  })
+  .transform(({ day, startTime, endTime, ...values }, ctx) => {
+    const startsAt = new Date(`${day}T${startTime}:00Z`);
+    const endsAt = new Date(`${day}T${endTime}:00Z`);
+    if (Number.isNaN(startsAt.getTime()) || endsAt <= startsAt) {
+      ctx.addIssue({
+        code: "custom",
+        message: "L'heure de fin doit suivre l'heure de début.",
+      });
+      return z.NEVER;
+    }
+    // The participant's code stays usable until the end of the next day.
+    const discountValidUntil = new Date(`${day}T23:59:59Z`);
+    discountValidUntil.setUTCDate(discountValidUntil.getUTCDate() + 1);
+    return { ...values, startsAt, endsAt, discountValidUntil };
+  });
+
 export const adminWorkshopRegistrationSchema = z.object({
+  // The session (city) they come to; the city is taken from it.
+  workshopId: z.uuid("Choisis la session."),
   fullName: workshopRegistrationSchema.shape.fullName,
   whatsapp: phoneField,
   email: workshopRegistrationSchema.shape.email,
-  city: cityField,
   amount: z.coerce.number().int().min(0).max(1_000_000),
 });

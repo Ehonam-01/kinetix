@@ -14,15 +14,20 @@ import { MessageCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackMarketingEvent, whenPixelReady } from "@/lib/marketing-events";
 import { cn } from "@/lib/utils";
+import { citiesLabel, priceSummary, type LiveSession } from "./sessions";
 
 const REFRESH_MS = 30_000;
 
 type Live = {
+  sessions: LiveSession[];
+  // Seats left across the cities still on sale, and whether any is.
   remaining: number;
   open: boolean;
+  // The price on the buttons: the same everywhere, or the lowest ("dès").
   price: number;
+  priceFrom: boolean;
   whatsappUrl: string | null;
-  markClosed: () => void;
+  markClosed: (sessionId: string) => void;
 };
 
 const LiveContext = createContext<Live | null>(null);
@@ -37,33 +42,39 @@ export function useWorkshopLive() {
   return useLive();
 }
 
+type Seats = { id: string; remaining: number; open: boolean };
+
 // The sales page is cached; the seats aren't. This keeps every counter and
 // button on it right, from /api/atelier-video-ia/places, only while the
 // page is actually on screen.
 export function WorkshopLiveProvider({
-  remaining: initialRemaining,
-  open: initialOpen,
-  price,
+  sessions: initialSessions,
   whatsappUrl,
   children,
 }: {
-  remaining: number;
-  open: boolean;
-  price: number;
+  sessions: LiveSession[];
   whatsappUrl: string | null;
   children: ReactNode;
 }) {
-  const [state, setState] = useState({
-    remaining: initialRemaining,
-    open: initialOpen,
-  });
+  const [sessions, setSessions] = useState(initialSessions);
 
   useEffect(() => {
     async function refresh() {
       if (document.visibilityState !== "visible") return;
       try {
         const response = await fetch("/api/atelier-video-ia/places");
-        if (response.ok) setState(await response.json());
+        if (!response.ok) return;
+        const { sessions: seats } = (await response.json()) as {
+          sessions: Seats[];
+        };
+        setSessions((current) =>
+          current.map((session) => {
+            const live = seats.find((s) => s.id === session.id);
+            return live
+              ? { ...session, remaining: live.remaining, open: live.open }
+              : session;
+          }),
+        );
       } catch {
         // No network for a moment: the last figure stays.
       }
@@ -74,13 +85,27 @@ export function WorkshopLiveProvider({
   }, []);
 
   const markClosed = useCallback(
-    () => setState((current) => ({ ...current, open: false })),
+    (sessionId: string) =>
+      setSessions((current) =>
+        current.map((session) =>
+          session.id === sessionId ? { ...session, open: false } : session,
+        ),
+      ),
     [],
   );
-  const value = useMemo(
-    () => ({ ...state, price, whatsappUrl, markClosed }),
-    [state, price, whatsappUrl, markClosed],
-  );
+  const value = useMemo(() => {
+    const onSale = sessions.filter((session) => session.open);
+    const { price, from } = priceSummary(onSale.length > 0 ? onSale : sessions);
+    return {
+      sessions,
+      remaining: onSale.reduce((sum, session) => sum + session.remaining, 0),
+      open: onSale.length > 0,
+      price,
+      priceFrom: from,
+      whatsappUrl,
+      markClosed,
+    };
+  }, [sessions, whatsappUrl, markClosed]);
 
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>;
 }
@@ -125,7 +150,7 @@ export function WorkshopCta({
   label: string;
   className?: string;
 }) {
-  const { open, price, whatsappUrl } = useLive();
+  const { open, price, priceFrom, whatsappUrl } = useLive();
 
   if (!open && whatsappUrl) {
     return (
@@ -145,7 +170,8 @@ export function WorkshopCta({
         className,
       )}
     >
-      {label} – {price.toLocaleString("fr-FR")}&nbsp;F
+      {label} – {priceFrom ? "dès " : ""}
+      {price.toLocaleString("fr-FR")}&nbsp;F
     </Link>
   );
 }
@@ -172,6 +198,7 @@ export function CtaNote({ className }: { className?: string }) {
 // of the accent colour turning behind a 2px gap (kx-neon in globals.css for
 // the glow), still for visitors who turned animations off.
 export function WorkshopCtaBlock({ className }: { className?: string }) {
+  const { sessions } = useLive();
   return (
     <div
       className={cn(
@@ -188,7 +215,7 @@ export function WorkshopCtaBlock({ className }: { className?: string }) {
           Prêt à créer ta première publicité avec l&apos;IA ?
         </p>
         <p className="text-muted-foreground mt-2">
-          Réserve ta place pour la masterclass du 14 novembre à Lomé.
+          Réserve ta place pour la masterclass à {citiesLabel(sessions)}.
         </p>
         <WorkshopCta label="JE RÉSERVE MA PLACE" className="mt-4 w-full" />
         <CtaNote className="mt-3 text-center" />

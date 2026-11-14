@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { CheckCircle2, Lock } from "lucide-react";
+import { CalendarDays, CheckCircle2, Lock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +14,14 @@ import {
   lookupWorkshopBalanceAction,
   registerForWorkshopAction,
 } from "../actions";
+import type { HeldSeat } from "@/services/workshops/register";
+import { cn } from "@/lib/utils";
 import { NON_REFUNDABLE_NOTE } from "./content";
 import { OperatorPicker } from "./payment-logos";
+import { sessionDay } from "./sessions";
 import { useWorkshopLive, WhatsappButton } from "./workshop-live";
 
-type Values = Omit<WorkshopRegistrationInput, "amount">;
+type Values = Omit<WorkshopRegistrationInput, "amount" | "sessionId">;
 
 const EMPTY: Values = {
   fullName: "",
@@ -29,9 +32,17 @@ const EMPTY: Values = {
 };
 
 export function RegistrationForm() {
-  const { open, price, whatsappUrl, markClosed } = useWorkshopLive();
+  const { sessions, open, whatsappUrl, markClosed } = useWorkshopLive();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(EMPTY);
+  // The city (explicit user decision: the same workshop in several cities,
+  // each with its own date, place, price and seats). Chosen first; only one
+  // still on sale is chosen already.
+  const onSale = sessions.filter((session) => session.open);
+  const [sessionId, setSessionId] = useState(
+    onSale.length === 1 ? onSale[0].id : "",
+  );
+  const session = onSale.find((s) => s.id === sessionId) ?? null;
   // Payment in parts (explicit user decision): the whole price, or a first
   // part from MIN_WORKSHOP_INSTALLMENT, the rest later or at the door.
   const [inParts, setInParts] = useState(false);
@@ -40,10 +51,7 @@ export function RegistrationForm() {
   // This WhatsApp number already holds a seat with something left to pay
   // (explicit user decision: they come back through this same form): the
   // form then pays that balance, wholly or in part.
-  const [balance, setBalance] = useState<{
-    left: number;
-    firstName: string;
-  } | null>(null);
+  const [balance, setBalance] = useState<HeldSeat | null>(null);
   const [started, setStarted] = useState(false);
   const typedPhone = toWorkshopPhone(values.whatsapp);
 
@@ -64,7 +72,8 @@ export function RegistrationForm() {
     };
   }, [typedPhone]);
 
-  const due = balance?.left ?? price;
+  const due = balance?.left ?? session?.price ?? 0;
+  const ready = !!balance || !!session;
   const partAmount = Number(part);
   const amount = inParts ? partAmount : due;
   const amountValid =
@@ -88,11 +97,18 @@ export function RegistrationForm() {
     startTransition(async () => {
       const result = await registerForWorkshopAction({
         ...values,
+        sessionId,
         amount,
         payBalance: !!balance,
       });
-      if (result.full) markClosed();
-      else if (result.error) setError(result.error);
+      if (result.full) {
+        // That city just filled up: the others stay on offer.
+        markClosed(sessionId);
+        setSessionId("");
+        setError(
+          `Il n'y a plus de place${session ? ` à ${session.city}` : ""}. Choisis une autre ville, ou écris-nous sur WhatsApp.`,
+        );
+      } else if (result.error) setError(result.error);
       else if (result.balance) {
         setBalance(result.balance);
         setInParts(false);
@@ -131,6 +147,59 @@ export function RegistrationForm() {
       onSubmit={handleSubmit}
       className="bg-card space-y-4 rounded-2xl border p-5"
     >
+      {!balance && (
+        <fieldset className="space-y-2">
+          <legend className="mb-1.5 text-sm font-medium">
+            Dans quelle ville ?
+          </legend>
+          {sessions.map((s) => (
+            <label
+              key={s.id}
+              className={cn(
+                "has-checked:border-brand-accent has-checked:bg-brand-accent/5 flex items-start gap-3 rounded-xl border p-3",
+                s.open ? "cursor-pointer" : "opacity-60",
+              )}
+            >
+              <input
+                type="radio"
+                name="atelier-session"
+                required
+                disabled={!s.open}
+                className="accent-brand-accent mt-1 size-4"
+                checked={sessionId === s.id}
+                onChange={() => setSessionId(s.id)}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="font-semibold">{s.city}</span>
+                  <span className="text-sm font-semibold whitespace-nowrap">
+                    {s.price.toLocaleString("fr-FR")} F
+                  </span>
+                </span>
+                <span className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-sm">
+                  <CalendarDays aria-hidden="true" className="size-3.5" />
+                  {s.when}
+                </span>
+                <span className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                  <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
+                  {s.place}
+                </span>
+                <span
+                  className={cn(
+                    "mt-1 block text-xs font-medium",
+                    s.open ? "text-brand-accent" : "text-destructive",
+                  )}
+                >
+                  {s.open
+                    ? `${s.remaining} place${s.remaining > 1 ? "s" : ""} restante${s.remaining > 1 ? "s" : ""}`
+                    : "Complet"}
+                </span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+
       <div className="space-y-1.5">
         <Label htmlFor="atelier-name">Nom complet</Label>
         <Input
@@ -188,7 +257,9 @@ export function RegistrationForm() {
       {balance && (
         <div className="border-brand-accent/40 bg-brand-accent/5 space-y-1 rounded-xl border p-3 text-sm">
           <p className="font-medium">
-            {balance.firstName}, ta place est déjà réservée.
+            {balance.firstName}, ta place
+            {balance.city ? ` à ${balance.city}` : ""} (
+            {sessionDay(balance.startsAt)}) est déjà réservée.
           </p>
           {balance.left > 0 ? (
             <p>
@@ -202,7 +273,13 @@ export function RegistrationForm() {
         </div>
       )}
 
-      {balance?.left !== 0 && (
+      {!ready && (
+        <p className="text-muted-foreground text-sm">
+          Choisis ta ville pour voir le prix et payer.
+        </p>
+      )}
+
+      {ready && balance?.left !== 0 && (
         <>
           <fieldset className="space-y-2">
             <legend className="mb-1.5 text-sm font-medium">
@@ -279,7 +356,7 @@ export function RegistrationForm() {
 
           <Button
             type="submit"
-            disabled={pending || !amountValid}
+            disabled={pending || !ready || !amountValid}
             className="bg-brand-accent text-brand-accent-foreground hover:bg-brand-accent/90 shadow-brand-accent/30 h-auto min-h-14 w-full rounded-xl py-3 text-base font-bold whitespace-normal shadow-lg"
           >
             {pending ? (

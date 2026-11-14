@@ -5,10 +5,11 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { profiles } from "@/db/schema/profiles";
 import { workshopRegistrations, workshops } from "@/db/schema/workshops";
-import { getWorkshop } from "@/repositories/workshops";
+import { getSession, getWorkshop } from "@/repositories/workshops";
 import {
   adminWorkshopRegistrationSchema,
-  workshopSettingsSchema,
+  workshopPageSchema,
+  workshopSessionSchema,
 } from "@/schemas/workshop";
 import { logAdminAction } from "@/services/admin/audit-log";
 import type { Executor } from "@/db/executor";
@@ -23,11 +24,11 @@ async function assertAdmin(tx: Executor, adminUserId: string) {
   }
 }
 
-export async function updateWorkshopSettings(
+export async function updateWorkshopPage(
   adminUserId: string,
-  input: z.input<typeof workshopSettingsSchema>,
+  input: z.input<typeof workshopPageSchema>,
 ) {
-  const values = workshopSettingsSchema.parse(input);
+  const values = workshopPageSchema.parse(input);
   return db.transaction(async (tx) => {
     await assertAdmin(tx, adminUserId);
     const workshop = await getWorkshop(tx);
@@ -45,6 +46,32 @@ export async function updateWorkshopSettings(
   });
 }
 
+// One city's session: date and hours, place, price, seats, group, sale.
+export async function updateWorkshopSession(
+  adminUserId: string,
+  sessionId: string,
+  input: z.input<typeof workshopSessionSchema>,
+) {
+  const values = workshopSessionSchema.parse(input);
+  return db.transaction(async (tx) => {
+    await assertAdmin(tx, adminUserId);
+    const page = await getWorkshop(tx);
+    const session = await getSession(tx, page.id, sessionId);
+    if (!session) throw new Error("Session introuvable.");
+    await tx
+      .update(workshops)
+      .set({ ...values, updatedAt: sql`now()` })
+      .where(eq(workshops.id, session.id));
+    await logAdminAction(tx, {
+      actorUserId: adminUserId,
+      action: "WORKSHOP_UPDATED",
+      targetType: "workshop",
+      targetId: session.id,
+      metadata: values,
+    });
+  });
+}
+
 // Someone who wrote on WhatsApp once the online sale stopped, and paid
 // off-site: registered as paid, with the same code as anyone else, worth
 // what they really paid. No payments row: no provider was involved.
@@ -55,12 +82,18 @@ export async function addWorkshopRegistration(
   const values = adminWorkshopRegistrationSchema.parse(input);
   return db.transaction(async (tx) => {
     await assertAdmin(tx, adminUserId);
-    const workshop = await getWorkshop(tx);
+    const page = await getWorkshop(tx);
+    const { workshopId, ...participant } = values;
+    // The page's own row (the first session) or one of its sessions.
+    const workshop =
+      workshopId === page.id ? page : await getSession(tx, page.id, workshopId);
+    if (!workshop) throw new Error("Session introuvable.");
     const [registration] = await tx
       .insert(workshopRegistrations)
       .values({
         workshopId: workshop.id,
-        ...values,
+        ...participant,
+        city: workshop.city ?? "",
         status: "PAID",
         amountPaid: values.amount,
         source: "ADMIN",

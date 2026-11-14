@@ -1,17 +1,80 @@
 import "server-only";
-import { and, count, desc, eq, gte, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { payments } from "@/db/schema/payments";
 import { workshopRegistrations, workshops } from "@/db/schema/workshops";
 
 export const WORKSHOP_SLUG = "atelier-video-ia";
 
+type Workshop = typeof workshops.$inferSelect;
+
+// The sales page's row: its videos, and the first session (Lomé, 14
+// November) with its registrations.
 export async function getWorkshop(executor: Executor) {
   const workshop = await executor.query.workshops.findFirst({
     where: eq(workshops.slug, WORKSHOP_SLUG),
   });
   if (!workshop) throw new Error("Atelier introuvable.");
   return workshop;
+}
+
+// The sessions sold on the page, one per city, in date order.
+export function listSessions(executor: Executor, pageId: string) {
+  return executor.query.workshops.findMany({
+    where: eq(workshops.pageId, pageId),
+    orderBy: asc(workshops.startsAt),
+  });
+}
+
+// A session of the page, or null: an id from a form is checked here.
+export async function getSession(
+  executor: Executor,
+  pageId: string,
+  sessionId: string,
+) {
+  const session = await executor.query.workshops.findFirst({
+    where: and(eq(workshops.id, sessionId), eq(workshops.pageId, pageId)),
+  });
+  return session ?? null;
+}
+
+export async function getWorkshopById(executor: Executor, id: string) {
+  const workshop = await executor.query.workshops.findFirst({
+    where: eq(workshops.id, id),
+  });
+  if (!workshop) throw new Error("Atelier introuvable.");
+  return workshop;
+}
+
+// Where a session takes place: its address, or its city until the address
+// is set.
+export function sessionPlace(workshop: Pick<Workshop, "venue" | "city">) {
+  return workshop.venue.trim() || workshop.city || "";
+}
+
+// Each session with its live seats, for the sales page and its form.
+export async function listSessionsWithAvailability(
+  executor: Executor,
+  pageId: string,
+) {
+  const sessions = await listSessions(executor, pageId);
+  return Promise.all(
+    sessions.map(async (session) => ({
+      session,
+      ...(await getWorkshopAvailability(executor, session)),
+    })),
+  );
 }
 
 export async function countPaidRegistrations(
@@ -98,25 +161,30 @@ export async function findLatestRegistrationPayment(
   return row ?? null;
 }
 
-// The number's registration that stops a new one: already paid, or a
-// payment started so recently that its prompt may still be on the phone.
+// The number's registration that stops a new one, in any of these
+// sessions (one seat per number across the cities): already paid (one with
+// something left to pay first), or a payment started so recently that its
+// prompt may still be on the phone.
 export async function findBlockingRegistration(
   executor: Executor,
-  workshopId: string,
+  workshopIds: string[],
   whatsapp: string,
   pendingSince: Date,
 ) {
-  const paid = await executor.query.workshopRegistrations.findFirst({
+  if (workshopIds.length === 0) return undefined;
+  const paid = await executor.query.workshopRegistrations.findMany({
     where: and(
-      eq(workshopRegistrations.workshopId, workshopId),
+      inArray(workshopRegistrations.workshopId, workshopIds),
       eq(workshopRegistrations.whatsapp, whatsapp),
       eq(workshopRegistrations.status, "PAID"),
     ),
+    orderBy: desc(workshopRegistrations.createdAt),
   });
-  if (paid) return paid;
+  const owing = paid.find((r) => r.amountPaid < r.amount);
+  if (owing ?? paid[0]) return owing ?? paid[0];
   return executor.query.workshopRegistrations.findFirst({
     where: and(
-      eq(workshopRegistrations.workshopId, workshopId),
+      inArray(workshopRegistrations.workshopId, workshopIds),
       eq(workshopRegistrations.whatsapp, whatsapp),
       eq(workshopRegistrations.status, "PENDING"),
       gte(workshopRegistrations.createdAt, pendingSince),

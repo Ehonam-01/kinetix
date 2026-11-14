@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -21,15 +22,23 @@ export const workshopRegistrationSourceEnum = pgEnum(
   ["ONLINE", "ADMIN"],
 );
 
-// A paid in-person workshop, with its settings in this one row (edited from
-// /admin/atelier, so a change needs no deploy). capacity only decides when
-// the online sale stops and visitors are sent to WhatsApp: explicit user
-// decision, nothing in the database refuses a registration past it, and a
-// payment confirmed past it keeps its seat.
+// A paid in-person workshop session, with its settings in its own row
+// (edited from /admin/atelier, so a change needs no deploy). capacity only
+// decides when the online sale stops and visitors are sent to WhatsApp:
+// explicit user decision, nothing in the database refuses a registration
+// past it, and a payment confirmed past it keeps its seat.
+//
+// The row with slug "atelier-video-ia" is the sales page: its videos are
+// the page's (and it was itself the first session, Lomé, 14 November).
+// The same workshop given in several cities (explicit user decision: its
+// own date, place, price and seats in each) is one row per city, pointing
+// at the page through pageId; the page sells those sessions.
 export const workshops = pgTable("workshops", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
+  pageId: uuid("page_id").references((): AnyPgColumn => workshops.id),
+  city: text("city"),
   priceCfa: integer("price_cfa").notNull(),
   // The value shown crossed out next to the price.
   regularPriceCfa: integer("regular_price_cfa").notNull(),

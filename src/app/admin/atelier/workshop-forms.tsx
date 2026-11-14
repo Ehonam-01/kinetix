@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import {
   addWorkshopRegistrationAction,
   markWorkshopBalancePaidAction,
-  updateWorkshopSettingsAction,
+  updateWorkshopPageAction,
+  updateWorkshopSessionAction,
 } from "./actions";
 
 function Field({
@@ -23,31 +24,19 @@ function Field({
   );
 }
 
-export function WorkshopSettingsForm({
+// The sales page's videos, shared by every city.
+export function WorkshopPageForm({
   current,
 }: {
   current: {
-    priceCfa: number;
-    regularPriceCfa: number;
-    capacity: number;
-    venue: string;
-    whatsappGroupUrl: string | null;
     exampleVideoUrls: string[];
     heroVideoUrl: string | null;
     sliderVideoUrls: string[];
-    registrationsOpen: boolean;
   };
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const [values, setValues] = useState({
-    priceCfa: String(current.priceCfa),
-    regularPriceCfa: String(current.regularPriceCfa),
-    capacity: String(current.capacity),
-    venue: current.venue,
-    whatsappGroupUrl: current.whatsappGroupUrl ?? "",
-    heroVideoUrl: current.heroVideoUrl ?? "",
-  });
+  const [heroVideoUrl, setHeroVideoUrl] = useState(current.heroVideoUrl ?? "");
   const [videos, setVideos] = useState(
     [0, 1, 2].map((i) => current.exampleVideoUrls[i] ?? ""),
   );
@@ -56,24 +45,15 @@ export function WorkshopSettingsForm({
   const [sliderVideos, setSliderVideos] = useState(
     current.sliderVideoUrls.join("\n"),
   );
-  const [registrationsOpen, setRegistrationsOpen] = useState(
-    current.registrationsOpen,
-  );
-
-  const set =
-    (field: keyof typeof values) =>
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      setValues((v) => ({ ...v, [field]: event.target.value }));
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setMessage(null);
     startTransition(async () => {
-      const result = await updateWorkshopSettingsAction({
-        ...values,
+      const result = await updateWorkshopPageAction({
+        heroVideoUrl,
         exampleVideoUrls: videos,
         sliderVideoUrls: sliderVideos.split("\n"),
-        registrationsOpen,
       });
       setMessage(result.error ?? "Enregistré.");
     });
@@ -81,48 +61,12 @@ export function WorkshopSettingsForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border p-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field
-          id="workshop-price"
-          label="Prix (F CFA)"
-          type="number"
-          value={values.priceCfa}
-          onChange={set("priceCfa")}
-        />
-        <Field
-          id="workshop-regular"
-          label="Prix barré (F CFA)"
-          type="number"
-          value={values.regularPriceCfa}
-          onChange={set("regularPriceCfa")}
-        />
-        <Field
-          id="workshop-capacity"
-          label="Places"
-          type="number"
-          value={values.capacity}
-          onChange={set("capacity")}
-        />
-      </div>
-      <Field
-        id="workshop-venue"
-        label="Lieu"
-        value={values.venue}
-        onChange={set("venue")}
-      />
-      <Field
-        id="workshop-group"
-        label="Lien du groupe WhatsApp des participants"
-        placeholder="https://chat.whatsapp.com/..."
-        value={values.whatsappGroupUrl}
-        onChange={set("whatsappGroupUrl")}
-      />
       <Field
         id="workshop-hero-video"
         label="Vidéo horizontale sous le haut de page (lien YouTube)"
         placeholder="https://www.youtube.com/watch?v=..."
-        value={values.heroVideoUrl}
-        onChange={set("heroVideoUrl")}
+        value={heroVideoUrl}
+        onChange={(e) => setHeroVideoUrl(e.target.value)}
       />
       {videos.map((url, i) => (
         <Field
@@ -155,13 +99,146 @@ export function WorkshopSettingsForm({
           tap relance la vidéo avec le son. Vide : le slider est masqué.
         </p>
       </div>
+      <div className="flex items-center gap-3">
+        <Button type="submit" disabled={pending}>
+          {pending ? "..." : "Enregistrer"}
+        </Button>
+        {message && <p className="text-sm">{message}</p>}
+      </div>
+    </form>
+  );
+}
+
+// Lomé time is UTC: the date and hours are read and typed as such.
+const toDay = (iso: string) => iso.slice(0, 10);
+const toTime = (iso: string) => iso.slice(11, 16);
+
+// One city's session: date and hours, place, price, seats, group, sale.
+export function WorkshopSessionForm({
+  session,
+}: {
+  session: {
+    id: string;
+    city: string | null;
+    startsAt: string;
+    endsAt: string;
+    priceCfa: number;
+    regularPriceCfa: number;
+    capacity: number;
+    venue: string;
+    whatsappGroupUrl: string | null;
+    registrationsOpen: boolean;
+  };
+}) {
+  const [pending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+  const [values, setValues] = useState({
+    city: session.city ?? "",
+    day: toDay(session.startsAt),
+    startTime: toTime(session.startsAt),
+    endTime: toTime(session.endsAt),
+    priceCfa: String(session.priceCfa),
+    regularPriceCfa: String(session.regularPriceCfa),
+    capacity: String(session.capacity),
+    venue: session.venue,
+    whatsappGroupUrl: session.whatsappGroupUrl ?? "",
+  });
+  const [registrationsOpen, setRegistrationsOpen] = useState(
+    session.registrationsOpen,
+  );
+  const id = (name: string) => `session-${session.id}-${name}`;
+
+  const set =
+    (field: keyof typeof values) =>
+    (event: React.ChangeEvent<HTMLInputElement>) =>
+      setValues((v) => ({ ...v, [field]: event.target.value }));
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setMessage(null);
+    startTransition(async () => {
+      const result = await updateWorkshopSessionAction(session.id, {
+        ...values,
+        registrationsOpen,
+      });
+      setMessage(result.error ?? "Enregistré.");
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Field
+          id={id("city")}
+          label="Ville"
+          value={values.city}
+          onChange={set("city")}
+        />
+        <Field
+          id={id("day")}
+          label="Date"
+          type="date"
+          value={values.day}
+          onChange={set("day")}
+        />
+        <Field
+          id={id("start")}
+          label="Début (heure de Lomé)"
+          type="time"
+          value={values.startTime}
+          onChange={set("startTime")}
+        />
+        <Field
+          id={id("end")}
+          label="Fin"
+          type="time"
+          value={values.endTime}
+          onChange={set("endTime")}
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field
+          id={id("price")}
+          label="Prix (F CFA)"
+          type="number"
+          value={values.priceCfa}
+          onChange={set("priceCfa")}
+        />
+        <Field
+          id={id("regular")}
+          label="Prix barré (F CFA)"
+          type="number"
+          value={values.regularPriceCfa}
+          onChange={set("regularPriceCfa")}
+        />
+        <Field
+          id={id("capacity")}
+          label="Places"
+          type="number"
+          value={values.capacity}
+          onChange={set("capacity")}
+        />
+      </div>
+      <Field
+        id={id("venue")}
+        label="Lieu (vide : la page affiche le nom de la ville)"
+        value={values.venue}
+        onChange={set("venue")}
+      />
+      <Field
+        id={id("group")}
+        label="Lien du groupe WhatsApp des participants de cette ville"
+        placeholder="https://chat.whatsapp.com/..."
+        value={values.whatsappGroupUrl}
+        onChange={set("whatsappGroupUrl")}
+      />
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
           checked={registrationsOpen}
           onChange={(e) => setRegistrationsOpen(e.target.checked)}
         />
-        Inscriptions en ligne ouvertes
+        Inscriptions en ligne ouvertes pour cette ville
       </label>
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
@@ -177,12 +254,12 @@ const EMPTY_REGISTRATION = {
   fullName: "",
   whatsapp: "",
   email: "",
-  city: "",
   amount: "",
 };
 
-// For someone who wrote on WhatsApp once the online sale stopped.
-export function AddRegistrationForm() {
+// For someone who wrote on WhatsApp once the online sale stopped, for the
+// session shown.
+export function AddRegistrationForm({ workshopId }: { workshopId: string }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [values, setValues] = useState(EMPTY_REGISTRATION);
@@ -196,7 +273,10 @@ export function AddRegistrationForm() {
     event.preventDefault();
     setMessage(null);
     startTransition(async () => {
-      const result = await addWorkshopRegistrationAction(values);
+      const result = await addWorkshopRegistrationAction({
+        ...values,
+        workshopId,
+      });
       if (result.error) {
         setMessage(result.error);
         return;
@@ -222,13 +302,6 @@ export function AddRegistrationForm() {
           required
           value={values.whatsapp}
           onChange={set("whatsapp")}
-        />
-        <Field
-          id="add-city"
-          label="Ville"
-          required
-          value={values.city}
-          onChange={set("city")}
         />
         <Field
           id="add-email"

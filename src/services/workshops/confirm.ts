@@ -11,6 +11,7 @@ import {
   countPaidRegistrations,
   findOtherPaidRegistration,
   findRegistrationForPayment,
+  sessionPlace,
 } from "@/repositories/workshops";
 import { alertAdmins } from "@/services/notifications/admin-alerts";
 import { resendEmailProvider } from "@/services/notifications/resend-email";
@@ -60,9 +61,9 @@ async function sendConfirmationEmail(
       subject,
       html: `
       <p>Bonjour ${escapeHtml(registration.fullName)},</p>
-      <p>Ta place est réservée pour le <strong>${fmtDateTime(workshop.startsAt)}</strong>.</p>
+      <p>Ta place est réservée pour le <strong>${fmtDateTime(workshop.startsAt)}</strong>${workshop.city ? ` à <strong>${escapeHtml(workshop.city)}</strong>` : ""}.</p>
       ${balance}
-      <p>Lieu : ${escapeHtml(workshop.venue)}</p>
+      <p>Lieu : ${escapeHtml(sessionPlace(workshop))}${workshop.venue.trim() ? "" : " (l'adresse précise arrive sur ta page de réservation)"}</p>
       <p><a href="${url}">Voir ma réservation${left > 0 ? ", faire un versement" : ""}, rejoindre le groupe WhatsApp et ajouter l'atelier à mon agenda</a></p>
     `,
     });

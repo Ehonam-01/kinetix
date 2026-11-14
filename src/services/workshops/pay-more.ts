@@ -8,11 +8,17 @@ import {
   findBlockingRegistration,
   findLatestRegistrationPayment,
   findRegistrationByToken,
-  getWorkshop,
+  getWorkshopById,
 } from "@/repositories/workshops";
 import type { workshopRegistrations } from "@/db/schema/workshops";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
-import { PAYMENT_ADDRESS, paymentEmail, splitName } from "./register";
+import {
+  currentSessionIds,
+  type HeldSeat,
+  PAYMENT_ADDRESS,
+  paymentEmail,
+  splitName,
+} from "./register";
 
 // Same as a first payment: a prompt may still be on the phone.
 const PENDING_WINDOW_MS = 5 * 60 * 1000;
@@ -61,10 +67,9 @@ export async function payWorkshopBalanceByNumber(input: {
   amount: number;
   origin: string;
 }): Promise<PayMoreResult> {
-  const workshop = await getWorkshop(db);
   const registration = await findBlockingRegistration(
     db,
-    workshop.id,
+    await currentSessionIds(),
     input.whatsapp,
     new Date(),
   );
@@ -85,18 +90,20 @@ export async function payWorkshopBalanceByNumber(input: {
 // already showed on submit (first name and amount left).
 export async function findWorkshopBalance(
   whatsapp: string,
-): Promise<{ left: number; firstName: string } | null> {
-  const workshop = await getWorkshop(db);
+): Promise<HeldSeat | null> {
   const registration = await findBlockingRegistration(
     db,
-    workshop.id,
+    await currentSessionIds(),
     whatsapp,
     new Date(),
   );
   if (registration?.status !== "PAID") return null;
+  const session = await getWorkshopById(db, registration.workshopId);
   return {
     left: Math.max(0, registration.amount - registration.amountPaid),
     firstName: splitName(registration.fullName).firstName,
+    city: session.city ?? "",
+    startsAt: session.startsAt.toISOString(),
   };
 }
 
@@ -116,7 +123,7 @@ async function startTopUp(
       message: "Ta place est déjà entièrement payée.",
     };
   }
-  const workshop = await getWorkshop(db);
+  const workshop = await getWorkshopById(db, registration.workshopId);
   if (workshop.startsAt.getTime() <= Date.now()) {
     return {
       outcome: "REFUSED",
@@ -182,7 +189,7 @@ async function startTopUp(
     metadata: { workshop_registration_id: registration.id },
     country: "TG",
     operator: input.operator,
-    address: PAYMENT_ADDRESS,
+    address: workshop.city || PAYMENT_ADDRESS,
   });
   await db
     .update(payments)

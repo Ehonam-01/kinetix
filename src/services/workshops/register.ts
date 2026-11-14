@@ -7,8 +7,10 @@ import { payments } from "@/db/schema/payments";
 import { workshopRegistrations } from "@/db/schema/workshops";
 import {
   findBlockingRegistration,
+  getSession,
   getWorkshop,
   getWorkshopAvailability,
+  listSessions,
 } from "@/repositories/workshops";
 import { getActivePaymentProvider } from "@/services/payments/provider-selector";
 
@@ -16,9 +18,24 @@ import { getActivePaymentProvider } from "@/services/payments/provider-selector"
 // prompt is still on the phone, and a double tap must not send a second one.
 const PENDING_WINDOW_MS = 5 * 60 * 1000;
 
-// Moov Togo requires an address and this form doesn't ask for one: where the
-// workshop takes place, like the fallback email below.
+// Moov Togo requires an address and this form doesn't ask for one: the
+// session's city, or this when there's none.
 export const PAYMENT_ADDRESS = "Lomé";
+
+// The sessions a number can hold a seat in: those sold on the page now
+// (the first edition's seats, on the page's own row, no longer count).
+export async function currentSessionIds() {
+  const page = await getWorkshop(db);
+  return (await listSessions(db, page.id)).map((session) => session.id);
+}
+
+// What the form shows for a number that already holds a seat.
+export type HeldSeat = {
+  left: number;
+  firstName: string;
+  city: string;
+  startsAt: string;
+};
 
 export function splitName(fullName: string) {
   const [firstName, ...rest] = fullName.trim().split(/\s+/);
@@ -32,6 +49,8 @@ export function paymentEmail(email: string | null) {
 }
 
 type RegisterInput = {
+  // The city chosen on the form: one of the page's sessions.
+  sessionId: string;
   fullName: string;
   whatsapp: string;
   email: string | null;
@@ -46,8 +65,9 @@ type RegisterResult =
   | { outcome: "ALREADY_PAID" }
   // This number already holds a seat with something left to pay: shown,
   // so the form offers to pay it (pay-more.ts payWorkshopBalanceByNumber).
-  | { outcome: "BALANCE_DUE"; left: number; firstName: string }
+  | ({ outcome: "BALANCE_DUE" } & HeldSeat)
   | { outcome: "IN_PROGRESS" }
+  | { outcome: "NO_SESSION" }
   | { outcome: "TOO_MUCH"; price: number }
   | {
       outcome: "STARTED";
@@ -67,22 +87,28 @@ type RegisterResult =
 export async function registerForWorkshop(
   input: RegisterInput,
 ): Promise<RegisterResult> {
-  const workshop = await getWorkshop(db);
+  const page = await getWorkshop(db);
+  const sessions = await listSessions(db, page.id);
   const existing = await findBlockingRegistration(
     db,
-    workshop.id,
+    sessions.map((session) => session.id),
     input.whatsapp,
     new Date(Date.now() - PENDING_WINDOW_MS),
   );
   // Checked before the seat count: a seat already held stays payable even
   // once the online sale has stopped.
   if (existing?.status === "PAID" && existing.amountPaid < existing.amount) {
+    const held = sessions.find((s) => s.id === existing.workshopId)!;
     return {
       outcome: "BALANCE_DUE",
       left: existing.amount - existing.amountPaid,
       firstName: splitName(existing.fullName).firstName,
+      city: held.city ?? "",
+      startsAt: held.startsAt.toISOString(),
     };
   }
+  const workshop = await getSession(db, page.id, input.sessionId);
+  if (!workshop) return { outcome: "NO_SESSION" };
   const { open } = await getWorkshopAvailability(db, workshop);
   if (!open) return { outcome: "FULL" };
   // The whole price, or a first part of it (schemas/workshop.ts checks the
@@ -125,8 +151,8 @@ export async function registerForWorkshop(
     fullName: input.fullName,
     whatsapp: input.whatsapp,
     email: input.email,
-    // No longer asked online; the column stays for people an admin adds.
-    city: "",
+    // The session's city, for the admin list and its export.
+    city: workshop.city ?? "",
     amount: workshop.priceCfa,
     paymentId: payment.id,
     accessToken: token,
@@ -135,7 +161,9 @@ export async function registerForWorkshop(
   try {
     const intent = await provider.createPayment({
       amount: input.amount,
-      description: workshop.title,
+      description: workshop.city
+        ? `${workshop.title} (${workshop.city})`
+        : workshop.title,
       customer: {
         email: paymentEmail(input.email),
         ...splitName(input.fullName),
@@ -146,7 +174,7 @@ export async function registerForWorkshop(
       metadata: { workshop_registration_id: registrationId },
       country: "TG",
       operator: input.operator,
-      address: PAYMENT_ADDRESS,
+      address: workshop.city || PAYMENT_ADDRESS,
     });
     await db
       .update(payments)

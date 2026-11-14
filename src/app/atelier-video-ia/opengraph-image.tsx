@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Kinetix AI Video Masterclass, atelier pratique à Lomé";
+export const alt =
+  "Kinetix AI Video Masterclass, atelier pratique à Lomé, Kara et Notsé";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -35,7 +36,7 @@ export default function OpengraphImage() {
         Crée ta première publicité vidéo professionnelle avec l&apos;IA
       </div>
       <div style={{ marginTop: 36, fontSize: 34, color: "#d7e0f5" }}>
-        Atelier 100 % pratique à Lomé · Samedi 14 novembre · 8 h – 13 h
+        Atelier 100 % pratique · Lomé 28 nov. · Kara 5 déc. · Notsé 6 déc.
       </div>
     </div>,
     size,

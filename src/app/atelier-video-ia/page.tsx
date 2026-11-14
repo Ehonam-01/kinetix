@@ -27,7 +27,10 @@ import { cn } from "@/lib/utils";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { whatsappHref } from "@/lib/whatsapp";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
-import { getWorkshop, getWorkshopAvailability } from "@/repositories/workshops";
+import {
+  getWorkshop,
+  listSessionsWithAvailability,
+} from "@/repositories/workshops";
 import {
   AUDIENCES,
   INCLUDED,
@@ -41,6 +44,12 @@ import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { HeroVideo } from "./_components/hero-video";
 import { PaymentLogos } from "./_components/payment-logos";
 import { RichText } from "./_components/rich-text";
+import {
+  citiesLabel,
+  priceSummary,
+  toLiveSession,
+  type LiveSession,
+} from "./_components/sessions";
 import { VideoSlider, type SliderVideo } from "./_components/video-slider";
 import {
   CtaNote,
@@ -56,7 +65,7 @@ import {
 
 const TITLE = `Kinetix AI Video Masterclass — ${SITE_NAME}`;
 const DESCRIPTION =
-  "Crée ta première publicité vidéo professionnelle avec l'IA en une seule matinée, et découvre comment transformer cette compétence en source de revenus. Atelier 100 % pratique à Lomé, samedi 14 novembre, 8 h – 13 h.";
+  "Crée ta première publicité vidéo professionnelle avec l'IA en une demi-journée, et découvre comment transformer cette compétence en source de revenus. Atelier 100 % pratique à Lomé (28 novembre), Kara (5 décembre) et Notsé (6 décembre).";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -82,27 +91,6 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 const fmt = (amount: number) => amount.toLocaleString("fr-FR");
-
-// The date and hours as set in /admin/atelier, in Lomé time.
-const fmtDay = (date: Date) =>
-  date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "Africa/Lome",
-  });
-function fmtHour(date: Date) {
-  const [hours, minutes] = date
-    .toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Africa/Lome",
-    })
-    .split(":");
-  return `${Number(hours)} h${minutes === "00" ? "" : ` ${minutes}`}`;
-}
-const capitalize = (text: string) =>
-  text.charAt(0).toUpperCase() + text.slice(1);
 
 // Handwriting, for the notes beside the hero video and a few labels.
 const caveat = Caveat({ subsets: ["latin"], weight: "700" });
@@ -168,21 +156,18 @@ function HandNotes() {
   );
 }
 
-// Date and hours, place, price: what a visitor needs to decide, as chips.
+// The cities and the price: what a visitor needs to decide, as chips.
 function EventInfo({
-  when,
-  venue,
+  sessions,
   price,
   className,
 }: {
-  when: string;
-  venue: string;
+  sessions: LiveSession[];
   price: string;
   className?: string;
 }) {
   const items: { icon: LucideIcon; text: string; strong?: boolean }[] = [
-    { icon: CalendarDays, text: when },
-    { icon: MapPin, text: venue },
+    { icon: MapPin, text: citiesLabel(sessions, "et") },
     { icon: Ticket, text: `${price} F CFA`, strong: true },
   ];
   return (
@@ -205,6 +190,53 @@ function EventInfo({
             className="text-brand-accent size-4 shrink-0"
           />
           {text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// One card per city: its date and hours, its place, its price. The seats
+// left are on the form, live.
+function SessionCards({
+  sessions,
+  className,
+}: {
+  sessions: LiveSession[];
+  className?: string;
+}) {
+  return (
+    <ul
+      className={cn(
+        "grid gap-3 text-left",
+        sessions.length > 1 && "sm:grid-cols-3",
+        className,
+      )}
+    >
+      {sessions.map((session) => (
+        <li key={session.id} className="bg-card rounded-2xl border p-4">
+          <p className="flex items-baseline justify-between gap-2">
+            <span className="font-heading text-lg font-bold">
+              {session.city}
+            </span>
+            <span className="text-sm font-semibold whitespace-nowrap">
+              {fmt(session.price)} F
+            </span>
+          </p>
+          <p className="mt-2 flex items-start gap-1.5 text-sm">
+            <CalendarDays
+              aria-hidden="true"
+              className="text-brand-accent mt-0.5 size-4 shrink-0"
+            />
+            {session.when}
+          </p>
+          <p className="text-muted-foreground mt-1 flex items-start gap-1.5 text-sm">
+            <MapPin
+              aria-hidden="true"
+              className="text-brand-accent mt-0.5 size-4 shrink-0"
+            />
+            {session.place}
+          </p>
         </li>
       ))}
     </ul>
@@ -272,7 +304,9 @@ export default async function AtelierVideoIaPage() {
     getWorkshop(db),
     getSupportWhatsapp(db),
   ]);
-  const { remaining, open } = await getWorkshopAvailability(db, workshop);
+  const sessions = (await listSessionsWithAvailability(db, workshop.id)).map(
+    toLiveSession,
+  );
   const whatsappUrl = (text: string) =>
     supportWhatsapp ? whatsappHref(supportWhatsapp, text) : null;
   const sliderVideos = workshop.sliderVideoUrls
@@ -285,25 +319,34 @@ export default async function AtelierVideoIaPage() {
     "Bonjour, j'ai une question sur la Kinetix AI Video Masterclass avant de réserver ma place.",
   );
   const waitlistUrl = whatsappUrl(
-    "Bonjour, je ne peux pas venir à l'atelier du 14 novembre. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
+    "Bonjour, je ne peux pas venir à l'atelier aux dates prévues. Je souhaite être sur la liste d'attente pour les prochaines sessions.",
   );
 
-  const day = fmtDay(workshop.startsAt);
-  const hours = `${fmtHour(workshop.startsAt)} – ${fmtHour(workshop.endsAt)}`;
-  const when = `${capitalize(day)} · ${hours}`;
-  const price = fmt(workshop.priceCfa);
-  const eventInfo = { when, venue: workshop.venue, price };
+  // Prices may differ by city: the lowest, "dès", when they do.
+  const onSale = sessions.filter((session) => session.open);
+  const offered = onSale.length > 0 ? onSale : sessions;
+  const summary = priceSummary(offered);
+  const price = `${summary.from ? "Dès " : ""}${fmt(summary.price)}`;
+  const regularPrice =
+    offered.find((session) => session.price === summary.price)?.regularPrice ??
+    0;
+  // The countdown runs to the next session still on sale.
+  const next = onSale[0] ?? null;
+  const eventInfo = { sessions, price };
   const faqs = workshopFaqs({
-    price,
-    venue: workshop.venue,
-    date: `${day}, de ${hours}`,
+    price: fmt(summary.price),
+    priceFrom: summary.from,
+    places: sessions
+      .map(
+        (session) =>
+          `À ${session.city} : ${session.when.toLowerCase()}, ${session.place === session.city ? "lieu précisé bientôt" : session.place}.`,
+      )
+      .join(" "),
   });
 
   return (
     <WorkshopLiveProvider
-      remaining={remaining}
-      open={open}
-      price={workshop.priceCfa}
+      sessions={sessions}
       whatsappUrl={whatsappUrl(WHATSAPP_REGISTER_TEXT)}
     >
       <main className="pb-24 sm:pb-0">
@@ -315,7 +358,7 @@ export default async function AtelierVideoIaPage() {
               Kinetix AI Video Masterclass
             </p>
             <h1 className="font-heading mt-2 text-[1.6rem] leading-[1.12] font-extrabold tracking-tight text-balance sm:text-5xl sm:leading-[1.15] lg:text-[2.75rem]">
-              En une matinée, crée une{" "}
+              En une demi-journée, crée une{" "}
               <span className="text-brand-accent">
                 vraie publicité vidéo avec l&apos;IA
               </span>{" "}
@@ -326,6 +369,10 @@ export default async function AtelierVideoIaPage() {
               réalises ta propre pub, accompagné du début à la fin.
             </p>
             <EventInfo {...eventInfo} className="mt-4" />
+            <SessionCards
+              sessions={sessions}
+              className="mx-auto mt-4 max-w-4xl"
+            />
 
             <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
               <HandNotes />
@@ -337,12 +384,16 @@ export default async function AtelierVideoIaPage() {
                 }
               />
               <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:justify-between">
-                <LaunchCountdown
-                  endsAt={workshop.startsAt.toISOString()}
-                  label="Temps restant avant l'atelier"
-                  boxClassName="bg-card border"
-                  labelClassName="text-muted-foreground"
-                />
+                {next ? (
+                  <LaunchCountdown
+                    endsAt={next.startsAt}
+                    label={`Temps restant avant l'atelier de ${next.city}`}
+                    boxClassName="bg-card border"
+                    labelClassName="text-muted-foreground"
+                  />
+                ) : (
+                  <span />
+                )}
                 <div
                   id={HERO_CTA_ID}
                   className="flex w-full flex-col items-center gap-2 sm:w-auto"
@@ -389,7 +440,7 @@ export default async function AtelierVideoIaPage() {
           </ul>
           <div className="border-brand-accent/40 bg-card mx-auto mt-8 max-w-3xl rounded-2xl border-2 p-5 sm:p-6">
             <p className="text-center font-semibold">
-              À la fin de la matinée, tu repars avec :
+              À la fin de l&apos;atelier, tu repars avec :
             </p>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {OUTCOMES.map((outcome) => (
@@ -470,7 +521,7 @@ export default async function AtelierVideoIaPage() {
             ))}
           </ol>
           <p className="text-muted-foreground mt-6 text-center text-sm">
-            ☕ Pause collation incluse. La matinée se termine par une
+            ☕ Pause collation incluse. L&apos;atelier se termine par une
             présentation de Kinetix Africa.
           </p>
           <CtaRow className="mt-8" />
@@ -554,7 +605,7 @@ export default async function AtelierVideoIaPage() {
               <p className="text-muted-foreground text-sm">
                 Valeur de l&apos;atelier :{" "}
                 <span className="font-semibold line-through">
-                  {fmt(workshop.regularPriceCfa)} F CFA
+                  {fmt(regularPrice)} F CFA
                 </span>
               </p>
               <p className="text-primary mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -565,11 +616,18 @@ export default async function AtelierVideoIaPage() {
               </p>
               <p className="mt-4 text-sm sm:text-base">
                 Kinetix Africa prend en charge le coût de cette formation
-                pratique. Ta contribution de <strong>{price} F CFA</strong>{" "}
+                pratique. Ta contribution de{" "}
+                <strong>
+                  {summary.from ? "dès " : ""}
+                  {fmt(summary.price)} F CFA
+                </strong>{" "}
                 couvre la réservation de ta place, la collation et
                 l&apos;organisation de l&apos;atelier.
               </p>
-              <EventInfo {...eventInfo} className="mt-5" />
+              <SessionCards
+                sessions={sessions}
+                className="mt-5 sm:grid-cols-1"
+              />
             </div>
 
             <div className="space-y-4 text-center lg:text-left">
@@ -582,8 +640,8 @@ export default async function AtelierVideoIaPage() {
                 ta place est réservée dès le premier versement.
               </p>
               <p>
-                ⚠️ Les places sont limitées à {workshop.capacity} : ta
-                contribution confirme ta présence.
+                ⚠️ Les places sont limitées dans chaque ville : ta contribution
+                confirme ta présence.
               </p>
               <WorkshopCtaBlock />
               <p className="text-muted-foreground text-sm">
@@ -648,7 +706,7 @@ export default async function AtelierVideoIaPage() {
         <section>
           <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8">
             <h2 className="text-2xl font-semibold tracking-tight text-balance sm:text-4xl">
-              En une matinée, crée ta première{" "}
+              En une demi-journée, crée ta première{" "}
               <span className="text-brand-accent">
                 publicité vidéo avec l&apos;IA
               </span>
@@ -659,6 +717,7 @@ export default async function AtelierVideoIaPage() {
               entreprises.
             </p>
             <EventInfo {...eventInfo} className="mt-6" />
+            <SessionCards sessions={sessions} className="mt-4" />
             <CtaRow label="OUI, JE RÉSERVE MA PLACE" className="mt-7" />
             <p className="mt-7 font-semibold">Apprends. Crée. Évolue.</p>
             <p className="text-muted-foreground mt-1 text-sm italic">

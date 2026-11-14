@@ -4,8 +4,16 @@ import { ArrowLeft } from "lucide-react";
 import { db } from "@/db/client";
 import { whatsappHref } from "@/lib/whatsapp";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
-import { getWorkshop, getWorkshopAvailability } from "@/repositories/workshops";
+import {
+  getWorkshop,
+  listSessionsWithAvailability,
+} from "@/repositories/workshops";
 import { WHATSAPP_REGISTER_TEXT } from "../_components/content";
+import {
+  citiesLabel,
+  priceSummary,
+  toLiveSession,
+} from "../_components/sessions";
 import { PaymentLogos } from "../_components/payment-logos";
 import { RegistrationForm } from "../_components/registration-form";
 import {
@@ -31,20 +39,20 @@ export default async function AtelierInscriptionPage() {
     getWorkshop(db),
     getSupportWhatsapp(db),
   ]);
-  const { remaining, open } = await getWorkshopAvailability(db, workshop);
+  const sessions = (await listSessionsWithAvailability(db, workshop.id)).map(
+    toLiveSession,
+  );
 
   return (
     <WorkshopLiveProvider
-      remaining={remaining}
-      open={open}
-      price={workshop.priceCfa}
+      sessions={sessions}
       whatsappUrl={
         supportWhatsapp
           ? whatsappHref(supportWhatsapp, WHATSAPP_REGISTER_TEXT)
           : null
       }
     >
-      <InitiateCheckoutTracker value={workshop.priceCfa} />
+      <InitiateCheckoutTracker value={priceSummary(sessions).price} />
       <main className="mx-auto max-w-md px-4 py-6 sm:py-10">
         <Link
           href="/atelier-video-ia"
@@ -60,8 +68,7 @@ export default async function AtelierInscriptionPage() {
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Kinetix AI Video Masterclass
-            <br />
-            Samedi 14 novembre · 8 h – 13 h · Lomé
+            <br />À {citiesLabel(sessions, "et")} : choisis ta ville
           </p>
         </div>
 

@@ -87,12 +87,25 @@ process.env.SITE_URL ??= "https://kinetix.example";
 
 const ORIGIN = "https://kinetix.example";
 
+// The sessions seeded by migration 0081, one per city.
+const sessionIds: Record<string, string> = {};
+// The sessions as migration 0081 seeds them, before any test moves them.
+let seededSessions: string[] = [];
+
+async function sessionIn(city: string) {
+  return localDb.query.workshops.findFirst({
+    where: eq(schema.workshops.id, sessionIds[city]),
+  });
+}
+
 function participant(
   whatsapp: string,
   email: string | null = null,
   amount = 2000,
+  city = "Lomé",
 ) {
   return {
+    sessionId: sessionIds[city],
     fullName: "Ama Mensah",
     whatsapp,
     email,
@@ -107,9 +120,10 @@ async function register(
   whatsapp: string,
   email: string | null = null,
   amount = 2000,
+  city = "Lomé",
 ) {
   const { registerForWorkshop } = await import("@/services/workshops/register");
-  return registerForWorkshop(participant(whatsapp, email, amount));
+  return registerForWorkshop(participant(whatsapp, email, amount, city));
 }
 
 async function payMore(token: string, amount: number) {
@@ -189,6 +203,14 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     localDb = db;
     await seedBaselineParameters(db);
     await seedDefaultCommissionRules(db);
+    const { getWorkshop, listSessions } =
+      await import("@/repositories/workshops");
+    const sessions = await listSessions(db, (await getWorkshop(db)).id);
+    for (const row of sessions) sessionIds[row.city!] = row.id;
+    seededSessions = sessions.map(
+      (s) =>
+        `${s.city} ${s.startsAt.toISOString()} ${s.endsAt.toISOString()} ${s.venue ? "lieu" : "sans lieu"}`,
+    );
   }, 120_000);
 
   beforeEach(async () => {
@@ -199,9 +221,15 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     await setWorkshop({
       capacity: 50,
       registrationsOpen: true,
-      startsAt: new Date(Date.now() + 86_400_000),
-      discountValidUntil: new Date(Date.now() + 2 * 86_400_000),
+      discountValidUntil: new Date(Date.now() + 9 * 86_400_000),
     });
+    // Still ahead, in the seeded order, whatever today's date.
+    for (const [i, id] of ["Lomé", "Kara", "Notsé"].entries()) {
+      await localDb
+        .update(schema.workshops)
+        .set({ startsAt: new Date(Date.now() + (i + 1) * 86_400_000) })
+        .where(eq(schema.workshops.id, sessionIds[id]));
+    }
     charges.length = 0;
     alerts.length = 0;
     sentEmails.length = 0;
@@ -210,17 +238,28 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
   });
 
   it("comes seeded with the agreed settings", async () => {
-    const workshop = await localDb.query.workshops.findFirst();
+    const workshop = await localDb.query.workshops.findFirst({
+      where: eq(schema.workshops.slug, "atelier-video-ia"),
+    });
     expect(workshop).toMatchObject({
-      slug: "atelier-video-ia",
       priceCfa: 2000,
       regularPriceCfa: 25000,
+      city: "Lomé",
+      pageId: null,
     });
     expect(workshop.endsAt.toISOString()).toBe("2026-11-14T13:00:00.000Z");
   });
 
+  it("the page sells three cities, each its own date and hours", () => {
+    expect(seededSessions).toEqual([
+      "Lomé 2026-11-28T08:00:00.000Z 2026-11-28T12:00:00.000Z lieu",
+      "Kara 2026-12-05T08:00:00.000Z 2026-12-05T12:00:00.000Z sans lieu",
+      "Notsé 2026-12-06T14:00:00.000Z 2026-12-06T18:00:00.000Z sans lieu",
+    ]);
+  });
+
   it("a started payment confirms nothing, and takes no seat", async () => {
-    const { getWorkshop, getWorkshopAvailability } =
+    const { getWorkshopAvailability } =
       await import("@/repositories/workshops");
     const result = await register("22890000001");
 
@@ -234,14 +273,14 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       status: "PENDING",
       discountCode: null,
     });
-    const workshop = await getWorkshop(localDb);
+    const workshop = await sessionIn("Lomé");
     expect((await getWorkshopAvailability(localDb, workshop)).remaining).toBe(
       50,
     );
   });
 
   it("the webhook confirms the seat, once, with a code and an email", async () => {
-    const { getWorkshop, getWorkshopAvailability } =
+    const { getWorkshopAvailability } =
       await import("@/repositories/workshops");
     await register("22890000002", "ama@example.test");
     const reference = lastReference;
@@ -252,7 +291,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     const registration = await registrationOf("22890000002");
     expect(registration.status).toBe("PAID");
     expect(registration.discountCode).toMatch(/^ATELIER-[A-Z2-9]{8}$/);
-    const workshop = await getWorkshop(localDb);
+    const workshop = await sessionIn("Lomé");
     expect((await getWorkshopAvailability(localDb, workshop)).remaining).toBe(
       49,
     );
@@ -299,14 +338,14 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
   });
 
   it("at capacity no payment starts: the visitor goes to WhatsApp", async () => {
-    const { getWorkshop, getWorkshopAvailability } =
+    const { getWorkshopAvailability } =
       await import("@/repositories/workshops");
     await paidParticipant("22890000007");
     await setWorkshop({ capacity: 1 });
 
     expect((await register("22890000008")).outcome).toBe("FULL");
     expect(charges).toHaveLength(1);
-    const workshop = await getWorkshop(localDb);
+    const workshop = await sessionIn("Lomé");
     expect(await getWorkshopAvailability(localDb, workshop)).toMatchObject({
       remaining: 0,
       open: false,
@@ -325,6 +364,71 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
 
     expect((await registrationOf("22890000010")).status).toBe("PAID");
     expect(alerts).toContain("Atelier : capacité dépassée");
+  });
+
+  it("one seat per number across the cities; a full city leaves the others", async () => {
+    const { findWorkshopBalance } =
+      await import("@/services/workshops/pay-more");
+    await register("22890000040", null, 1000, "Kara");
+    await webhook("CONFIRMED", lastReference);
+    expect(await registrationOf("22890000040")).toMatchObject({
+      city: "Kara",
+      workshopId: sessionIds["Kara"],
+    });
+    // Another city with the same number: its seat in Kara, to pay.
+    expect(await register("22890000040", null, 2000, "Notsé")).toMatchObject({
+      outcome: "BALANCE_DUE",
+      city: "Kara",
+      left: 1000,
+    });
+    expect(await findWorkshopBalance("22890000040")).toMatchObject({
+      city: "Kara",
+      left: 1000,
+    });
+    expect(charges.at(-1)?.address).toBe("Kara");
+
+    await localDb
+      .update(schema.workshops)
+      .set({ capacity: 0 })
+      .where(eq(schema.workshops.id, sessionIds["Kara"]));
+    expect((await register("22890000041", null, 2000, "Kara")).outcome).toBe(
+      "FULL",
+    );
+    expect((await register("22890000041", null, 2000, "Notsé")).outcome).toBe(
+      "STARTED",
+    );
+  });
+
+  it("a seat of the first edition doesn't count for the cities", async () => {
+    const { getWorkshop } = await import("@/repositories/workshops");
+    const page = await getWorkshop(localDb);
+    await localDb.insert(schema.workshopRegistrations).values({
+      workshopId: page.id,
+      fullName: "Ancien Participant",
+      whatsapp: "22890000042",
+      city: "Lomé",
+      amount: 2000,
+      amountPaid: 1000,
+      status: "PAID",
+      accessToken: `old-${randomUUID()}`,
+    });
+    expect((await register("22890000042")).outcome).toBe("STARTED");
+  });
+
+  it("an unknown or foreign session is refused", async () => {
+    const { registerForWorkshop } =
+      await import("@/services/workshops/register");
+    const { getWorkshop } = await import("@/repositories/workshops");
+    const page = await getWorkshop(localDb);
+    for (const sessionId of [randomUUID(), page.id]) {
+      expect(
+        await registerForWorkshop({
+          ...participant("22890000043"),
+          sessionId,
+        }),
+      ).toEqual({ outcome: "NO_SESSION" });
+    }
+    expect(charges).toHaveLength(0);
   });
 
   it("closing registrations stops the online sale", async () => {
@@ -407,7 +511,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
   });
 
   it("a first part holds the seat; the code waits for the whole price", async () => {
-    const { getWorkshop, getWorkshopAvailability } =
+    const { getWorkshopAvailability } =
       await import("@/repositories/workshops");
     expect((await register("22890000030", null, 2500)).outcome).toBe(
       "TOO_MUCH",
@@ -425,7 +529,7 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       amountPaid: 1000,
       discountCode: null,
     });
-    const workshop = await getWorkshop(localDb);
+    const workshop = await sessionIn("Lomé");
     expect((await getWorkshopAvailability(localDb, workshop)).remaining).toBe(
       49,
     );
@@ -436,6 +540,8 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       outcome: "BALANCE_DUE",
       left: 1000,
       firstName: "Ama",
+      city: "Lomé",
+      startsAt: (await sessionIn("Lomé")).startsAt.toISOString(),
     });
 
     expect(await payMore(held.accessToken, 1500)).toMatchObject({
@@ -560,8 +666,11 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
   });
 
   it("an admin adds someone paid off-site, past the capacity if needed", async () => {
-    const { addWorkshopRegistration, updateWorkshopSettings } =
-      await import("@/services/workshops/admin");
+    const {
+      addWorkshopRegistration,
+      updateWorkshopPage,
+      updateWorkshopSession,
+    } = await import("@/services/workshops/admin");
     const admin = await makeMember();
     await localDb
       .update(schema.profiles)
@@ -570,10 +679,10 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     await setWorkshop({ capacity: 0 });
 
     await addWorkshopRegistration(admin, {
+      workshopId: sessionIds["Kara"],
       fullName: "Kofi Agbeko",
       whatsapp: "90 00 00 15",
       email: "",
-      city: "Kpalimé",
       amount: 1500,
     });
     expect(await registrationOf("22890000015")).toMatchObject({
@@ -581,83 +690,106 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
       source: "ADMIN",
       amount: 1500,
       paymentId: null,
+      city: "Kara",
+      workshopId: sessionIds["Kara"],
     });
+    await expect(
+      addWorkshopRegistration(admin, {
+        workshopId: randomUUID(),
+        fullName: "Session Inconnue",
+        whatsapp: "90000017",
+        email: "",
+        amount: 1000,
+      }),
+    ).rejects.toThrow("Session introuvable");
 
-    await updateWorkshopSettings(admin, {
-      priceCfa: 2500,
-      regularPriceCfa: 25000,
-      capacity: 60,
-      venue: "Lomé, Tokoin",
-      whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
+    await updateWorkshopPage(admin, {
       exampleVideoUrls: ["", "https://youtube.com/shorts/dQw4w9WgXcQ", ""],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ", " ", ""],
-      registrationsOpen: false,
     });
-    expect(await localDb.query.workshops.findFirst()).toMatchObject({
-      priceCfa: 2500,
-      capacity: 60,
+    expect(
+      await localDb.query.workshops.findFirst({
+        where: eq(schema.workshops.slug, "atelier-video-ia"),
+      }),
+    ).toMatchObject({
       exampleVideoUrls: ["https://youtube.com/shorts/dQw4w9WgXcQ"],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ"],
-      registrationsOpen: false,
     });
     await expect(
-      updateWorkshopSettings(admin, {
-        priceCfa: 2000,
-        regularPriceCfa: 25000,
-        capacity: 50,
-        venue: "Lomé",
-        whatsappGroupUrl: "",
+      updateWorkshopPage(admin, {
         exampleVideoUrls: ["https://exemple.com/video"],
         heroVideoUrl: "",
         sliderVideoUrls: [],
-        registrationsOpen: true,
       }),
     ).rejects.toThrow("Lien YouTube invalide");
-    const settings = {
-      priceCfa: 2000,
-      regularPriceCfa: 25000,
-      capacity: 50,
-      venue: "Lomé",
-      whatsappGroupUrl: "",
-      exampleVideoUrls: [],
-      heroVideoUrl: "",
-      registrationsOpen: true,
-    };
     await expect(
-      updateWorkshopSettings(admin, {
-        ...settings,
+      updateWorkshopPage(admin, {
+        exampleVideoUrls: [],
+        heroVideoUrl: "",
         sliderVideoUrls: ["https://vimeo.com/123"],
       }),
     ).rejects.toThrow("Lien YouTube invalide dans le slider");
     await expect(
-      updateWorkshopSettings(admin, {
-        ...settings,
+      updateWorkshopPage(admin, {
+        exampleVideoUrls: [],
+        heroVideoUrl: "",
         sliderVideoUrls: Array(13).fill("https://youtu.be/dQw4w9WgXcQ"),
       }),
     ).rejects.toThrow("12 vidéos au plus");
-    await updateWorkshopSettings(admin, {
-      priceCfa: 2000,
+
+    const kara = {
+      city: "Kara",
+      day: "2026-12-05",
+      startTime: "09:00",
+      endTime: "13:30",
+      priceCfa: 3000,
       regularPriceCfa: 25000,
-      capacity: 50,
-      venue: "[adresse précise, Lomé]",
-      whatsappGroupUrl: "",
-      exampleVideoUrls: [],
-      heroVideoUrl: "",
-      sliderVideoUrls: [],
-      registrationsOpen: true,
+      capacity: 40,
+      venue: "Kara, quartier Tomdè",
+      whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
+      registrationsOpen: false,
+    };
+    await updateWorkshopSession(admin, sessionIds["Kara"], kara);
+    const saved = await sessionIn("Kara");
+    expect(saved).toMatchObject({
+      priceCfa: 3000,
+      capacity: 40,
+      venue: "Kara, quartier Tomdè",
+      whatsappGroupUrl: "https://chat.whatsapp.com/AbC123",
+      registrationsOpen: false,
     });
+    expect(saved.startsAt.toISOString()).toBe("2026-12-05T09:00:00.000Z");
+    expect(saved.endsAt.toISOString()).toBe("2026-12-05T13:30:00.000Z");
+    expect(saved.discountValidUntil.toISOString()).toBe(
+      "2026-12-06T23:59:59.000Z",
+    );
+    // The others are left as they were.
+    expect((await sessionIn("Notsé")).priceCfa).toBe(2000);
+    await expect(
+      updateWorkshopSession(admin, sessionIds["Kara"], {
+        ...kara,
+        endTime: "08:00",
+      }),
+    ).rejects.toThrow("heure de fin");
+    const { getWorkshop } = await import("@/repositories/workshops");
+    await expect(
+      updateWorkshopSession(admin, (await getWorkshop(localDb)).id, kara),
+    ).rejects.toThrow("Session introuvable");
 
     const member = await makeMember();
     await expect(
       addWorkshopRegistration(member, {
+        workshopId: sessionIds["Lomé"],
         fullName: "Non Admin",
         whatsapp: "90000016",
         email: "",
-        city: "Lomé",
         amount: 0,
       }),
+    ).rejects.toThrow("Seul un administrateur");
+    await expect(
+      updateWorkshopSession(member, sessionIds["Kara"], kara),
     ).rejects.toThrow("Seul un administrateur");
   });
 

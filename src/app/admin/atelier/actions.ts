@@ -5,26 +5,46 @@ import { requireAdmin } from "@/services/auth/current-user";
 import {
   addWorkshopRegistration,
   markWorkshopBalancePaid,
-  updateWorkshopSettings,
+  updateWorkshopPage,
+  updateWorkshopSession,
 } from "@/services/workshops/admin";
 
-type SettingsInput = Parameters<typeof updateWorkshopSettings>[1];
+type PageInput = Parameters<typeof updateWorkshopPage>[1];
+type SessionInput = Parameters<typeof updateWorkshopSession>[2];
 type RegistrationInput = Parameters<typeof addWorkshopRegistration>[1];
 
 function errorMessage(err: unknown) {
   return err instanceof Error ? err.message : "Une erreur est survenue.";
 }
 
-export async function updateWorkshopSettingsAction(input: SettingsInput) {
-  const { profile } = await requireAdmin();
-  try {
-    await updateWorkshopSettings(profile.id, input);
-  } catch (err) {
-    return { error: errorMessage(err) };
-  }
+function revalidateWorkshop() {
   revalidatePath("/admin/atelier");
   revalidatePath("/atelier-video-ia");
   revalidatePath("/atelier-video-ia/inscription");
+}
+
+export async function updateWorkshopPageAction(input: PageInput) {
+  const { profile } = await requireAdmin();
+  try {
+    await updateWorkshopPage(profile.id, input);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateWorkshop();
+  return { error: null };
+}
+
+export async function updateWorkshopSessionAction(
+  sessionId: string,
+  input: SessionInput,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await updateWorkshopSession(profile.id, sessionId, input);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateWorkshop();
   return { error: null };
 }
 

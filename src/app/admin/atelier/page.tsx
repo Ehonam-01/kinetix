@@ -2,13 +2,19 @@ import { db } from "@/db/client";
 import { getSiteEnv } from "@/config/env.site";
 import { formatWhatsapp, whatsappHref } from "@/lib/whatsapp";
 import { onePerParticipant } from "@/lib/workshop-participants";
-import { getWorkshop, listRegistrations } from "@/repositories/workshops";
+import Link from "next/link";
+import {
+  getWorkshop,
+  listRegistrations,
+  listSessionsWithAvailability,
+} from "@/repositories/workshops";
 import { requireAdmin } from "@/services/auth/current-user";
 import { buttonVariants } from "@/components/ui/button";
 import {
   AddRegistrationForm,
   BalancePaidButton,
-  WorkshopSettingsForm,
+  WorkshopPageForm,
+  WorkshopSessionForm,
 } from "./workshop-forms";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -51,13 +57,25 @@ const fmtDay = (date: Date) =>
     timeZone: "Africa/Lome",
   });
 
+const shortDay = (date: Date) =>
+  date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Africa/Lome",
+  });
+
+// "samedi 28 novembre à Kara".
+function sessionLabel(session: { startsAt: Date; city: string | null }) {
+  return `${fmtDay(session.startsAt)}${session.city ? ` à ${session.city}` : ""}`;
+}
+
 // A payment that didn't go through (or a prompt never validated): an admin
 // writes to the person to help them pay, from their own WhatsApp.
-function retryMessage(fullName: string, startsAt: Date) {
+function retryMessage(fullName: string, session: string) {
   const firstName = fullName.trim().split(/\s+/)[0];
   return [
     `Bonjour ${firstName}, c'est l'équipe Kinetix Africa.`,
-    `Nous avons vu que ton paiement pour la Kinetix AI Video Masterclass du ${fmtDay(startsAt)} n'a pas abouti. Tu as rencontré un souci ? On peut t'aider à finaliser ta réservation.`,
+    `Nous avons vu que ton paiement pour la Kinetix AI Video Masterclass du ${session} n'a pas abouti. Tu as rencontré un souci ? On peut t'aider à finaliser ta réservation.`,
     `Tu peux réessayer ici : ${getSiteEnv().SITE_URL}/atelier-video-ia/inscription`,
     `Tu peux aussi payer en plusieurs fois, dès 1 000 F.`,
   ].join("\n\n");
@@ -73,13 +91,13 @@ function balanceMessage(
     amountPaid: number;
     accessToken: string;
   },
-  startsAt: Date,
+  session: string,
 ) {
   const firstName = registration.fullName.trim().split(/\s+/)[0];
   const fmt = (value: number) => `${value.toLocaleString("fr-FR")} F`;
   return [
     `Bonjour ${firstName}, c'est l'équipe Kinetix Africa.`,
-    `Ta place pour la Kinetix AI Video Masterclass du ${fmtDay(startsAt)} est bien réservée. Tu as versé ${fmt(registration.amountPaid)} sur ${fmt(registration.amount)} : il te reste ${fmt(registration.amount - registration.amountPaid)} à payer.`,
+    `Ta place pour la Kinetix AI Video Masterclass du ${session} est bien réservée. Tu as versé ${fmt(registration.amountPaid)} sur ${fmt(registration.amount)} : il te reste ${fmt(registration.amount - registration.amountPaid)} à payer.`,
     `Tu peux faire ton prochain versement ici : ${getSiteEnv().SITE_URL}/atelier-video-ia/merci?t=${registration.accessToken}`,
     `Tu peux aussi régler le reste sur place le jour J.`,
   ].join("\n\n");
@@ -93,14 +111,25 @@ function isStale(date: Date) {
   return Date.now() - date.getTime() > STALE_PENDING_MS;
 }
 
-// The paid workshop (/atelier-video-ia): its settings, who registered, and
-// the people added by hand after writing on WhatsApp.
-export default async function AdminWorkshopPage() {
+// The paid workshop (/atelier-video-ia): its sessions (one per city), the
+// page's videos, who registered in each session, and the people added by
+// hand after writing on WhatsApp.
+export default async function AdminWorkshopPage(
+  props: PageProps<"/admin/atelier">,
+) {
   // Re-checked here, not only in admin/layout.tsx: a layout isn't re-run on
   // every navigation, so it can't be the only gate.
   await requireAdmin();
-  const workshop = await getWorkshop(db);
-  const registrations = await listRegistrations(db, workshop.id);
+  const page = await getWorkshop(db);
+  const sessions = await listSessionsWithAvailability(db, page.id);
+  // The sessions sold now, then the first one (the page's own row, Lomé,
+  // 14 November) with its registrations.
+  const choices = [...sessions.map(({ session }) => session), page];
+  const { s } = await props.searchParams;
+  const selected =
+    choices.find((choice) => choice.id === s) ?? choices[0] ?? page;
+  const selectedLabel = sessionLabel(selected);
+  const registrations = await listRegistrations(db, selected.id);
   const paid = registrations.filter((r) => r.status === "PAID");
   const owing = paid.filter((r) => r.amountPaid < r.amount);
   const owed = owing.reduce((sum, r) => sum + (r.amount - r.amountPaid), 0);
@@ -115,10 +144,10 @@ export default async function AdminWorkshopPage() {
   // after a failed payment, a reminder of what is left, or nothing.
   const contactMessage = (r: Participant) => {
     if (r.status === "PAID" && r.amountPaid < r.amount) {
-      return balanceMessage(r, workshop.startsAt);
+      return balanceMessage(r, selectedLabel);
     }
     if (r.status !== "PAID") {
-      return retryMessage(r.fullName, workshop.startsAt);
+      return retryMessage(r.fullName, selectedLabel);
     }
     return undefined;
   };
@@ -126,34 +155,92 @@ export default async function AdminWorkshopPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
-        <h2 className="font-semibold">Réglages</h2>
+        <h2 className="font-semibold">Sessions</h2>
         <p className="text-muted-foreground text-sm">
-          {paid.length} inscrit(s) payé(s) sur {workshop.capacity} places. À la
-          capacité, la page de vente dirige les visiteurs vers WhatsApp.
+          Une session par ville, avec sa date, son lieu, son prix et ses places.
+          Quand une ville est complète, elle ne se vend plus en ligne ; quand
+          toutes le sont, la page de vente dirige les visiteurs vers WhatsApp.
         </p>
-        {owing.length > 0 && (
-          <p className="text-sm">
-            Dont {owing.length} qui paie(nt) par versements : il reste{" "}
-            <strong>{owed.toLocaleString("fr-FR")} F</strong> à encaisser.
-          </p>
-        )}
-        <WorkshopSettingsForm current={workshop} />
+        {sessions.length === 0 && <p className="text-sm">Aucune session.</p>}
+        {sessions.map(({ session, paid: paidCount, open }) => (
+          <details
+            key={session.id}
+            className="rounded-2xl border p-4 [&_summary]:cursor-pointer"
+          >
+            <summary className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="font-medium">{sessionLabel(session)}</span>
+              <span className="text-muted-foreground text-sm">
+                {paidCount} payé(s) sur {session.capacity} places ·{" "}
+                {open ? "en vente" : "vente arrêtée"}
+              </span>
+            </summary>
+            <div className="mt-4">
+              <WorkshopSessionForm
+                session={{
+                  ...session,
+                  startsAt: session.startsAt.toISOString(),
+                  endsAt: session.endsAt.toISOString(),
+                }}
+              />
+            </div>
+          </details>
+        ))}
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">Ajouter un participant</h2>
+        <h2 className="font-semibold">Page de vente</h2>
+        <p className="text-muted-foreground text-sm">
+          Les vidéos de la page, communes à toutes les villes.
+        </p>
+        <WorkshopPageForm current={page} />
+      </section>
+
+      <section className="space-y-3">
+        <nav className="flex flex-wrap gap-2" aria-label="Session affichée">
+          {choices.map((choice) => (
+            <Link
+              key={choice.id}
+              href={`/admin/atelier?s=${choice.id}`}
+              aria-current={choice.id === selected.id ? "page" : undefined}
+              className={buttonVariants({
+                variant: choice.id === selected.id ? "default" : "outline",
+                size: "sm",
+              })}
+            >
+              {choice.city ?? "Atelier"} · {shortDay(choice.startsAt)}
+              {choice.id === page.id && " (1re édition)"}
+            </Link>
+          ))}
+        </nav>
+        <p className="text-sm">
+          <strong>{selectedLabel}</strong> : {paid.length} inscrit(s) payé(s)
+          sur {selected.capacity} places.
+          {owing.length > 0 && (
+            <>
+              {" "}
+              Dont {owing.length} qui paie(nt) par versements : il reste{" "}
+              <strong>{owed.toLocaleString("fr-FR")} F</strong> à encaisser.
+            </>
+          )}
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">
+          Ajouter un participant ({selectedLabel})
+        </h2>
         <p className="text-muted-foreground text-sm">
           Pour une personne qui a payé en dehors du site. Elle reçoit un code de
           réduction égal au montant reçu.
         </p>
-        <AddRegistrationForm />
+        <AddRegistrationForm key={selected.id} workshopId={selected.id} />
       </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-semibold">Inscrits ({participants.length})</h2>
           <a
-            href="/admin/atelier/export"
+            href={`/admin/atelier/export?s=${selected.id}`}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Exporter en CSV
@@ -253,7 +340,7 @@ export default async function AdminWorkshopPage() {
                         <a
                           href={whatsappHref(
                             r.whatsapp,
-                            retryMessage(r.fullName, workshop.startsAt),
+                            retryMessage(r.fullName, selectedLabel),
                           )}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -267,7 +354,7 @@ export default async function AdminWorkshopPage() {
                             r.whatsapp,
                             codeMessage(
                               { ...r, discountCode: r.discountCode },
-                              workshop.discountValidUntil,
+                              selected.discountValidUntil,
                             ),
                           )}
                           target="_blank"

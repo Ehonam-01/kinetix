@@ -20,13 +20,16 @@ import {
   payMoreForWorkshop,
   payWorkshopBalanceByNumber,
 } from "@/services/workshops/pay-more";
-import { registerForWorkshop } from "@/services/workshops/register";
+import {
+  type HeldSeat,
+  registerForWorkshop,
+} from "@/services/workshops/register";
 
 type RegisterResult = {
   error: string | null;
   full: boolean;
-  // This number already holds a seat with this much left to pay.
-  balance?: { left: number; firstName: string };
+  // This number already holds a seat, with this much left to pay.
+  balance?: HeldSeat;
   // The balance payment was pushed to the phone (no page to go to).
   started?: boolean;
 };
@@ -85,11 +88,15 @@ export async function registerForWorkshopAction(
     });
     if (result.outcome === "FULL") return { error: null, full: true };
     if (result.outcome === "BALANCE_DUE") {
+      const { left, firstName, city, startsAt } = result;
       return {
         error: null,
         full: false,
-        balance: { left: result.left, firstName: result.firstName },
+        balance: { left, firstName, city, startsAt },
       };
+    }
+    if (result.outcome === "NO_SESSION") {
+      return { error: "Choisis ta ville.", full: false };
     }
     if (result.outcome === "ALREADY_PAID") {
       return {
@@ -124,7 +131,7 @@ export async function registerForWorkshopAction(
 // The seat a number already holds, looked up as it is typed in the form.
 export async function lookupWorkshopBalanceAction(
   whatsapp: string,
-): Promise<{ left: number; firstName: string } | null> {
+): Promise<HeldSeat | null> {
   const phone = toWorkshopPhone(String(whatsapp).slice(0, 40));
   if (!phone) return null;
   if (

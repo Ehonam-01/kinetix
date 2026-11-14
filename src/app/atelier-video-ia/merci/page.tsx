@@ -10,6 +10,7 @@ import {
   findLatestRegistrationPayment,
   findRegistrationByToken,
   getWorkshop,
+  getWorkshopById,
 } from "@/repositories/workshops";
 import { TO_BRING } from "../_components/content";
 import { RichText } from "../_components/rich-text";
@@ -60,7 +61,12 @@ export default async function AtelierMerciPage(
   if (typeof t !== "string") notFound();
   const registration = await findRegistrationByToken(db, t);
   if (!registration) notFound();
-  const workshop = await getWorkshop(db);
+  // The participant's own session (city), and the page for what is shared.
+  const [workshop, page] = await Promise.all([
+    getWorkshopById(db, registration.workshopId),
+    getWorkshop(db),
+  ]);
+  const groupUrl = workshop.whatsappGroupUrl ?? page.whatsappGroupUrl;
   // The code is given after the workshop and the platform's presentation:
   // until it ends, this page doesn't show it (the admins can also send it
   // by WhatsApp from /admin/atelier).
@@ -127,7 +133,10 @@ export default async function AtelierMerciPage(
                   ? "Ta place est réservée !"
                   : "Ta place est confirmée !"}
               </h1>
-              <p className="text-muted-foreground">{workshop.title}</p>
+              <p className="text-muted-foreground">
+                {workshop.title}
+                {workshop.city ? ` · ${workshop.city}` : ""}
+              </p>
             </div>
 
             {partPending && (
@@ -233,14 +242,26 @@ export default async function AtelierMerciPage(
               </div>
               <div>
                 <dt className="text-muted-foreground">Lieu</dt>
-                <dd className="font-medium">{workshop.venue}</dd>
+                <dd className="font-medium">
+                  {workshop.venue.trim() ? (
+                    workshop.venue
+                  ) : (
+                    <>
+                      {workshop.city}
+                      <span className="text-muted-foreground block text-xs font-normal">
+                        L&apos;adresse précise s&apos;affichera ici dès
+                        qu&apos;elle est fixée.
+                      </span>
+                    </>
+                  )}
+                </dd>
               </div>
             </dl>
 
             <div className="flex flex-col gap-3">
-              {workshop.whatsappGroupUrl ? (
+              {groupUrl ? (
                 <WhatsappButton
-                  url={workshop.whatsappGroupUrl}
+                  url={groupUrl}
                   label="Rejoindre le groupe WhatsApp des participants"
                 />
               ) : (
@@ -250,7 +271,7 @@ export default async function AtelierMerciPage(
                 </p>
               )}
               <a
-                href="/atelier-video-ia/agenda.ics"
+                href={`/atelier-video-ia/agenda.ics?s=${workshop.id}`}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
                   "h-12",
