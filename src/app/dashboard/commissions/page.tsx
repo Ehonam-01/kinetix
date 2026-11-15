@@ -7,7 +7,7 @@ import {
   listTransactions,
 } from "@/repositories/financial-transactions";
 import { listSubscriptionsForAmbassador } from "@/repositories/subscriptions";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { getSiteEnv } from "@/config/env.site";
 import { getCurrentParameterValue } from "@/repositories/parameter-versions";
 import Link from "next/link";
@@ -49,7 +49,7 @@ function formatXof(amount: number) {
 }
 
 export default async function CommissionsPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const [balance, transactions, ambassador] = await Promise.all([

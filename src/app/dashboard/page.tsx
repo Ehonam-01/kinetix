@@ -25,7 +25,7 @@ import {
   getSubscriptionStatus,
   listSubscriptionsForAmbassador,
 } from "@/repositories/subscriptions";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { getLatestOrientationRequest } from "@/services/orientation/orientation-requests";
 import { countTicketsWithNewReply } from "@/services/support/support-tickets";
 import { goalLabel } from "@/config/goals";
@@ -48,7 +48,7 @@ import { OrientationPrompt } from "./orientation-prompt";
 // view (section 24). The account-detail summary (email/rôle/statut) moved
 // to /dashboard/settings so it can also be edited from one place.
 export default async function DashboardPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
 
   if (profile.status === "SUSPENDED") {
     return (

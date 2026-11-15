@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireActiveMember } from "@/services/auth/current-user";
+import { requireMemberOrLearner } from "@/services/auth/current-user";
 import { submitQuizAttempt } from "@/services/lms/submit-quiz-attempt";
 import {
   deleteOwnLessonPost,
@@ -15,7 +15,7 @@ export async function submitQuizAttemptAction(
   lessonId: string,
   answers: Record<string, string>,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   const result = await submitQuizAttempt(profile.id, lessonId, answers);
   if (!result.limited && result.passed) {
     // "layout" also refreshes every lesson page under this course — the
@@ -37,7 +37,7 @@ export async function postLessonQuestionAction(
   lessonId: string,
   body: string,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   try {
     await postLessonQuestion(profile.id, lessonId, body);
   } catch (err) {
@@ -53,7 +53,7 @@ export async function postLessonAnswerAction(
   questionId: string,
   body: string,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   try {
     await postLessonAnswer(profile.id, questionId, body);
   } catch (err) {
@@ -68,7 +68,7 @@ export async function deleteLessonPostAction(
   lessonId: string,
   postId: string,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   try {
     await deleteOwnLessonPost(profile.id, postId);
   } catch (err) {
@@ -84,7 +84,7 @@ export async function reportLessonPostAction(
   postId: string,
   reason: string,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   try {
     await reportLessonPost(profile.id, postId, reason);
   } catch (err) {

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { listLevelProgress } from "@/repositories/member-levels";
 import { listRewardCatalog } from "@/repositories/rewards";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import {
   Card,
   CardContent,
@@ -21,7 +21,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function LevelsPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const [levelProgress, rewardCatalog] = await Promise.all([

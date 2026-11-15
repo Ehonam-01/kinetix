@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { listMemberRewards } from "@/repositories/member-rewards";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function RewardsPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const rewards = await listMemberRewards(db, profile.id);

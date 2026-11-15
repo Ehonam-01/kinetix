@@ -17,6 +17,24 @@ export default async function DashboardLayout({
   // DELETED accounts never reach this point — requireUser() itself
   // redirects them straight to /login (services/auth/current-user.ts).
   const { profile } = await requireUser();
+  // Bought one or more courses on their own, not a member (explicit user
+  // decision): no subscription to pay or renew, no programme. Their
+  // account only shows their courses, support and settings; every
+  // member-only page sends them back (requireMemberArea).
+  const isLearner = profile.accountType === "LEARNER";
+  if (isLearner) {
+    return (
+      <DashboardShell
+        memberName={profile.fullName}
+        isAdmin={false}
+        isAmbassador={false}
+        isLearner
+        showNav={profile.status !== "SUSPENDED"}
+      >
+        {children}
+      </DashboardShell>
+    );
+  }
 
   // Subscription status and ambassador lookup don't depend on each other —
   // run them together instead of back-to-back so the shell only waits on
@@ -73,31 +91,64 @@ export default async function DashboardLayout({
   }
 
   return (
+    <DashboardShell
+      memberName={profile.fullName}
+      isAdmin={profile.role === "ADMIN"}
+      isAmbassador={!!ambassador}
+      // PENDING_PAYMENT never reaches this render at all anymore (the gate
+      // above intercepts it) — the only two statuses that get here are
+      // ACTIVE and SUSPENDED, so this is really just "hide the nav for a
+      // suspended account," same gate every course page already uses since
+      // Phase 11.
+      showNav={profile.status !== "SUSPENDED"}
+      banner={
+        // On every member page, not just the overview: the last days before
+        // expiry and the whole grace period (explicit user decision — "un
+        // bandeau d'alerte en permanence").
+        status && (
+          <div className="mb-6 empty:hidden">
+            <SubscriptionAlertBanner status={status} />
+          </div>
+        )
+      }
+    >
+      {children}
+    </DashboardShell>
+  );
+}
+
+function DashboardShell({
+  memberName,
+  isAdmin,
+  isAmbassador,
+  isLearner = false,
+  showNav,
+  banner,
+  children,
+}: {
+  memberName: string;
+  isAdmin: boolean;
+  isAmbassador: boolean;
+  isLearner?: boolean;
+  showNav: boolean;
+  banner?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
     <MobileSidebarProvider>
       <div className="from-primary/15 via-background to-accent/40 min-h-screen bg-linear-to-br p-0 sm:p-8">
         <div className="border-border bg-card mx-auto flex h-screen max-w-7xl overflow-hidden border shadow-2xl sm:h-[calc(100vh-4rem)] sm:rounded-3xl">
           <DashboardSidebar
-            memberName={profile.fullName}
-            isAdmin={profile.role === "ADMIN"}
-            isAmbassador={!!ambassador}
-            // PENDING_PAYMENT never reaches this render at all anymore (the
-            // gate above intercepts it) — the only two statuses that get
-            // here are ACTIVE and SUSPENDED, so this is really just "hide
-            // the nav for a suspended account," same gate every course page
-            // already uses since Phase 11.
-            showNav={profile.status !== "SUSPENDED"}
+            memberName={memberName}
+            isAdmin={isAdmin}
+            isAmbassador={isAmbassador}
+            isLearner={isLearner}
+            showNav={showNav}
           />
           <div className="flex flex-1 flex-col overflow-y-auto">
-            <DashboardTopBar memberName={profile.fullName} />
+            <DashboardTopBar memberName={memberName} isLearner={isLearner} />
             <main className="flex-1 px-4 py-6 sm:px-8">
-              {/* On every member page, not just the overview: the last days
-                  before expiry and the whole grace period (explicit user
-                  decision — "un bandeau d'alerte en permanence"). */}
-              {status && (
-                <div className="mb-6 empty:hidden">
-                  <SubscriptionAlertBanner status={status} />
-                </div>
-              )}
+              {banner}
               <InstallAppBanner />
               {children}
             </main>

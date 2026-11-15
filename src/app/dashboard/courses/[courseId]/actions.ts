@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireActiveMember } from "@/services/auth/current-user";
+import { requireMemberOrLearner } from "@/services/auth/current-user";
 import { markLessonComplete } from "@/services/lms/mark-lesson-complete";
 import {
   courseReviewSchema,
@@ -14,7 +14,7 @@ export async function markLessonCompleteAction(
   courseId: string,
   lessonId: string,
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   await markLessonComplete(profile.id, lessonId);
   // "layout" also refreshes every lesson page under this course.
   revalidatePath(`/dashboard/courses/${courseId}`, "layout");
@@ -31,7 +31,7 @@ export async function saveCourseReviewAction(
   courseId: string,
   input: { rating: number; comment: string },
 ) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   const parsed = courseReviewSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Entrée invalide." };
@@ -48,7 +48,7 @@ export async function saveCourseReviewAction(
 }
 
 export async function deleteCourseReviewAction(courseId: string) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
   try {
     await deleteOwnCourseReview(profile.id, courseId);
   } catch (err) {

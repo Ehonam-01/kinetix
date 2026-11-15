@@ -96,7 +96,11 @@ export async function updateCourseStatusAction(
 
 export async function updateCoursePricingAction(
   courseId: string,
-  input: { price: number | null; category: string | null },
+  input: {
+    price: number | null;
+    salePrice: number | null;
+    category: string | null;
+  },
 ) {
   const { profile } = await requireAdmin();
   try {

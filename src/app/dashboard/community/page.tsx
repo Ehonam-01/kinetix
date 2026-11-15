@@ -11,7 +11,7 @@ import {
   getDiscordInviteUrl,
   getWhatsappCommunityUrl,
 } from "@/config/env.community";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 
 // The members' private WhatsApp group (the everyday exchanges) and Discord
 // (one channel per formation, shared resources). The invite links are only
@@ -45,7 +45,7 @@ const WHAT_YOU_FIND = [
 ];
 
 export default async function CommunityPage() {
-  await requireUser();
+  await requireMemberArea();
   const discordUrl = getDiscordInviteUrl();
   const whatsappUrl = getWhatsappCommunityUrl();
 

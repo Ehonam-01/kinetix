@@ -13,17 +13,21 @@ export function DashboardSidebar({
   memberName,
   isAdmin,
   isAmbassador,
+  isLearner = false,
   showNav,
 }: {
   memberName: string;
   isAdmin: boolean;
   isAmbassador: boolean;
+  // Courses bought on their own, not a member: their courses, support and
+  // settings, nothing of the programme (explicit user decision).
+  isLearner?: boolean;
   showNav: boolean;
 }) {
   const pathname = usePathname();
   const { open, setOpen } = useMobileSidebar();
-  const items = DASHBOARD_NAV_ITEMS.filter(
-    (item) => isAmbassador || !item.ambassadorOnly,
+  const items = DASHBOARD_NAV_ITEMS.filter((item) =>
+    isLearner ? item.learner : isAmbassador || !item.ambassadorOnly,
   );
 
   return (
@@ -78,7 +82,7 @@ export function DashboardSidebar({
                   )}
                 >
                   <Icon className="size-4" />
-                  {item.label}
+                  {(isLearner && item.learnerLabel) || item.label}
                 </Link>
               );
             })}
@@ -86,7 +90,7 @@ export function DashboardSidebar({
         )}
 
         <div className="border-sidebar-border mt-auto space-y-3 border-t pt-4">
-          {!isAmbassador && (
+          {!isAmbassador && !isLearner && (
             <Link
               href="/dashboard/become-ambassador"
               onClick={() => setOpen(false)}

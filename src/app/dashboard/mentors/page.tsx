@@ -12,7 +12,7 @@ import {
   listMentorReviews,
   listMentorshipsForMentee,
 } from "@/repositories/mentorships";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { StarRatingDisplay } from "@/components/star-rating";
@@ -22,7 +22,7 @@ import { MentorshipAction } from "./mentorship-action";
 export default async function MentorsPage(
   props: PageProps<"/dashboard/mentors">,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status === "SUSPENDED") return null;
   const goal = goalLabel(profile.goal);
 

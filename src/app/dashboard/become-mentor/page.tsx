@@ -5,7 +5,7 @@ import {
   listMentorReviews,
   listPendingMentorshipRequestsForMentor,
 } from "@/repositories/mentorships";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ import { RequestMentorForm } from "./request-form";
 import { MentorshipRequests } from "./mentorship-requests";
 
 export default async function BecomeMentorPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status === "SUSPENDED") redirect("/dashboard");
 
   const existing = await findMentorProfileByUserId(db, profile.id);
@@ -119,16 +119,17 @@ export default async function BecomeMentorPage() {
         <CardTitle>Devenir mentor</CardTitle>
         <CardDescription>
           Gratuit. Déclarez un domaine dans lequel vous pouvez accompagner
-          d&apos;autres membres — un administrateur valide chaque demande
-          avant que votre profil n&apos;apparaisse dans l&apos;annuaire des
-          mentors.
+          d&apos;autres membres — un administrateur valide chaque demande avant
+          que votre profil n&apos;apparaisse dans l&apos;annuaire des mentors.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {existing?.status === "REJECTED" && (
           <p className="border-destructive/30 bg-destructive/5 text-destructive mb-4 rounded-lg border p-3 text-sm">
             Votre précédente demande a été refusée
-            {existing.rejectionReason ? ` : ${existing.rejectionReason}` : "."}{" "}
+            {existing.rejectionReason
+              ? ` : ${existing.rejectionReason}`
+              : "."}{" "}
             Vous pouvez soumettre une nouvelle demande ci-dessous.
           </p>
         )}

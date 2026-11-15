@@ -8,14 +8,18 @@ import { updateCommunityProfileSchema } from "@/schemas/community-profile";
 import { updateProfileSchema } from "@/schemas/profile";
 import { confirmAccountDeletion } from "@/services/account/confirm-account-deletion";
 import { requestAccountDeletion } from "@/services/account/request-account-deletion";
-import { requireActiveMember, requireUser } from "@/services/auth/current-user";
+import {
+  requireActiveMember,
+  requireMemberOrLearner,
+  requireUser,
+} from "@/services/auth/current-user";
 import { logoutUser } from "@/services/auth/logout";
 import { changePassword } from "@/services/auth/change-password";
 import { updateCommunityProfile } from "@/services/profile/update-community-profile";
 import { updateProfile } from "@/services/profile/update-profile";
 
 export async function updateProfileAction(input: unknown) {
-  const { profile } = await requireActiveMember();
+  const { profile } = await requireMemberOrLearner();
 
   const parsed = updateProfileSchema.safeParse(input);
   if (!parsed.success) {

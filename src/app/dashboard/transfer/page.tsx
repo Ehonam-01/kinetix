@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { getBalance } from "@/repositories/financial-transactions";
 import { listPendingWalletPaymentRequestsForOwner } from "@/repositories/subscriptions";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { PendingWalletRequests } from "./pending-wallet-requests";
 import { TransferForm } from "./transfer-form";
 
 export default async function TransferPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const [balance, pendingWalletRequests] = await Promise.all([

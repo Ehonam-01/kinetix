@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { CheckCircle2, Clock, Presentation } from "lucide-react";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { findTrainerProfileByUserId } from "@/services/trainers/trainer-requests";
 import { TrainerRequestForm } from "./request-form";
 
 // Becoming a trainer: apply with the course you'd teach; the team reviews
 // it (admin/trainers) and, once accepted, builds the course with you.
 export default async function BecomeTrainerPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status === "SUSPENDED") redirect("/dashboard");
   const existing = await findTrainerProfileByUserId(profile.id);
 

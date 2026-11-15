@@ -50,26 +50,29 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bio publique</CardTitle>
-          <CardDescription>
-            Affichée sur votre profil dans{" "}
-            <Link href="/dashboard/mentors" className="underline">
-              l&apos;annuaire des mentors
-            </Link>{" "}
-            si vous êtes mentor validé.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CommunityProfileForm
-            bio={profile.bio ?? ""}
-            goal={profile.goal ?? ""}
-            skills={profile.skills ?? []}
-            directoryVisible={profile.directoryVisible}
-          />
-        </CardContent>
-      </Card>
+      {/* A learner (courses bought on their own) has no public profile. */}
+      {profile.accountType !== "LEARNER" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bio publique</CardTitle>
+            <CardDescription>
+              Affichée sur votre profil dans{" "}
+              <Link href="/dashboard/mentors" className="underline">
+                l&apos;annuaire des mentors
+              </Link>{" "}
+              si vous êtes mentor validé.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CommunityProfileForm
+              bio={profile.bio ?? ""}
+              goal={profile.goal ?? ""}
+              skills={profile.skills ?? []}
+              directoryVisible={profile.directoryVisible}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

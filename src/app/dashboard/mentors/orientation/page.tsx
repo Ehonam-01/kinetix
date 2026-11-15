@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { goalLabel, isGoalValue } from "@/config/goals";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { getLatestOrientationRequest } from "@/services/orientation/orientation-requests";
 import { buttonVariants } from "@/components/ui/button";
 import { formatWhatsapp } from "@/lib/whatsapp";
@@ -12,7 +12,7 @@ import { OrientationForm } from "./orientation-form";
 // or mentor to pick. It goes to the team (admin → Orientation), who answers
 // on the member's WhatsApp.
 export default async function OrientationPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status === "SUSPENDED") return null;
 
   const latest = await getLatestOrientationRequest(profile.id);

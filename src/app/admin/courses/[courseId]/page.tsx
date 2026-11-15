@@ -125,13 +125,16 @@ export default async function AdminCourseDetailPage(
         <CardHeader>
           <CardTitle>Prix et catégorie</CardTitle>
           <CardDescription>
-            Affichés sur la page d&apos;accueil et la fiche du cours.
+            Le prix affiché et la catégorie apparaissent sur la page
+            d&apos;accueil et la fiche du cours. Le prix à l&apos;unité permet
+            d&apos;acheter cette formation seule, à vie, sans abonnement.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <EditPricingForm
             courseId={courseId}
             currentPrice={content.course.price}
+            currentSalePrice={content.course.salePrice}
             currentCategory={content.course.category}
           />
         </CardContent>

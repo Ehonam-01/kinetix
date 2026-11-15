@@ -69,6 +69,37 @@ export async function requireActiveMember() {
   return current;
 }
 
+// A learner (profiles.accountType LEARNER: bought courses on their own,
+// not a member) only ever sees the courses they own, their settings and
+// support (explicit user decision). Every member-only page starts with
+// this: a learner reaching one by its address goes back to their courses.
+export async function requireMemberArea() {
+  const current = await requireUser();
+  if (current.profile.accountType === "LEARNER") {
+    // A suspended learner can't open their courses either: support only
+    // (the course pages send a suspended account back to /dashboard).
+    redirect(
+      current.profile.status === "SUSPENDED"
+        ? "/dashboard/support"
+        : "/dashboard/courses",
+    );
+  }
+  return current;
+}
+
+// The actions a learner shares with members: following their courses
+// (lesson done, quiz, questions, review) and editing their profile. Which
+// course they may follow is still checked by hasCourseAccess in each
+// service; a member goes through requireActiveMember as before.
+export async function requireMemberOrLearner() {
+  const current = await requireUser();
+  if (current.profile.accountType === "LEARNER") {
+    if (current.profile.status === "SUSPENDED") redirect("/dashboard/support");
+    return current;
+  }
+  return requireActiveMember();
+}
+
 // Every admin page and admin action goes through here: role check, then the
 // second factor (services/auth/admin-mfa.ts) — an admin session that hasn't
 // entered its TOTP code is sent to /mfa, whatever it was trying to reach.

@@ -26,6 +26,11 @@ export type DashboardNavItem = {
   // list, so findDashboardSectionLabel below still resolves every possible
   // path regardless of who's viewing it.
   ambassadorOnly?: boolean;
+  // Shown to a learner too (courses bought on their own, not a member):
+  // their courses, support and settings only (explicit user decision).
+  learner?: boolean;
+  // The label a learner sees instead.
+  learnerLabel?: string;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
@@ -60,7 +65,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: Layers,
     ambassadorOnly: true,
   },
-  { href: "/dashboard/courses", label: "Cours", icon: BookOpen },
+  {
+    href: "/dashboard/courses",
+    label: "Cours",
+    icon: BookOpen,
+    learner: true,
+    learnerLabel: "Mes formations",
+  },
   { href: "/dashboard/mentors", label: "Mentorat", icon: GraduationCap },
   {
     href: "/dashboard/community",
@@ -78,13 +89,26 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: Gift,
     ambassadorOnly: true,
   },
-  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
-  { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
+  {
+    href: "/dashboard/support",
+    label: "Support",
+    icon: LifeBuoy,
+    learner: true,
+  },
+  {
+    href: "/dashboard/settings",
+    label: "Paramètres",
+    icon: Settings,
+    learner: true,
+  },
 ];
 
 // Longest-href-first match so "/dashboard/courses/[id]" resolves to
 // "Cours", not falling through to the "/dashboard" overview entry.
-export function findDashboardSectionLabel(pathname: string): string {
+export function findDashboardSectionLabel(
+  pathname: string,
+  isLearner = false,
+): string {
   const sorted = [...DASHBOARD_NAV_ITEMS].sort(
     (a, b) => b.href.length - a.href.length,
   );
@@ -93,5 +117,9 @@ export function findDashboardSectionLabel(pathname: string): string {
       ? pathname === "/dashboard"
       : pathname.startsWith(item.href),
   );
-  return match?.label ?? "Tableau de bord";
+  return (
+    (isLearner ? match?.learnerLabel : undefined) ??
+    match?.label ??
+    "Tableau de bord"
+  );
 }

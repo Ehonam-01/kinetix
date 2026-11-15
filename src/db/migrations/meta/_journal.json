@@ -575,6 +575,13 @@
       "when": 1794693805903,
       "tag": "0081_workshop_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1794737550378,
+      "tag": "0082_course_sales_learners",
+      "breakpoints": true
     }
   ]
 }

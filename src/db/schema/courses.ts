@@ -43,7 +43,13 @@ export const courses = pgTable(
     title: text("title").notNull(),
     slug: text("slug"),
     description: text("description"),
+    // The value shown on the course ("Gratuit avec l'abonnement"), never
+    // charged.
     price: integer("price"),
+    // What the course costs bought on its own, for life (explicit user
+    // decision: a price per course, set by the admin). null: not sold on
+    // its own, only through the subscription.
+    salePrice: integer("sale_price"),
     businessVolume: integer("business_volume"),
     category: text("category"),
     thumbnailUrl: text("thumbnail_url"),

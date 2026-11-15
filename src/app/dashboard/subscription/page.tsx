@@ -2,7 +2,7 @@ import { CheckCircle2, PiggyBank, XCircle } from "lucide-react";
 import { db } from "@/db/client";
 import { CountrySupportHint } from "@/components/support/country-support-hint";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { getPaymentOptions } from "./payment-options";
 import { PriceTag } from "./price-tag";
 import {
@@ -17,7 +17,7 @@ import { LaunchOfferNotice } from "./launch-offer-notice";
 import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   const [status, options] = await Promise.all([
     getSubscriptionStatus(db, profile.id),
     getPaymentOptions(profile.id),

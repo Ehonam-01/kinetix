@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { ambassadorProfiles } from "@/db/schema/ambassador-profiles";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import { JoinAmbassadorForm } from "./join-form";
 export default async function BecomeAmbassadorPage(
   props: PageProps<"/dashboard/become-ambassador">,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status === "SUSPENDED") redirect("/dashboard");
 
   const existing = await db.query.ambassadorProfiles.findFirst({

@@ -8,12 +8,19 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useMobileSidebar } from "@/components/mobile-sidebar-context";
 import { findDashboardSectionLabel } from "./nav-items";
 
-export function DashboardTopBar({ memberName }: { memberName: string }) {
+export function DashboardTopBar({
+  memberName,
+  isLearner = false,
+}: {
+  memberName: string;
+  // A learner has no network to search and no rewards.
+  isLearner?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const { setOpen } = useMobileSidebar();
-  const title = findDashboardSectionLabel(pathname);
+  const title = findDashboardSectionLabel(pathname, isLearner);
   const initial = memberName.trim().charAt(0).toUpperCase() || "M";
 
   function handleSearch(e: React.FormEvent) {
@@ -34,7 +41,10 @@ export function DashboardTopBar({ memberName }: { memberName: string }) {
           >
             <Menu className="size-4" />
           </button>
-          <form onSubmit={handleSearch} className="relative w-full max-w-sm">
+          <form
+            onSubmit={handleSearch}
+            className={isLearner ? "hidden" : "relative w-full max-w-sm"}
+          >
             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               type="search"
@@ -47,13 +57,15 @@ export function DashboardTopBar({ memberName }: { memberName: string }) {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
-          <Link
-            href="/dashboard/rewards"
-            title="Récompenses"
-            className="bg-muted hover:bg-accent flex size-9 items-center justify-center rounded-full"
-          >
-            <Bell className="size-4" />
-          </Link>
+          {!isLearner && (
+            <Link
+              href="/dashboard/rewards"
+              title="Récompenses"
+              className="bg-muted hover:bg-accent flex size-9 items-center justify-center rounded-full"
+            >
+              <Bell className="size-4" />
+            </Link>
+          )}
           <div className="bg-muted flex items-center gap-2 rounded-full py-1 pr-1 pl-1 sm:pr-3">
             <div className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-full text-xs font-semibold">
               {initial}

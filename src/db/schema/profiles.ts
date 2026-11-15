@@ -19,6 +19,17 @@ export const authUsers = authSchema.table("users", {
 
 export const profileRoleEnum = pgEnum("profile_role", ["USER", "ADMIN"]);
 
+// MEMBER: the platform's member, whose account opens with the subscription
+// (network, commissions, withdrawals...). LEARNER: someone who only bought
+// one or more courses on their own (explicit user decision): not a member,
+// never placed in the tree, their account only shows the courses they own.
+// Their status stays PENDING_PAYMENT, so every member-only action
+// (requireActiveMember) keeps refusing them.
+export const profileAccountTypeEnum = pgEnum("profile_account_type", [
+  "MEMBER",
+  "LEARNER",
+]);
+
 // PENDING_PAYMENT is the default: a profile exists once the email is
 // verified, but the account isn't ACTIVE until registration payment is
 // confirmed (Phase 5). See MLM_RULES.md once written.
@@ -50,6 +61,9 @@ export const profiles = pgTable("profiles", {
   phone: text("phone"),
   country: text("country"),
   role: profileRoleEnum("role").notNull().default("USER"),
+  accountType: profileAccountTypeEnum("account_type")
+    .notNull()
+    .default("MEMBER"),
   status: profileStatusEnum("status").notNull().default("PENDING_PAYMENT"),
   // Captured from the registration form's "Devenir ambassadeur" checkbox
   // (schemas/auth.ts's registerSchema) — payment is now mandatory before

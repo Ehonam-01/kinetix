@@ -41,7 +41,12 @@ export default async function CoursesPage(
   const { q } = await props.searchParams;
   const query = typeof q === "string" ? q.trim().toLowerCase() : "";
 
-  const allCourses = await listCoursesForUser(db, profile.id);
+  // A learner (courses bought on their own) sees the courses they own; a
+  // member, the whole catalogue.
+  const isLearner = profile.accountType === "LEARNER";
+  const allCourses = (await listCoursesForUser(db, profile.id)).filter(
+    (c) => !isLearner || c.accessible,
+  );
   // Learners' average rating per course (shown once a course has reviews).
   const ratings = await getRatingSummaries(
     db,
@@ -112,7 +117,16 @@ export default async function CoursesPage(
 
       {courses.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          Aucune formation disponible pour le moment.
+          {isLearner ? (
+            <>
+              Tu n&apos;as pas encore de formation.{" "}
+              <Link href="/formations" className="text-primary underline">
+                Voir le catalogue
+              </Link>
+            </>
+          ) : (
+            "Aucune formation disponible pour le moment."
+          )}
         </p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -201,24 +215,26 @@ export default async function CoursesPage(
         </div>
       )}
       {/* Members with something to teach: become a trainer. */}
-      <Link
-        href="/dashboard/become-trainer"
-        className="border-brand-accent/30 bg-brand-accent/5 hover:bg-brand-accent/10 flex items-center gap-4 rounded-2xl border p-5 transition-colors"
-      >
-        <div className="bg-brand-accent/15 text-brand-accent flex size-11 shrink-0 items-center justify-center rounded-xl">
-          <Presentation className="size-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">
-            Tu maîtrises un sujet ? Deviens formateur
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Propose ta formation : l&apos;équipe t&apos;accompagne pour la
-            préparer et la mettre en ligne.
-          </p>
-        </div>
-        <ArrowRight className="text-muted-foreground size-4 shrink-0" />
-      </Link>
+      {!isLearner && (
+        <Link
+          href="/dashboard/become-trainer"
+          className="border-brand-accent/30 bg-brand-accent/5 hover:bg-brand-accent/10 flex items-center gap-4 rounded-2xl border p-5 transition-colors"
+        >
+          <div className="bg-brand-accent/15 text-brand-accent flex size-11 shrink-0 items-center justify-center rounded-xl">
+            <Presentation className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              Tu maîtrises un sujet ? Deviens formateur
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Propose ta formation : l&apos;équipe t&apos;accompagne pour la
+              préparer et la mettre en ligne.
+            </p>
+          </div>
+          <ArrowRight className="text-muted-foreground size-4 shrink-0" />
+        </Link>
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   getWithdrawalFeeSettings,
   listWithdrawalRequestsForUser,
 } from "@/repositories/withdrawals";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { cn } from "@/lib/utils";
 import { WithdrawalForm } from "./withdrawal-form";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
@@ -32,7 +32,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default async function WithdrawalsPage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const [balance, minimumAmount, requests, feeSettings] = await Promise.all([

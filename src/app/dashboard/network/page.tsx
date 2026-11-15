@@ -10,7 +10,7 @@ import {
   getNetworkView,
   searchDownlineMembers,
 } from "@/repositories/network";
-import { requireUser } from "@/services/auth/current-user";
+import { requireMemberArea } from "@/services/auth/current-user";
 import { GenealogyTree } from "./genealogy-tree";
 import { LevelSelector } from "./level-selector";
 import { MemberContact } from "./member-contact";
@@ -18,7 +18,7 @@ import { MemberContact } from "./member-contact";
 export default async function NetworkPage(
   props: PageProps<"/dashboard/network">,
 ) {
-  const { profile } = await requireUser();
+  const { profile } = await requireMemberArea();
   if (profile.status !== "ACTIVE") redirect("/dashboard");
 
   const { level, q } = await props.searchParams;
