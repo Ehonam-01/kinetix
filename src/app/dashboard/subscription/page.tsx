@@ -2,7 +2,7 @@ import { CheckCircle2, PiggyBank, XCircle } from "lucide-react";
 import { db } from "@/db/client";
 import { CountrySupportHint } from "@/components/support/country-support-hint";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
-import { requireMemberArea } from "@/services/auth/current-user";
+import { requireUser } from "@/services/auth/current-user";
 import { getPaymentOptions } from "./payment-options";
 import { PriceTag } from "./price-tag";
 import {
@@ -17,7 +17,10 @@ import { LaunchOfferNotice } from "./launch-offer-notice";
 import { SubscriptionPanel } from "./subscription-panel";
 
 export default async function SubscriptionPage() {
-  const { profile } = await requireMemberArea();
+  // Open to a learner too (courses bought on their own): subscribing is how
+  // they become a member.
+  const { profile } = await requireUser();
+  const isLearner = profile.accountType === "LEARNER";
   const [status, options] = await Promise.all([
     getSubscriptionStatus(db, profile.id),
     getPaymentOptions(profile.id),
@@ -44,6 +47,14 @@ export default async function SubscriptionPage() {
           L&apos;abonnement annuel donne accès à toutes les formations de la
           plateforme.
         </p>
+        {isLearner && (
+          <p className="mt-2 text-sm">
+            En t&apos;abonnant, tu deviens membre : tout le catalogue, la
+            communauté, le mentorat et le programme ambassadeur. Tu gardes les
+            formations que tu as achetées ; leur prix n&apos;est pas déduit de
+            l&apos;abonnement.
+          </p>
+        )}
       </div>
 
       {/* Covers the hosted-checkout redirect (Moneroo, or PayDunya/Bictorys

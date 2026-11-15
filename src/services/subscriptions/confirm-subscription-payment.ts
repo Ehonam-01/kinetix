@@ -205,10 +205,16 @@ export async function confirmSubscriptionPurchase(
   const buyerProfile = await tx.query.profiles.findFirst({
     where: eq(profiles.id, buyerUserId),
   });
-  if (buyerProfile && buyerProfile.status !== "ACTIVE") {
+  // A learner (courses bought on their own) who subscribes becomes a
+  // member, at the full price (explicit user decision: nothing bought
+  // before is taken off), and keeps the courses they bought.
+  if (
+    buyerProfile &&
+    (buyerProfile.status !== "ACTIVE" || buyerProfile.accountType !== "MEMBER")
+  ) {
     await tx
       .update(profiles)
-      .set({ status: "ACTIVE" })
+      .set({ status: "ACTIVE", accountType: "MEMBER" })
       .where(eq(profiles.id, buyerUserId));
   }
 

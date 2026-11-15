@@ -310,6 +310,56 @@ describe("course bought on its own (pglite, fake provider)", () => {
     expect((await salesOf(alone))[0].ambassadorUserId).toBe(null);
   });
 
+  it("a learner who subscribes becomes a member and keeps the course", async () => {
+    const { confirmSubscriptionPurchaseInNewTransaction } =
+      await import("@/services/subscriptions/confirm-subscription-payment");
+    const { hasCourseAccess } = await import("@/repositories/courses");
+    const learner = await makeProfile("devient_membre", {
+      accountType: "LEARNER",
+    });
+    const courseId = await makeCourse(15_000);
+    await buyAndConfirm(learner, courseId);
+
+    // The full price, nothing taken off (explicit user decision).
+    const [payment] = await localDb
+      .insert(schema.payments)
+      .values({
+        beneficiaryUserId: learner,
+        purpose: "SUBSCRIPTION",
+        method: "MOBILE_MONEY",
+        amount: 35_000,
+        status: "PENDING",
+        idempotencyKey: `TEST:${randomUUID()}`,
+      })
+      .returning();
+    await confirmSubscriptionPurchaseInNewTransaction(payment.id);
+    expect(await profileOf(learner)).toMatchObject({
+      accountType: "MEMBER",
+      status: "ACTIVE",
+    });
+    expect(await hasCourseAccess(localDb, learner, courseId)).toBe(true);
+    expect(await salesOf(learner)).toHaveLength(1);
+  });
+
+  it("the sponsor and the admin see the course sold, with its commission", async () => {
+    const { listCourseSalesForAmbassador, listSalesForAdmin } =
+      await import("@/repositories/sales");
+    const { sponsor, learner } = await makeSponsoredLearner();
+    await buyAndConfirm(learner, await makeCourse(20_000));
+
+    expect(await listCourseSalesForAmbassador(localDb, sponsor)).toMatchObject([
+      { courseTitle: "Montage vidéo", pricePaid: 20_000, commission: 3_000 },
+    ]);
+    const [sale] = await salesOf(learner);
+    const listed = (await listSalesForAdmin(localDb)).find(
+      (s: { id: string }) => s.id === sale.id,
+    );
+    expect(listed).toMatchObject({
+      buyerFullName: "Profil filleul",
+      commission: 3_000,
+    });
+  });
+
   it("a payment that fails opens nothing", async () => {
     const { initiateCoursePurchase } =
       await import("@/services/lms/course-purchase");

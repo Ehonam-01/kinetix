@@ -182,6 +182,22 @@ export default function ConditionsUtilisationPage() {
           ouverte avant la mise en place du paiement en 3 fois reste soumise aux
           règles en vigueur à son ouverture.
         </p>
+        <p>
+          <strong>Achat d&apos;une formation seule.</strong> Certaines
+          formations peuvent être achetées à l&apos;unité, sans Abonnement, au
+          prix affiché sur leur page, en un seul paiement. L&apos;acheteur
+          dispose alors d&apos;un compte « apprenant » qui donne accès, sans
+          limite de durée, à la ou aux formations achetées, pour le temps où la
+          Plateforme les propose. Ce compte ne donne pas accès aux autres
+          formations, à la communauté, au mentorat ni au programme ambassadeur,
+          et ne permet ni de percevoir de commissions ni d&apos;effectuer de
+          retraits. Le prix d&apos;une formation achetée seule n&apos;est pas
+          déduit d&apos;un Abonnement souscrit ensuite : l&apos;apprenant qui
+          s&apos;abonne paie l&apos;Abonnement à son prix en vigueur, devient
+          Membre et conserve les formations achetées. La politique de
+          remboursement ci-dessus s&apos;applique à cet achat comme à un
+          Abonnement.
+        </p>
       </Section>
 
       <Section title="6. Utilisation des contenus et de la communauté">

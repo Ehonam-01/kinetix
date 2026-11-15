@@ -15,10 +15,23 @@ export default async function AdminSalesPage() {
   // authentication guide, "Layouts and auth checks").
   await requireAdmin();
   const sales = await listSalesForAdmin(db);
+  const confirmed = sales.filter((s) => s.status === "CONFIRMED");
+  const revenue = confirmed.reduce((sum, s) => sum + s.pricePaid, 0);
+  const commissions = confirmed.reduce(
+    (sum, s) => sum + (s.commission ?? 0),
+    0,
+  );
 
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">{sales.length} vente(s)</p>
+      <p className="text-muted-foreground text-sm">
+        Les formations achetées seules, à vie, sans abonnement. Un remboursement
+        retire la commission du parrain.
+      </p>
+      <p className="text-sm">
+        {sales.length} vente(s) · {revenue.toLocaleString("fr-FR")} F encaissés
+        · {commissions.toLocaleString("fr-FR")} F de commissions
+      </p>
 
       {sales.length === 0 ? (
         <p className="text-muted-foreground text-sm">Aucune vente.</p>
@@ -33,9 +46,11 @@ export default async function AdminSalesPage() {
                 <div>
                   <p className="font-medium">{s.courseTitle}</p>
                   <p className="text-muted-foreground text-xs">
-                    Acheteur : {s.buyerUsername}
+                    Acheteur : {s.buyerFullName} ({s.buyerUsername})
                     {s.ambassadorUsername &&
-                      ` · attribuée à ${s.ambassadorUsername}`}
+                      ` · parrain ${s.ambassadorUsername}`}
+                    {s.commission !== null &&
+                      ` (${s.commission.toLocaleString("fr-FR")} F)`}
                     {" · "}
                     {s.createdAt.toLocaleDateString("fr-FR", {
                       dateStyle: "medium",
@@ -43,10 +58,7 @@ export default async function AdminSalesPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span>
-                    {s.pricePaid.toLocaleString("fr-FR")} F ·{" "}
-                    {s.businessVolume.toLocaleString("fr-FR")} pts
-                  </span>
+                  <span>{s.pricePaid.toLocaleString("fr-FR")} F</span>
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-xs font-medium",

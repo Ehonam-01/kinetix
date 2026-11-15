@@ -159,13 +159,18 @@ describe("course sold on its own: price and learner accounts (pglite)", () => {
     expect(accessible).toEqual([bought]);
   });
 
-  it("a learner's menu: their courses, support and settings only", () => {
+  it("a learner's menu: their courses, subscribing, support and settings", () => {
     const learnerItems = DASHBOARD_NAV_ITEMS.filter((item) => item.learner);
     expect(learnerItems.map((item) => item.href)).toEqual([
       "/dashboard/courses",
+      // "Passer à l'abonnement": how a learner becomes a member.
+      "/dashboard/subscription",
       "/dashboard/support",
       "/dashboard/settings",
     ]);
+    expect(findDashboardSectionLabel("/dashboard/subscription", true)).toBe(
+      "Passer à l'abonnement",
+    );
     expect(findDashboardSectionLabel("/dashboard/courses/abc", true)).toBe(
       "Mes formations",
     );

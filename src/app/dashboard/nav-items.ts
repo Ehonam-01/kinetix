@@ -82,6 +82,8 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     href: "/dashboard/subscription",
     label: "Mon abonnement",
     icon: CalendarClock,
+    learner: true,
+    learnerLabel: "Passer à l'abonnement",
   },
   {
     href: "/dashboard/rewards",

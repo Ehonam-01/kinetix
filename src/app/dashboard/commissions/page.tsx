@@ -6,6 +6,7 @@ import {
   getBalance,
   listTransactions,
 } from "@/repositories/financial-transactions";
+import { listCourseSalesForAmbassador } from "@/repositories/sales";
 import { listSubscriptionsForAmbassador } from "@/repositories/subscriptions";
 import { requireMemberArea } from "@/services/auth/current-user";
 import { getSiteEnv } from "@/config/env.site";
@@ -26,6 +27,7 @@ const TYPE_LABEL: Record<string, string> = {
   LEVEL_1_BONUS: "Bonus fin de niveau 1",
   LEVEL_COMMISSION: "Commission de génération",
   DIRECT_SALE_COMMISSION: "Commission sur souscription directe",
+  // DIRECT_SALE_COMMISSION of a course sold on its own: see saleIdOf.
   GENERATION_COMMISSION: "Commission de génération (volume)",
   COMMISSION_REVERSAL: "Commission annulée",
   REWARD: "Récompense en espèces",
@@ -43,6 +45,13 @@ const STATUS_LABEL: Record<string, string> = {
   REVERSED: "Annulé",
 };
 
+// A course sold on its own (services/lms/course-purchase.ts) names its sale
+// in the commission's metadata.
+function saleIdOf(metadata: unknown) {
+  const saleId = (metadata as { saleId?: unknown } | null)?.saleId;
+  return typeof saleId === "string" ? saleId : null;
+}
+
 function formatXof(amount: number) {
   const sign = amount > 0 ? "+" : "";
   return `${sign}${amount.toLocaleString("fr-FR")} F`;
@@ -59,9 +68,15 @@ export default async function CommissionsPage() {
       where: eq(ambassadorProfiles.userId, profile.id),
     }),
   ]);
-  const attributedSubscriptions = ambassador
-    ? await listSubscriptionsForAmbassador(db, profile.id)
-    : [];
+  const [attributedSubscriptions, courseSales] = ambassador
+    ? await Promise.all([
+        listSubscriptionsForAmbassador(db, profile.id),
+        listCourseSalesForAmbassador(db, profile.id),
+      ])
+    : [[], []];
+  const courseTitleBySale = new Map(
+    courseSales.map((sale) => [sale.id, sale.courseTitle]),
+  );
 
   return (
     <div className="space-y-6">
@@ -157,7 +172,16 @@ export default async function CommissionsPage() {
               className="flex items-center justify-between px-4 py-3 text-sm"
             >
               <div>
-                <p className="font-medium">{TYPE_LABEL[tx.type] ?? tx.type}</p>
+                <p className="font-medium">
+                  {tx.type === "DIRECT_SALE_COMMISSION" && saleIdOf(tx.metadata)
+                    ? "Commission sur vente de formation"
+                    : (TYPE_LABEL[tx.type] ?? tx.type)}
+                </p>
+                {courseTitleBySale.get(saleIdOf(tx.metadata) ?? "") && (
+                  <p className="text-muted-foreground text-xs">
+                    {courseTitleBySale.get(saleIdOf(tx.metadata) ?? "")}
+                  </p>
+                )}
                 <p className="text-muted-foreground text-xs">
                   {tx.createdAt.toLocaleDateString("fr-FR", {
                     dateStyle: "medium",
@@ -204,6 +228,39 @@ export default async function CommissionsPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {ambassador && courseSales.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium">Mes ventes de formations</h2>
+          <div className="divide-y rounded-xl border">
+            {courseSales.map((sale) => (
+              <div
+                key={sale.id}
+                className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">{sale.courseTitle}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {sale.buyerUsername} ·{" "}
+                    {sale.createdAt.toLocaleDateString("fr-FR", {
+                      dateStyle: "medium",
+                    })}
+                    {sale.status === "REFUNDED" && " · remboursée"}
+                  </p>
+                </div>
+                <span className="shrink-0 text-right">
+                  {sale.pricePaid.toLocaleString("fr-FR")} F
+                  {sale.commission !== null && (
+                    <span className="block text-xs text-green-600">
+                      +{sale.commission.toLocaleString("fr-FR")} F
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

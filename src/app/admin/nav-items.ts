@@ -44,7 +44,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: CalendarClock,
   },
   { href: "/admin/installments", label: "Cagnottes", icon: PiggyBank },
-  { href: "/admin/sales", label: "Ventes (historique)", icon: ReceiptText },
+  {
+    href: "/admin/sales",
+    label: "Ventes de formations",
+    icon: ReceiptText,
+  },
   { href: "/admin/transfers", label: "Transferts", icon: ArrowLeftRight },
   { href: "/admin/withdrawals", label: "Retraits", icon: Landmark },
   { href: "/admin/commissions", label: "Commissions", icon: TrendingUp },
