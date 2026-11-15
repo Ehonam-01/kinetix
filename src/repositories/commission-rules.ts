@@ -91,6 +91,41 @@ export async function getEffectiveSubscriptionRule(
   return rule ?? null;
 }
 
+// A course sold on its own (services/lms/course-purchase.ts): its own
+// DIRECT_SALE rule, the category below (seeded at 15 % by migration 0083,
+// explicit user decision), or one for that very course. Never the
+// subscription's default rule, and never a course's own category: those
+// are the subscription's and the old per-course model's.
+export const COURSE_SALE_CATEGORY = "VENTE_COURS";
+
+// What a course sold alone pays the sponsor when no rule is found: the
+// agreed 15 % (explicit user decision), in basis points.
+export const COURSE_SALE_DEFAULT_RATE = 1500;
+
+export async function getEffectiveCourseSaleRule(
+  executor: Executor,
+  courseId: string,
+): Promise<EffectiveCommissionRule | null> {
+  const candidates = await executor.query.commissionRules.findMany({
+    where: and(
+      eq(commissionRules.scope, "DIRECT_SALE"),
+      lte(commissionRules.effectiveFrom, sql`now()`),
+      or(
+        isNull(commissionRules.effectiveTo),
+        sql`${commissionRules.effectiveTo} > now()`,
+      ),
+    ),
+    orderBy: desc(commissionRules.effectiveFrom),
+  });
+  return (
+    candidates.find((r) => r.courseId === courseId) ??
+    candidates.find(
+      (r) => r.courseId === null && r.category === COURSE_SALE_CATEGORY,
+    ) ??
+    null
+  );
+}
+
 // GENERATION scope is keyed by (levelCode, generation) exactly — no
 // resolution-order ambiguity like DIRECT_SALE's course/category/default
 // chain, since a generation only ever belongs to one level. Returns null

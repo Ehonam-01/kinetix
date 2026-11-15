@@ -1,5 +1,6 @@
 import { db } from "@/db/client";
 import {
+  COURSE_SALE_CATEGORY,
   listEffectiveDirectSaleRules,
   listEffectiveGenerationRules,
 } from "@/repositories/commission-rules";
@@ -113,9 +114,11 @@ export default async function AdminCommissionRulesPage() {
                     {rule.courseId
                       ? (titleByCourseId.get(rule.courseId) ??
                         "Formation supprimée")
-                      : rule.category
-                        ? `Catégorie : ${rule.category}`
-                        : "Règle par défaut (toutes les formations)"}
+                      : rule.category === COURSE_SALE_CATEGORY
+                        ? "Formations vendues seules (sans abonnement)"
+                        : rule.category
+                          ? `Catégorie : ${rule.category}`
+                          : "Règle par défaut (abonnement)"}
                     {rule.cap != null &&
                       ` · plafond ${rule.cap.toLocaleString("fr-FR")} F`}
                   </CardDescription>

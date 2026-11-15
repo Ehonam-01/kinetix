@@ -30,6 +30,7 @@ export async function insertProfileIfMissing(values: {
   wantsAmbassador?: boolean;
   phone?: string | null;
   goal?: string | null;
+  accountType?: "MEMBER" | "LEARNER";
 }) {
   // Availability was already checked at registration time
   // (services/auth/register.ts), but profile creation is deferred until

@@ -11,9 +11,9 @@ import { LoginForm } from "./login-form";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; reset?: string }>;
+  searchParams: Promise<{ error?: string; reset?: string; next?: string }>;
 }) {
-  const { error, reset } = await searchParams;
+  const { error, reset, next } = await searchParams;
 
   return (
     <Card>
@@ -40,7 +40,7 @@ export default async function LoginPage({
             Mot de passe mis à jour. Connectez-vous.
           </p>
         )}
-        <LoginForm />
+        <LoginForm next={next} />
         <p className="text-center text-sm">
           <Link
             href="/forgot-password"

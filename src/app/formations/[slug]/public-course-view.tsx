@@ -167,6 +167,13 @@ export function PublicCourseView({
                     Déjà membre ? Accéder à la formation
                   </Link>
                 </div>
+                {course.salePrice !== null && !course.comingSoon && (
+                  <BuyAloneLink
+                    slug={course.slug ?? course.id}
+                    price={course.salePrice}
+                    className="mt-4"
+                  />
+                )}
                 <ShareCourse
                   url={shareUrl}
                   courseTitle={course.title}
@@ -187,7 +194,9 @@ export function PublicCourseView({
         <div>
           <h2 className="text-2xl font-semibold">Programme de la formation</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Le contenu des leçons est réservé aux membres abonnés.
+            {course.salePrice !== null
+              ? "Le contenu des leçons est réservé aux abonnés et à ceux qui ont acheté cette formation."
+              : "Le contenu des leçons est réservé aux membres abonnés."}
           </p>
           <div className="border-border bg-card mt-6 rounded-2xl border p-5 sm:p-6">
             {lessons.length === 0 ? (
@@ -226,9 +235,49 @@ export function PublicCourseView({
             <Link href="/register" className={cn(buttonVariants(), "w-full")}>
               Commencer maintenant
             </Link>
+            {course.salePrice !== null && !course.comingSoon && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold">
+                  Ou seulement cette formation
+                </p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Accès à vie, en un seul paiement, sans abonnement.
+                </p>
+                <BuyAloneLink
+                  slug={course.slug ?? course.id}
+                  price={course.salePrice}
+                  className="mt-3 w-full"
+                />
+              </div>
+            )}
           </div>
         </aside>
       </section>
     </>
+  );
+}
+
+// Buying this course alone, for life (explicit user decision): its own
+// page, where the visitor signs in or creates a learner account, then pays.
+function BuyAloneLink({
+  slug,
+  price,
+  className,
+}: {
+  slug: string;
+  price: number;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={`/formations/${slug}/acheter`}
+      className={cn(
+        buttonVariants({ size: "lg", variant: "outline" }),
+        "h-auto min-h-11 py-2 whitespace-normal",
+        className,
+      )}
+    >
+      Acheter seulement cette formation – {price.toLocaleString("fr-FR")} F
+    </Link>
   );
 }

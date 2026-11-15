@@ -11,7 +11,9 @@ import {
 import { loginSchema } from "@/schemas/auth";
 import { loginUser } from "@/services/auth/login";
 
-export async function loginAction(input: unknown) {
+// next: where to go once signed in (a course's purchase page), a path of
+// this site only.
+export async function loginAction(input: unknown, next?: string) {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
@@ -33,5 +35,11 @@ export async function loginAction(input: unknown) {
   const goal = (await cookies()).get(GOAL_COOKIE_NAME)?.value;
   if (isGoalValue(goal)) redirect(`/orientation?objectif=${goal}`);
 
+  if (
+    typeof next === "string" &&
+    /^\/formations\/[\w-]+\/acheter$/.test(next)
+  ) {
+    redirect(next);
+  }
   redirect("/dashboard");
 }

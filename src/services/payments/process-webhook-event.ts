@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import type { Executor } from "@/db/executor";
 import { paymentEvents, payments } from "@/db/schema/payments";
+import { confirmCoursePurchase } from "@/services/lms/course-purchase";
 import { confirmSubscriptionPurchase } from "@/services/subscriptions/confirm-subscription-payment";
 import { applyInstallmentDeposit } from "@/services/subscriptions/installments";
 import {
@@ -87,6 +88,9 @@ export async function processWebhookEvent(tx: Executor, event: WebhookEvent) {
       await activateRegistration(tx, payment.id);
     } else if (payment.purpose === "WORKSHOP") {
       await confirmWorkshopRegistration(tx, payment.id);
+    } else if (payment.purpose === "COURSE_PURCHASE") {
+      // A course bought on its own (services/lms/course-purchase.ts).
+      await confirmCoursePurchase(tx, payment.id);
     }
   } else if (event.status === "FAILED") {
     // Only a payment still waiting can fail: a late "failed"/"reversed"

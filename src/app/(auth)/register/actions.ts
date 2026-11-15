@@ -3,6 +3,8 @@
 import { cookies } from "next/headers";
 import { GOAL_COOKIE_NAME, isGoalValue } from "@/config/goals";
 import { isIpRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
+import { db } from "@/db/client";
+import { getPublicCourse } from "@/repositories/courses";
 import { registerSchema } from "@/schemas/auth";
 import {
   lookupSponsorByUsername,
@@ -13,7 +15,9 @@ import {
   parseMarketingCookie,
 } from "@/services/marketing/campaign-tracking";
 
-export async function registerAction(input: unknown) {
+// formation: the slug of the course this visitor came to buy on its own
+// (a learner account), checked here.
+export async function registerAction(input: unknown, formation?: string) {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
@@ -31,7 +35,20 @@ export async function registerAction(input: unknown) {
     parseMarketingCookie(cookieStore.get(MARKETING_COOKIE_NAME)?.value)
       ?.firstVisitId ?? null;
 
-  const result = await registerUser(parsed.data, { goal, marketingVisitId });
+  let learnerCourseSlug: string | null = null;
+  if (formation) {
+    const course = await getPublicCourse(db, formation);
+    if (!course?.course.slug || course.course.salePrice === null) {
+      return { error: "Cette formation n'est pas vendue seule." };
+    }
+    learnerCourseSlug = course.course.slug;
+  }
+
+  const result = await registerUser(parsed.data, {
+    goal,
+    marketingVisitId,
+    learnerCourseSlug,
+  });
   if (!result.error && goal) cookieStore.delete(GOAL_COOKIE_NAME);
   return result;
 }

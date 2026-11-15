@@ -30,7 +30,7 @@ function actionLabel(course: CourseSummary) {
 export default async function CoursesPage(
   props: PageProps<"/dashboard/courses">,
 ) {
-  const { profile } = await requireUser();
+  const { authUser, profile } = await requireUser();
   // Unlike the rest of /dashboard's sub-pages (network, commissions,
   // levels...), which stay ambassador-only and gated to ACTIVE, the course
   // catalog must be reachable by a plain customer who never joins the
@@ -120,9 +120,20 @@ export default async function CoursesPage(
           {isLearner ? (
             <>
               Tu n&apos;as pas encore de formation.{" "}
-              <Link href="/formations" className="text-primary underline">
-                Voir le catalogue
-              </Link>
+              {/* The course this account was created to buy, when the
+                  email confirmation didn't bring them back to its page. */}
+              {typeof authUser.user_metadata?.learner_course === "string" ? (
+                <Link
+                  href={`/formations/${encodeURIComponent(authUser.user_metadata.learner_course)}/acheter`}
+                  className="text-primary underline"
+                >
+                  Finaliser l&apos;achat de ta formation
+                </Link>
+              ) : (
+                <Link href="/formations" className="text-primary underline">
+                  Voir le catalogue
+                </Link>
+              )}
             </>
           ) : (
             "Aucune formation disponible pour le moment."

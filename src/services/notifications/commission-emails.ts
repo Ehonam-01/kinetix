@@ -19,6 +19,8 @@ type ClaimedCommission = {
   beneficiary_status: string;
   referral_name: string | null;
   referral_username: string | null;
+  // Set for a course sold on its own (services/lms/course-purchase.ts).
+  course_title: string | null;
 };
 
 const fmt = (amount: number) => `${amount.toLocaleString("fr-FR")} F`;
@@ -30,6 +32,18 @@ function buildEmail(c: ClaimedCommission, availableBalance: number) {
         c.referral_username ? ` (${escapeHtml(c.referral_username)})` : ""
       }`
     : "une nouvelle personne";
+  if (c.course_title) {
+    return {
+      subject: `Félicitations : +${fmt(c.amount)} pour une formation vendue`,
+      lines: [
+        `Félicitations ${firstName} !`,
+        `${referral} vient d'acheter la formation <strong>${escapeHtml(c.course_title)}</strong> grâce à toi.`,
+        `Ta commission de <strong>${fmt(c.amount)}</strong> a été ajoutée à ton solde.`,
+        `Solde disponible : <strong>${fmt(availableBalance)}</strong>. Tu peux le retirer vers mobile money depuis ton espace, ou l'utiliser pour payer un abonnement.`,
+        "Continue à partager ton lien : chaque formation vendue te rapporte une commission.",
+      ],
+    };
+  }
   return {
     subject: `Félicitations : +${fmt(c.amount)} pour ton nouveau filleul`,
     lines: [
@@ -80,7 +94,9 @@ export async function sendCommissionEmails(): Promise<{
       RETURNING ce.id, ce.beneficiary_user_id, ce.amount,
         b.full_name AS beneficiary_name, b.status AS beneficiary_status,
         (SELECT full_name FROM profiles WHERE id = ce.source_user_id) AS referral_name,
-        (SELECT username FROM profiles WHERE id = ce.source_user_id) AS referral_username
+        (SELECT username FROM profiles WHERE id = ce.source_user_id) AS referral_username,
+        (SELECT c.title FROM sales s JOIN courses c ON c.id = s.course_id
+          WHERE ce.dedupe_key = 'DIRECT_SALE:' || s.id::text) AS course_title
     `);
     if (claimed.length === 0) return { sent, failed };
 

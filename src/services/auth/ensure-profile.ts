@@ -56,6 +56,9 @@ export async function ensureProfile(user: User) {
     goal: isGoalValue(user.user_metadata?.goal)
       ? user.user_metadata.goal
       : null,
+    // Signed up to buy a course on its own (services/auth/register.ts).
+    accountType:
+      user.user_metadata?.account_type === "LEARNER" ? "LEARNER" : "MEMBER",
   });
 
   // The campaign the sign-up came from (Admin → Marketing). Never allowed

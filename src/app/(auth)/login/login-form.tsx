@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
@@ -22,7 +22,7 @@ export function LoginForm() {
   function onSubmit(values: LoginInput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await loginAction(values);
+      const result = await loginAction(values, next);
       if (result?.error) {
         setServerError(result.error);
       }

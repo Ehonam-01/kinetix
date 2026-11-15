@@ -582,6 +582,13 @@
       "when": 1794737550378,
       "tag": "0082_course_sales_learners",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1794739792353,
+      "tag": "0083_course_sale_commission_rule",
+      "breakpoints": true
     }
   ]
 }

@@ -21,9 +21,13 @@ import { trackMarketingEvent } from "@/lib/marketing-events";
 export function RegisterForm({
   defaultSponsorUsername,
   header,
+  formation,
 }: {
   defaultSponsorUsername?: string;
   header: ReactNode;
+  // Signing up to buy this course on its own (its slug): a learner
+  // account, nothing about the ambassador programme.
+  formation?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -73,7 +77,7 @@ export function RegisterForm({
   function onSubmit(values: RegisterInput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await registerAction(values);
+      const result = await registerAction(values, formation);
       if (result.error) {
         setServerError(result.error);
       } else {
@@ -224,39 +228,45 @@ export function RegisterForm({
               </p>
             )}
           </div>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">
-              Souhaitez-vous aussi devenir ambassadeur ?
-            </legend>
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="true"
-                  defaultChecked
-                  {...register("wantsAmbassador", {
-                    setValueAs: (value) => value === "true",
-                  })}
-                />
-                Oui
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  value="false"
-                  {...register("wantsAmbassador", {
-                    setValueAs: (value) => value === "true",
-                  })}
-                />
-                Non
-              </label>
-            </div>
-          </fieldset>
+          {!formation && (
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">
+                Souhaitez-vous aussi devenir ambassadeur ?
+              </legend>
+              <div className="flex gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="true"
+                    defaultChecked
+                    {...register("wantsAmbassador", {
+                      setValueAs: (value) => value === "true",
+                    })}
+                  />
+                  Oui
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    value="false"
+                    {...register("wantsAmbassador", {
+                      setValueAs: (value) => value === "true",
+                    })}
+                  />
+                  Non
+                </label>
+              </div>
+            </fieldset>
+          )}
           {serverError && (
             <p className="text-destructive text-sm">{serverError}</p>
           )}
           <Button type="submit" disabled={pending} className="w-full">
-            {pending ? "Inscription..." : "Nous rejoindre"}
+            {pending
+              ? "Inscription..."
+              : formation
+                ? "Créer mon compte"
+                : "Nous rejoindre"}
           </Button>
           <p className="text-muted-foreground text-center text-xs">
             En créant un compte, vous acceptez nos{" "}

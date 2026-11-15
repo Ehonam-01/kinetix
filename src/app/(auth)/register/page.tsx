@@ -5,14 +5,23 @@ import {
   REFERRAL_COOKIE_NAME,
   resolveReferralUsername,
 } from "@/services/attribution/resolve-referral";
+import { db } from "@/db/client";
+import { getPublicCourse } from "@/repositories/courses";
 import { RegisterForm } from "./register-form";
 
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sponsor?: string }>;
+  searchParams: Promise<{ sponsor?: string; formation?: string }>;
 }) {
-  const { sponsor } = await searchParams;
+  const { sponsor, formation } = await searchParams;
+  // ?formation=<slug>: signing up to buy that course on its own (a learner
+  // account, explicit user decision), only for a course sold that way.
+  const course = formation ? await getPublicCourse(db, formation) : null;
+  const learnerCourse =
+    course?.course.slug && course.course.salePrice !== null
+      ? course.course
+      : null;
   // ?sponsor= (an explicit sponsor-specific registration link) wins when
   // present; otherwise, prefill from the visitor's own referral-link cookie
   // if any — so a click-through visitor isn't left with no sponsorships row
@@ -27,13 +36,26 @@ export default async function RegisterPage({
   return (
     <RegisterForm
       defaultSponsorUsername={defaultSponsorUsername}
+      formation={learnerCourse?.slug ?? undefined}
       header={
         <CardHeader>
-          <CardTitle>Nous rejoindre</CardTitle>
+          <CardTitle>
+            {learnerCourse ? "Crée ton compte" : "Nous rejoindre"}
+          </CardTitle>
+          {learnerCourse && (
+            <CardDescription>
+              Pour acheter « {learnerCourse.title} » et la retrouver quand tu
+              veux. Tu paies juste après avoir confirmé ton adresse email.
+            </CardDescription>
+          )}
           <CardDescription>
             Déjà inscrit ?{" "}
             <Link
-              href="/login"
+              href={
+                learnerCourse
+                  ? `/login?next=${encodeURIComponent(`/formations/${learnerCourse.slug}/acheter`)}`
+                  : "/login"
+              }
               className="text-primary underline underline-offset-4"
             >
               Se connecter

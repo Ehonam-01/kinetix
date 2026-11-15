@@ -23,7 +23,14 @@ async function findPlatformSponsor() {
 
 export async function registerUser(
   input: RegisterInput,
-  extra: { goal?: GoalValue | null; marketingVisitId?: string | null } = {},
+  extra: {
+    goal?: GoalValue | null;
+    marketingVisitId?: string | null;
+    // Signing up to buy this course on its own (its slug): a learner
+    // account, not a member (explicit user decision), brought back to the
+    // course's purchase page once the email is confirmed.
+    learnerCourseSlug?: string | null;
+  } = {},
 ) {
   const {
     fullName,
@@ -33,8 +40,11 @@ export async function registerUser(
     password,
     sponsorUsername,
     noSponsor,
-    wantsAmbassador,
+    wantsAmbassador: wantsAmbassadorInput,
   } = registerSchema.parse(input);
+  const learnerCourseSlug = extra.learnerCourseSlug ?? null;
+  // A learner joins no programme.
+  const wantsAmbassador = learnerCourseSlug ? false : wantsAmbassadorInput;
 
   // Resolved and validated up front so a typo'd sponsor pseudo fails loudly
   // at registration time, instead of silently dropping the attribution
@@ -111,8 +121,13 @@ export async function registerUser(
         ...(extra.marketingVisitId
           ? { mkt_visit: extra.marketingVisitId }
           : {}),
+        ...(learnerCourseSlug
+          ? { account_type: "LEARNER", learner_course: learnerCourseSlug }
+          : {}),
       },
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: learnerCourseSlug
+        ? `${origin}/auth/callback?next=${encodeURIComponent(`/formations/${learnerCourseSlug}/acheter`)}`
+        : `${origin}/auth/callback`,
     },
   });
 
