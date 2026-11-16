@@ -17,6 +17,7 @@ import {
   MessageCircle,
   PenLine,
   Ticket,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { GridBackdrop } from "@/app/_components/grid-backdrop";
@@ -298,6 +299,7 @@ const INCLUDED_ICONS = [
   Coffee,
   FileText,
   MessageCircle,
+  Users,
   Award,
 ];
 
