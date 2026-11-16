@@ -16,11 +16,11 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    // The splash screen stays white: the animated launch screen
-    // (components/pwa/launch-screen.tsx) starts from the same white picture.
-    // The title bar follows the default theme, dark (--background of
-    // globals.css, same as the viewport themeColor in app/layout.tsx).
-    background_color: "#ffffff",
+    // The default theme, dark (--background of globals.css, same as the
+    // viewport themeColor in app/layout.tsx): the title bar, and the splash
+    // screen, which the animated launch screen (components/pwa/
+    // launch-screen.tsx) continues from the same dark picture.
+    background_color: "#0a0a0a",
     theme_color: "#0a0a0a",
     categories: ["education", "business"],
     icons: [

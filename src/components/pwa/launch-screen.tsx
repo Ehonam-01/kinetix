@@ -1,7 +1,7 @@
 // Animated launch screen of the installed app. It takes over from the
-// phone's own splash (plain white + logo, built by Android from
+// phone's own splash (plain dark background + logo, built by Android from
 // app/manifest.ts, which can't be animated) and starts from the same
-// picture — white, mark in the center — so the hand-off is seamless, then
+// picture — dark, mark in the center — so the hand-off is seamless, then
 // comes alive for about two seconds before revealing the app.
 //
 // No React state or effect: LAUNCH_SCREEN_SCRIPT (app/layout.tsx) adds

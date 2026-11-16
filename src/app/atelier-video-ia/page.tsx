@@ -62,7 +62,6 @@ import {
   WorkshopCta,
   WorkshopCtaBlock,
   WorkshopLiveProvider,
-  QuestionWhatsapp,
   QuestionWhatsappButton,
 } from "./_components/workshop-live";
 
@@ -793,7 +792,6 @@ export default async function AtelierVideoIaPage() {
         </section>
       </main>
       <StickyCta />
-      {questionUrl && <QuestionWhatsapp url={questionUrl} />}
     </WorkshopLiveProvider>
   );
 }

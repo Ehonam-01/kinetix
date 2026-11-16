@@ -187,11 +187,12 @@
 
 /* Launch screen of the installed app (components/pwa/launch-screen.tsx).
    Hidden unless LAUNCH_SCREEN_SCRIPT set html.kx-launch-on. Starts as the
-   phone's own splash (white, mark centered) then, over ~2 s: the mark
+   phone's own splash (dark, mark centered) then, over ~2 s: the mark
    pulses and rings ripple out, three photos pop into orbit, the name and
    tagline rise, the bar fills, and the whole screen fades away — all in
-   CSS, so it leaves even if the page's JavaScript is slow. Fixed light
-   colors on purpose: it continues the (white) system splash. */
+   CSS, so it leaves even if the page's JavaScript is slow. Fixed dark
+   colors on purpose (explicit user decision, the site's default theme): it
+   continues the system splash, app/manifest.ts's background_color. */
 .kx-launch {
   display: none;
 }
@@ -202,7 +203,7 @@ html.kx-launch-on .kx-launch {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #0a0a0a;
   animation: kx-exit 0.45s cubic-bezier(0.4, 0, 1, 1) 2.1s forwards;
 }
 .kx-stage {
@@ -227,7 +228,7 @@ html.kx-launch-on .kx-launch {
   top: 0;
   width: 120px;
   height: 120px;
-  border: 2px solid #2563eb;
+  border: 2px solid #3b82f6;
   border-radius: 9999px;
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.5);
@@ -244,10 +245,10 @@ html.kx-launch-on .kx-launch {
   width: 64px;
   height: 64px;
   max-width: none;
-  border: 3px solid #ffffff;
+  border: 3px solid #262626;
   border-radius: 9999px;
   object-fit: cover;
-  box-shadow: 0 8px 24px rgb(19 26 42 / 0.18);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.2);
   animation: kx-orbit 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -285,13 +286,13 @@ html.kx-launch-on .kx-launch {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #131a2a;
+  color: #f5f5f5;
   animation: kx-rise 0.5s ease-out 0.85s both;
 }
 .kx-tagline {
   margin: 0;
   font-size: 13px;
-  color: #5a6478;
+  color: #a3a3a3;
   animation: kx-rise 0.5s ease-out 1.05s both;
 }
 .kx-progress {
@@ -301,7 +302,7 @@ html.kx-launch-on .kx-launch {
   margin-top: 14px;
   overflow: hidden;
   border-radius: 9999px;
-  background: #eef2f9;
+  background: #262626;
   animation: kx-rise 0.3s ease-out 0.9s both;
 }
 .kx-progress > span {

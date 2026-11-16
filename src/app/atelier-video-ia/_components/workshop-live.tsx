@@ -151,9 +151,13 @@ export function WhatsappButton({
 // user decision, a visitor past the capacity is never offered a payment.
 export function WorkshopCta({
   label,
+  stacked = false,
   className,
 }: {
   label: string;
+  // The label on one line, the prices on the next: for the narrow bar at
+  // the bottom of a phone's screen, where one line overflows.
+  stacked?: boolean;
   className?: string;
 }) {
   const { open, price, priceFrom, regularPrice, whatsappUrl } = useLive();
@@ -176,14 +180,31 @@ export function WorkshopCta({
         className,
       )}
     >
-      {label} –{" "}
-      {regularPrice > price && (
-        <s className="mr-1 font-semibold decoration-2 opacity-70">
-          {regularPrice.toLocaleString("fr-FR")}&nbsp;F
-        </s>
+      {stacked ? (
+        <span className="flex flex-col items-center leading-tight">
+          <span>{label}</span>
+          <span className="mt-0.5 text-xs">
+            {regularPrice > price && (
+              <s className="mr-1 font-semibold decoration-2 opacity-70">
+                {regularPrice.toLocaleString("fr-FR")}&nbsp;F
+              </s>
+            )}
+            {priceFrom ? "dès " : ""}
+            {price.toLocaleString("fr-FR")}&nbsp;F
+          </span>
+        </span>
+      ) : (
+        <>
+          {label} –{" "}
+          {regularPrice > price && (
+            <s className="mr-1 font-semibold decoration-2 opacity-70">
+              {regularPrice.toLocaleString("fr-FR")}&nbsp;F
+            </s>
+          )}
+          {priceFrom ? "dès " : ""}
+          {price.toLocaleString("fr-FR")}&nbsp;F
+        </>
       )}
-      {priceFrom ? "dès " : ""}
-      {price.toLocaleString("fr-FR")}&nbsp;F
     </Link>
   );
 }
@@ -251,25 +272,8 @@ export function SaleStatus({ className }: { className?: string }) {
 // Counted as a Meta "Contact" when the pixel runs.
 const trackContact = () => trackMarketingEvent("Contact");
 
-// Always in reach, bottom right: above the phones' booking bar, below the
-// pixel banner while that one is open.
-export function QuestionWhatsapp({ url }: { url: string }) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={trackContact}
-      aria-label="Une question ? Écris-nous sur WhatsApp"
-      className="fixed right-3 bottom-24 z-30 flex items-center gap-2 rounded-full bg-[#25D366] py-2.5 pr-4 pl-3 text-sm font-semibold text-white shadow-lg shadow-black/20 transition-transform hover:scale-105 sm:right-5 sm:bottom-5"
-    >
-      <MessageCircle aria-hidden="true" className="size-5" />
-      Une question&nbsp;?
-    </a>
-  );
-}
-
-// The same, inline: under the questions answered on the page.
+// Under the questions answered on the page (the floating one in the corner
+// was removed: explicit user decision, it covered the booking bar).
 export function QuestionWhatsappButton({ url }: { url: string }) {
   return (
     <WhatsappButton
@@ -312,7 +316,11 @@ export function StickyCta() {
     >
       <div className="flex items-center gap-3">
         <SaleStatus className="w-24 shrink-0 text-xs leading-tight" />
-        <WorkshopCta label="JE RÉSERVE MA PLACE" className="flex-1 text-sm" />
+        <WorkshopCta
+          label="JE RÉSERVE MA PLACE"
+          stacked
+          className="flex-1 px-3 py-2 text-sm"
+        />
       </div>
     </div>
   );
