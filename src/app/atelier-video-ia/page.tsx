@@ -118,10 +118,14 @@ function StruckPrice({
 // Handwriting, for the notes beside the hero video and a few labels.
 const caveat = Caveat({ subsets: ["latin"], weight: "700" });
 
-function toSliderVideo(url: string): SliderVideo | null {
+function toSliderVideo(url: string, title?: string): SliderVideo | null {
   const id = getVideoEmbedUrl("YOUTUBE", url)?.match(/\/embed\/([\w-]+)/)?.[1];
   return id
-    ? { id, thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` }
+    ? {
+        id,
+        thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+        title: title || null,
+      }
     : null;
 }
 
@@ -356,7 +360,7 @@ export default async function AtelierVideoIaPage() {
   const whatsappUrl = (text: string) =>
     supportWhatsapp ? whatsappHref(supportWhatsapp, text) : null;
   const sliderVideos = workshop.sliderVideoUrls
-    .map(toSliderVideo)
+    .map((url, i) => toSliderVideo(url, workshop.sliderVideoTitles[i]))
     .filter((video) => video !== null);
   const exampleVideos = workshop.exampleVideoUrls
     .map(toExampleVideo)

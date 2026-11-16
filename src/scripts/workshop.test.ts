@@ -706,7 +706,12 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     await updateWorkshopPage(admin, {
       exampleVideoUrls: ["", "https://youtube.com/shorts/dQw4w9WgXcQ", ""],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ", " ", ""],
+      sliderVideoUrls: [
+        "https://youtu.be/dQw4w9WgXcQ | Pub boutique",
+        " ",
+        "",
+        "https://youtu.be/jNQXAC9IVRw",
+      ],
     });
     expect(
       await localDb.query.workshops.findFirst({
@@ -715,7 +720,11 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
     ).toMatchObject({
       exampleVideoUrls: ["https://youtube.com/shorts/dQw4w9WgXcQ"],
       heroVideoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      sliderVideoUrls: ["https://youtu.be/dQw4w9WgXcQ"],
+      sliderVideoUrls: [
+        "https://youtu.be/dQw4w9WgXcQ",
+        "https://youtu.be/jNQXAC9IVRw",
+      ],
+      sliderVideoTitles: ["Pub boutique", ""],
     });
     await expect(
       updateWorkshopPage(admin, {
@@ -738,6 +747,13 @@ describe("workshop (pglite, no shared DB touched, fake provider)", () => {
         sliderVideoUrls: Array(13).fill("https://youtu.be/dQw4w9WgXcQ"),
       }),
     ).rejects.toThrow("12 vidéos au plus");
+    await expect(
+      updateWorkshopPage(admin, {
+        exampleVideoUrls: [],
+        heroVideoUrl: "",
+        sliderVideoUrls: [`https://youtu.be/dQw4w9WgXcQ | ${"a".repeat(81)}`],
+      }),
+    ).rejects.toThrow("80 caractères");
 
     const kara = {
       city: "Kara",

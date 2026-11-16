@@ -32,6 +32,7 @@ export function WorkshopPageForm({
     exampleVideoUrls: string[];
     heroVideoUrl: string | null;
     sliderVideoUrls: string[];
+    sliderVideoTitles: string[];
   };
 }) {
   const [pending, startTransition] = useTransition();
@@ -40,10 +41,16 @@ export function WorkshopPageForm({
   const [videos, setVideos] = useState(
     [0, 1, 2].map((i) => current.exampleVideoUrls[i] ?? ""),
   );
-  // One link per line: easier than a field per video for a list of any
-  // length.
+  // One line per video, "link | title": easier than fields per video for a
+  // list of any length.
   const [sliderVideos, setSliderVideos] = useState(
-    current.sliderVideoUrls.join("\n"),
+    current.sliderVideoUrls
+      .map((url, i) =>
+        current.sliderVideoTitles[i]
+          ? `${url} | ${current.sliderVideoTitles[i]}`
+          : url,
+      )
+      .join("\n"),
   );
 
   function handleSubmit(event: React.FormEvent) {
@@ -82,21 +89,24 @@ export function WorkshopPageForm({
       ))}
       <div className="space-y-1.5">
         <Label htmlFor="workshop-slider-videos">
-          Slider de vidéos exemples (un lien YouTube par ligne, 12 au plus)
+          Slider de vidéos exemples (une vidéo par ligne : lien YouTube | titre,
+          12 au plus)
         </Label>
         <textarea
           id="workshop-slider-videos"
           rows={5}
           placeholder={
-            "https://www.youtube.com/shorts/...\nhttps://www.youtube.com/shorts/..."
+            "https://www.youtube.com/shorts/... | Pub pour une boutique\nhttps://www.youtube.com/shorts/... | Promo Black Friday"
           }
           value={sliderVideos}
           onChange={(e) => setSliderVideos(e.target.value)}
           className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 w-full rounded-lg border bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:ring-3"
         />
         <p className="text-muted-foreground text-xs">
-          Sous « Ce que tu vas réaliser ». Les vidéos se lisent sans le son ; un
-          tap relance la vidéo avec le son. Vide : le slider est masqué.
+          Sous « Ce que tu vas réaliser ». Le titre, après la barre « | », est
+          affiché sous la vidéo (facultatif, 80 caractères au plus). Les vidéos
+          se lisent sans le son ; un tap relance la vidéo avec le son. Vide : le
+          slider est masqué.
         </p>
       </div>
       <div className="flex items-center gap-3">

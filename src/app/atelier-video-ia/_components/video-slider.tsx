@@ -5,7 +5,12 @@ import { ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CleanYouTube } from "./clean-youtube";
 
-export type SliderVideo = { id: string; thumbnailUrl: string };
+export type SliderVideo = {
+  id: string;
+  thumbnailUrl: string;
+  // Shown under the video, when the admin gave one.
+  title: string | null;
+};
 
 // What a phone with "save data" on shouldn't load on its own.
 function savesData() {
@@ -183,44 +188,53 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
         {cards.map((video, i) => {
           const sound = withSound === i;
           const playing = sound || visible.has(i);
+          const label =
+            video.title ?? `Vidéo d'exemple ${(i % videos.length) + 1}`;
           return (
             <div
               key={`${video.id}-${i}`}
               data-index={i}
-              className="relative aspect-[9/16] w-[62vw] max-w-64 shrink-0 snap-center overflow-hidden rounded-2xl border bg-white shadow-lg sm:w-56 sm:snap-start"
+              className="w-[62vw] max-w-64 shrink-0 snap-center sm:w-56 sm:snap-start"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={video.thumbnailUrl}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 size-full object-cover"
-              />
-              {playing && (
-                // YouTube's title and channel bars cropped out; with the
-                // sound, a tap pauses or resumes it.
-                <CleanYouTube
-                  key={sound ? "sound" : "muted"}
-                  videoId={video.id}
-                  title={`Vidéo d'exemple ${(i % videos.length) + 1}`}
-                  muted={!sound}
-                  loop
-                  pausable={sound}
+              <div className="relative aspect-[9/16] overflow-hidden rounded-2xl border bg-white shadow-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={video.thumbnailUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 size-full object-cover"
                 />
-              )}
-              {!sound && (
-                <button
-                  type="button"
-                  onClick={() => setWithSound(i)}
-                  aria-label={`Regarder la vidéo d'exemple ${(i % videos.length) + 1} avec le son`}
-                  className="absolute inset-0 flex cursor-pointer items-end justify-center p-3"
-                >
-                  <span className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
-                    <Volume2 aria-hidden="true" className="size-4" />
-                    Activer le son
-                  </span>
-                </button>
+                {playing && (
+                  // YouTube's title and channel bars cropped out; with the
+                  // sound, a tap pauses or resumes it.
+                  <CleanYouTube
+                    key={sound ? "sound" : "muted"}
+                    videoId={video.id}
+                    title={label}
+                    muted={!sound}
+                    loop
+                    pausable={sound}
+                  />
+                )}
+                {!sound && (
+                  <button
+                    type="button"
+                    onClick={() => setWithSound(i)}
+                    aria-label={`Regarder « ${label} » avec le son`}
+                    className="absolute inset-0 flex cursor-pointer items-end justify-center p-3"
+                  >
+                    <span className="flex items-center gap-1.5 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white">
+                      <Volume2 aria-hidden="true" className="size-4" />
+                      Activer le son
+                    </span>
+                  </button>
+                )}
+              </div>
+              {video.title && (
+                <p className="mt-2 line-clamp-2 px-1 text-center text-sm leading-snug font-semibold">
+                  {video.title}
+                </p>
               )}
             </div>
           );

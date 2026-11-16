@@ -596,6 +596,13 @@
       "when": 1794793676616,
       "tag": "0084_workshop_testimonials",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1794854722049,
+      "tag": "0085_workshop_slider_titles",
+      "breakpoints": true
     }
   ]
 }

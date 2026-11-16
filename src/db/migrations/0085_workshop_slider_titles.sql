@@ -1,0 +1,1 @@
+ALTER TABLE "workshops" ADD COLUMN "slider_video_titles" text[] DEFAULT '{}'::text[] NOT NULL;

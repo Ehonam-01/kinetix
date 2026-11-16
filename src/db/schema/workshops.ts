@@ -60,6 +60,12 @@ export const workshops = pgTable("workshops", {
     .array()
     .notNull()
     .default(sql`'{}'::text[]`),
+  // The title under each slider video, same order as sliderVideoUrls ("":
+  // none).
+  sliderVideoTitles: text("slider_video_titles")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   registrationsOpen: boolean("registrations_open").notNull().default(true),
   // Last moment a participant's code still takes money off a subscription.
   discountValidUntil: timestamp("discount_valid_until", {
