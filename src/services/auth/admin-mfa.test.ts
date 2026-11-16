@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  ADMIN_IDLE_MS,
+  ADMIN_SESSION_COOKIE,
+  signAdminSession,
+} from "@/lib/admin-session";
 
 // Who's signed in (validated by Supabase's getUser), their factors, and the
 // session token in the cookies.
@@ -6,6 +11,9 @@ let role: "ADMIN" | "USER" = "ADMIN";
 let factors: { status: string }[] = [];
 let session: { access_token: string } | null = null;
 let getUserCalls = 0;
+// The browser's admin-session cookie (lib/admin-session.ts).
+let adminCookie: string | undefined;
+const SERVICE_KEY = "test-service-key";
 
 function token(claims: Record<string, unknown>) {
   const encode = (o: object) =>
@@ -15,6 +23,17 @@ function token(claims: Record<string, unknown>) {
 const inOneHour = () => Math.floor(Date.now() / 1000) + 3600;
 
 vi.mock("@/db/client", () => ({ db: {} }));
+vi.mock("@/config/env.supabase-admin", () => ({
+  getSupabaseAdminEnv: () => ({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY }),
+}));
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    get: (name: string) =>
+      name === ADMIN_SESSION_COOKIE && adminCookie
+        ? { name, value: adminCookie }
+        : undefined,
+  }),
+}));
 vi.mock("@/services/auth/ensure-profile", () => ({
   ensureProfile: async () => ({ id: "u1", role, status: "ACTIVE" }),
 }));
@@ -42,6 +61,36 @@ describe("requireAdmin with a second factor", () => {
     factors = [{ status: "verified" }];
     session = null;
     getUserCalls = 0;
+    adminCookie = signAdminSession("u1", SERVICE_KEY);
+  });
+
+  it("signs out an admin session past its second factor once idle an hour or the browser closed", async () => {
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal2" }),
+    };
+    const { requireAdmin } = await import("./current-user");
+    // Browser closed: the session cookie is gone.
+    adminCookie = undefined;
+    await expectRedirectTo(requireAdmin(), "/auth/admin-expired");
+    // An hour without activity.
+    adminCookie = signAdminSession(
+      "u1",
+      SERVICE_KEY,
+      Date.now() - ADMIN_IDLE_MS - 1000,
+    );
+    await expectRedirectTo(requireAdmin(), "/auth/admin-expired");
+    // Another user's cookie.
+    adminCookie = signAdminSession("u2", SERVICE_KEY);
+    await expectRedirectTo(requireAdmin(), "/auth/admin-expired");
+  });
+
+  it("asks nothing of an admin who hasn't entered the code yet: /mfa first", async () => {
+    session = {
+      access_token: token({ sub: "u1", exp: inOneHour(), aal: "aal1" }),
+    };
+    adminCookie = undefined;
+    const { requireAdmin } = await import("./current-user");
+    await expectRedirectTo(requireAdmin(), "/mfa");
   });
 
   it("lets an admin through once the session passed the second factor", async () => {

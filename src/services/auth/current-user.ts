@@ -1,7 +1,10 @@
 import "server-only";
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSupabaseAdminEnv } from "@/config/env.supabase-admin";
 import { db } from "@/db/client";
+import { ADMIN_SESSION_COOKIE, isFreshAdminSession } from "@/lib/admin-session";
 import { getSubscriptionStatus } from "@/repositories/subscriptions";
 import { getAdminMfaState } from "./admin-mfa";
 import { ensureProfile } from "./ensure-profile";
@@ -33,7 +36,29 @@ export async function requireUser() {
   // server action) is covered from this one place, so a deleted account
   // can never act as though it still exists in that window.
   if (current.profile.status === "DELETED") redirect("/login");
+  if (current.profile.role === "ADMIN")
+    await enforceAdminSession(current.profile.id);
   return current;
+}
+
+// An admin session past its second factor ends after an hour without
+// activity or once the browser was closed (explicit user decision, see
+// lib/admin-session.ts): without a fresh session cookie, it's signed out.
+// Before the second factor there's nothing to end yet: the cookie is set
+// when the code is entered (app/mfa/actions.ts).
+async function enforceAdminSession(userId: string) {
+  const mfa = await getAdminMfaState();
+  if (mfa.status !== "verified") return;
+  const cookie = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+  if (
+    !isFreshAdminSession(
+      cookie,
+      userId,
+      getSupabaseAdminEnv().SUPABASE_SERVICE_ROLE_KEY,
+    )
+  ) {
+    redirect("/auth/admin-expired");
+  }
 }
 
 export const DEACTIVATED_ACCOUNT_MESSAGE =

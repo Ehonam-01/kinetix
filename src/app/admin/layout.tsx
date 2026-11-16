@@ -2,12 +2,14 @@ import { requireAdmin } from "@/services/auth/current-user";
 import { MobileSidebarProvider } from "@/components/mobile-sidebar-context";
 import { AdminSidebar } from "./admin-sidebar";
 import { AdminTopBar } from "./admin-topbar";
+import { AdminIdleLogout } from "./idle-logout";
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { profile } = await requireAdmin();
 
   return (
     <MobileSidebarProvider>
+      <AdminIdleLogout />
       <div className="from-primary/15 via-background to-accent/40 min-h-screen bg-linear-to-br p-0 sm:p-8">
         <div className="border-border bg-card mx-auto flex h-screen max-w-7xl overflow-hidden border shadow-2xl sm:h-[calc(100vh-4rem)] sm:rounded-3xl">
           <AdminSidebar adminName={profile.fullName} />

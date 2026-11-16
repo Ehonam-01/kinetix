@@ -1,5 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  ADMIN_SESSION_COOKIE,
+  adminSessionCookieOptions,
+  isFreshAdminSession,
+  signAdminSession,
+} from "@/lib/admin-session";
 import { hardenSessionCookie } from "@/lib/supabase/cookie-options";
 
 // businessplan.<domain> serves the ambassador sales page
@@ -76,7 +82,26 @@ export async function proxy(request: NextRequest) {
   // falls back to the same getUser round trip otherwise — never weaker,
   // often one network call fewer on every request. Pages and actions still
   // validate the user with Supabase themselves (services/auth/session.ts).
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+
+  // An admin's activity: the hour without activity starts again on every
+  // request (lib/admin-session.ts). A stale cookie is left as it is: the
+  // page's own guard signs that session out.
+  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const userId = data?.claims.sub;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (
+    adminSession &&
+    userId &&
+    serviceKey &&
+    isFreshAdminSession(adminSession, userId, serviceKey)
+  ) {
+    response.cookies.set(
+      ADMIN_SESSION_COOKIE,
+      signAdminSession(userId, serviceKey),
+      adminSessionCookieOptions,
+    );
+  }
 
   return response;
 }

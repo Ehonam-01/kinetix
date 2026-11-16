@@ -1,14 +1,24 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getSupabaseAdminEnv } from "@/config/env.supabase-admin";
 import { SITE_NAME } from "@/config/site";
+import {
+  ADMIN_SESSION_COOKIE,
+  adminSessionCookieOptions,
+  signAdminSession,
+} from "@/lib/admin-session";
 import { isRateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminMfaState } from "@/services/auth/admin-mfa";
 import { requireUser } from "@/services/auth/current-user";
 
-const codeSchema = z.string().trim().regex(/^\d{6}$/, "Code à 6 chiffres.");
+const codeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Code à 6 chiffres.");
 
 // Deliberately requireUser + an explicit role check, not requireAdmin:
 // requireAdmin is what sends a not-yet-verified admin here in the first
@@ -23,7 +33,10 @@ export async function startMfaEnrollmentAction() {
   await requireAdminAccount();
   const state = await getAdminMfaState();
   if (state.status !== "needs-enrollment") {
-    return { error: "La double authentification est déjà configurée.", enrollment: null };
+    return {
+      error: "La double authentification est déjà configurée.",
+      enrollment: null,
+    };
   }
 
   const supabase = await createClient();
@@ -75,11 +88,24 @@ async function verifyCode(factorId: string, rawCode: string) {
     code: code.data,
   });
   if (error) return { error: "Code incorrect ou expiré." };
+  // The admin session starts: an hour without activity or the browser
+  // closed ends it (lib/admin-session.ts).
+  (await cookies()).set(
+    ADMIN_SESSION_COOKIE,
+    signAdminSession(
+      profile.id,
+      getSupabaseAdminEnv().SUPABASE_SERVICE_ROLE_KEY,
+    ),
+    adminSessionCookieOptions,
+  );
   redirect("/admin");
 }
 
 // First-time setup: confirms the factor just enrolled by scanning the QR code.
-export async function confirmMfaEnrollmentAction(factorId: string, code: string) {
+export async function confirmMfaEnrollmentAction(
+  factorId: string,
+  code: string,
+) {
   return verifyCode(factorId, code);
 }
 

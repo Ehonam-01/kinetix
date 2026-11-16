@@ -35,6 +35,12 @@ export default async function LoginPage({
             Le lien utilisé est invalide ou a expiré. Réessayez.
           </p>
         )}
+        {error === "session_expired" && (
+          <p className="text-muted-foreground text-sm">
+            Session administrateur fermée après une heure d&apos;inactivité ou
+            la fermeture du navigateur. Reconnectez-vous.
+          </p>
+        )}
         {reset === "success" && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">
             Mot de passe mis à jour. Connectez-vous.
