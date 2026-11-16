@@ -423,6 +423,8 @@ export type MarketingCourseSummary = {
   description: string | null;
   category: string | null;
   price: number | null;
+  // Bought on its own, for life; null: only through the subscription.
+  salePrice: number | null;
   thumbnailUrl: string | null;
   durationMinutes: number | null;
   moduleCount: number;
@@ -490,6 +492,7 @@ export async function listPublishedCoursesForMarketing(
     description: course.description,
     category: course.category,
     price: course.price,
+    salePrice: course.salePrice,
     thumbnailUrl: course.thumbnailUrl,
     durationMinutes: course.durationMinutes,
     moduleCount: moduleCountByCourse.get(course.id) ?? 0,

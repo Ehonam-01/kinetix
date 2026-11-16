@@ -404,7 +404,10 @@ export default async function AtelierVideoIaPage() {
         {/* 1. The offer, at a glance. */}
         <section className="relative overflow-hidden">
           <GridBackdrop />
-          <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-12 text-center sm:px-6 sm:pt-12 sm:pb-16 lg:px-8 lg:pt-8">
+          {/* On phones (flex column) the video, countdown and booking button
+              come right after the title (order-1), the rest after them
+              (order-2); from sm up it's a plain block, in source order. */}
+          <div className="relative mx-auto flex max-w-6xl flex-col px-4 pt-6 pb-12 text-center sm:block sm:px-6 sm:pt-12 sm:pb-16 lg:px-8 lg:pt-8">
             <p className="text-primary text-xs font-bold tracking-widest uppercase sm:text-sm">
               Kinetix AI Video Masterclass
             </p>
@@ -415,17 +418,17 @@ export default async function AtelierVideoIaPage() {
               </span>{" "}
               et repars avec la méthode pour la vendre.
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-[0.95rem] leading-snug font-medium text-pretty sm:mt-4 sm:text-lg sm:leading-normal">
+            <p className="order-2 mx-auto mt-3 max-w-2xl text-[0.95rem] leading-snug font-medium text-pretty sm:mt-4 sm:text-lg sm:leading-normal">
               Atelier 100&nbsp;% pratique, accessible aux débutants : tu
               réalises ta propre pub, accompagné du début à la fin.
             </p>
-            <EventInfo {...eventInfo} className="mt-4" />
+            <EventInfo {...eventInfo} className="order-2 mt-4" />
             <SessionCards
               sessions={sessions}
-              className="mx-auto mt-4 max-w-4xl"
+              className="order-2 mx-auto mt-4 max-w-4xl"
             />
 
-            <div className="relative mx-auto mt-5 max-w-3xl lg:max-w-xl">
+            <div className="relative order-1 mx-auto mt-5 w-full max-w-3xl lg:max-w-xl">
               <HandNotes />
               <HeroVideo
                 video={

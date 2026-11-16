@@ -142,8 +142,21 @@ export function PublicCourseView({
                     <span className="text-muted-foreground text-2xl font-semibold tabular-nums line-through">
                       {course.price.toLocaleString("fr-FR")} F
                     </span>
+                    {/* What it sells for on its own (explicit user
+                        decision), next to the value struck through. */}
+                    {course.salePrice !== null &&
+                      course.salePrice < course.price &&
+                      !course.comingSoon && (
+                        <span className="text-foreground text-2xl font-bold tabular-nums">
+                          {course.salePrice.toLocaleString("fr-FR")} F
+                        </span>
+                      )}
                     <span className="text-lg font-semibold text-emerald-600">
-                      Gratuit avec l&apos;abonnement
+                      {course.salePrice !== null &&
+                      course.salePrice < course.price &&
+                      !course.comingSoon
+                        ? "ou gratuit avec l'abonnement"
+                        : "Gratuit avec l'abonnement"}
                     </span>
                   </p>
                 ) : (

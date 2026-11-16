@@ -54,11 +54,30 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
           <span className="flex flex-col">
             {course.price ? (
               <>
-                <span className="text-muted-foreground text-lg font-semibold line-through tabular-nums">
-                  {course.price.toLocaleString("fr-FR")} F
+                {/* The value struck through, then what the course sells
+                    for on its own when it does (explicit user decision). */}
+                <span className="flex items-baseline gap-2 tabular-nums">
+                  <span
+                    className={
+                      course.salePrice !== null &&
+                      course.salePrice < course.price
+                        ? "text-muted-foreground text-sm font-semibold line-through"
+                        : "text-muted-foreground text-lg font-semibold line-through"
+                    }
+                  >
+                    {course.price.toLocaleString("fr-FR")} F
+                  </span>
+                  {course.salePrice !== null &&
+                    course.salePrice < course.price && (
+                      <span className="text-foreground text-lg font-bold">
+                        {course.salePrice.toLocaleString("fr-FR")} F
+                      </span>
+                    )}
                 </span>
                 <span className="text-sm font-semibold text-green-600">
-                  Gratuit avec l&apos;abonnement
+                  {course.salePrice !== null && course.salePrice < course.price
+                    ? "ou gratuit avec l'abonnement"
+                    : "Gratuit avec l'abonnement"}
                 </span>
               </>
             ) : (
