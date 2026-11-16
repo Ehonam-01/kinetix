@@ -409,19 +409,21 @@ export function RegistrationForm() {
               />
               <span>
                 <span className="block font-medium">
-                  {balance ? "Payer une partie" : "Payer petit à petit"}
+                  {balance ? "Payer une partie" : "Payer un acompte"}
                 </span>
                 <span className="text-muted-foreground block text-sm">
                   {balance
                     ? `Dès ${Math.min(MIN_WORKSHOP_INSTALLMENT, due).toLocaleString("fr-FR")} F. Le reste quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`
-                    : `Dès ${MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F. Ta place est réservée dès ce premier versement, et tu complètes quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`}
+                    : `Dès ${MIN_WORKSHOP_INSTALLMENT.toLocaleString("fr-FR")} F. Ta place est réservée dès cet acompte, et tu complètes quand tu veux jusqu'au jour de la masterclass, ou sur place le jour même.`}
                 </span>
               </span>
             </label>
             {inParts && (
               <div className="space-y-1.5 pt-1">
                 <Label htmlFor="atelier-part">
-                  Montant de ce {balance ? "" : "premier "}versement (F CFA)
+                  {balance
+                    ? "Montant de ce versement (F CFA)"
+                    : "Montant de l'acompte (F CFA)"}
                 </Label>
                 <Input
                   id="atelier-part"
