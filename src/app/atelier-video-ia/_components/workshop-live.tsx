@@ -26,6 +26,9 @@ type Live = {
   // The price on the buttons: the same everywhere, or the lowest ("dès").
   price: number;
   priceFrom: boolean;
+  // The value struck through on the buttons: that of the session at the
+  // price shown.
+  regularPrice: number;
   whatsappUrl: string | null;
   markClosed: (sessionId: string) => void;
 };
@@ -96,12 +99,15 @@ export function WorkshopLiveProvider({
   const value = useMemo(() => {
     const onSale = sessions.filter((session) => session.open);
     const { price, from } = priceSummary(onSale.length > 0 ? onSale : sessions);
+    const pool = onSale.length > 0 ? onSale : sessions;
     return {
       sessions,
       remaining: onSale.reduce((sum, session) => sum + session.remaining, 0),
       open: onSale.length > 0,
       price,
       priceFrom: from,
+      regularPrice:
+        pool.find((session) => session.price === price)?.regularPrice ?? 0,
       whatsappUrl,
       markClosed,
     };
@@ -150,7 +156,7 @@ export function WorkshopCta({
   label: string;
   className?: string;
 }) {
-  const { open, price, priceFrom, whatsappUrl } = useLive();
+  const { open, price, priceFrom, regularPrice, whatsappUrl } = useLive();
 
   if (!open && whatsappUrl) {
     return (
@@ -170,7 +176,13 @@ export function WorkshopCta({
         className,
       )}
     >
-      {label} – {priceFrom ? "dès " : ""}
+      {label} –{" "}
+      {regularPrice > price && (
+        <s className="mr-1 font-semibold decoration-2 opacity-70">
+          {regularPrice.toLocaleString("fr-FR")}&nbsp;F
+        </s>
+      )}
+      {priceFrom ? "dès " : ""}
       {price.toLocaleString("fr-FR")}&nbsp;F
     </Link>
   );

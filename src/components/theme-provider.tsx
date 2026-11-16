@@ -14,12 +14,14 @@ const ThemeContext = React.createContext<ThemeContextValue | undefined>(
   undefined,
 );
 
+// Dark unless the visitor chose light (explicit user decision; same rule as
+// layout.tsx's inline script).
 function readStoredTheme(): Theme {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   try {
-    return localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
+    return localStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark";
   } catch {
-    return "light";
+    return "dark";
   }
 }
 

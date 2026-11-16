@@ -280,6 +280,11 @@ export function RegistrationForm() {
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="font-semibold">{s.city}</span>
                     <span className="text-sm font-semibold whitespace-nowrap">
+                      {s.regularPrice > s.price && (
+                        <s className="text-muted-foreground mr-1.5 text-xs decoration-red-500 decoration-2">
+                          {s.regularPrice.toLocaleString("fr-FR")} F
+                        </s>
+                      )}
                       {s.price.toLocaleString("fr-FR")} F
                     </span>
                   </span>

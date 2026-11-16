@@ -13,11 +13,12 @@ import "./globals.css";
 import { CampaignTracker } from "@/components/marketing/campaign-tracker";
 import { MarketingConsent } from "@/components/marketing/marketing-consent";
 
-// Sets the .dark class on <html> before the browser paints, matching the
-// storage key theme-provider.tsx reads/writes — see InlineScript for why
-// this avoids React 19's "script tag" warning. No class = light, the
-// existing default.
-const THEME_INIT_SCRIPT = `(function(){try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}})()`;
+// Dark by default (explicit user decision: most visitors are on a phone,
+// where there's no theme switch in sight): <html> is rendered with .dark,
+// and this removes it before the browser paints only for a visitor who
+// chose light, under the storage key theme-provider.tsx reads/writes — see
+// InlineScript for why this avoids React 19's "script tag" warning.
+const THEME_INIT_SCRIPT = `(function(){try{if(localStorage.getItem("theme")==="light")document.documentElement.classList.remove("dark")}catch(e){}})()`;
 
 // Poppins isn't a variable font on Google Fonts, so next/font needs an
 // explicit weight list rather than the single "variable" axis Geist used.
@@ -51,19 +52,16 @@ export const metadata: Metadata = {
 };
 
 // Browser bar / installed app's status bar, matching the page background
-// in each theme (--background in globals.css).
+// of the default theme, dark (--background in globals.css).
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${poppins.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} dark h-full scroll-smooth antialiased`}
       suppressHydrationWarning
     >
       <head>

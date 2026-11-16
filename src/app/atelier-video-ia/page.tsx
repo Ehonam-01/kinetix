@@ -95,6 +95,27 @@ export const revalidate = 60;
 
 const fmt = (amount: number) => amount.toLocaleString("fr-FR");
 
+// The workshop's value, struck through, shown next to every price
+// (explicit user decision: it must stand out).
+function StruckPrice({
+  amount,
+  className,
+}: {
+  amount: number;
+  className?: string;
+}) {
+  return (
+    <s
+      className={cn(
+        "text-muted-foreground font-semibold whitespace-nowrap decoration-red-500 decoration-2",
+        className,
+      )}
+    >
+      {fmt(amount)} F
+    </s>
+  );
+}
+
 // Handwriting, for the notes beside the hero video and a few labels.
 const caveat = Caveat({ subsets: ["latin"], weight: "700" });
 
@@ -163,15 +184,28 @@ function HandNotes() {
 function EventInfo({
   sessions,
   price,
+  regularPrice,
   className,
 }: {
   sessions: LiveSession[];
   price: string;
+  // Struck through before the price, when above it.
+  regularPrice: number | null;
   className?: string;
 }) {
-  const items: { icon: LucideIcon; text: string; strong?: boolean }[] = [
+  const items: {
+    icon: LucideIcon;
+    text: string;
+    strong?: boolean;
+    struck?: number | null;
+  }[] = [
     { icon: MapPin, text: citiesLabel(sessions, "et") },
-    { icon: Ticket, text: `${price} F CFA`, strong: true },
+    {
+      icon: Ticket,
+      text: `${price} F CFA`,
+      strong: true,
+      struck: regularPrice,
+    },
   ];
   return (
     <ul
@@ -180,7 +214,7 @@ function EventInfo({
         className,
       )}
     >
-      {items.map(({ icon: Icon, text, strong }) => (
+      {items.map(({ icon: Icon, text, strong, struck }) => (
         <li
           key={text}
           className={cn(
@@ -192,6 +226,7 @@ function EventInfo({
             aria-hidden="true"
             className="text-brand-accent size-4 shrink-0"
           />
+          {struck ? <StruckPrice amount={struck} /> : null}
           {text}
         </li>
       ))}
@@ -222,7 +257,13 @@ function SessionCards({
             <span className="font-heading text-lg font-bold">
               {session.city}
             </span>
-            <span className="text-sm font-semibold whitespace-nowrap">
+            <span className="text-right text-sm font-semibold whitespace-nowrap">
+              {session.regularPrice > session.price && (
+                <StruckPrice
+                  amount={session.regularPrice}
+                  className="mr-1.5 text-xs"
+                />
+              )}
               {fmt(session.price)} F
             </span>
           </p>
@@ -338,7 +379,12 @@ export default async function AtelierVideoIaPage() {
     0;
   // The countdown runs to the next session still on sale.
   const next = onSale[0] ?? null;
-  const eventInfo = { sessions, price };
+  // The value struck through, only when above the price.
+  const struck = regularPrice > summary.price ? regularPrice : null;
+  const discount = struck
+    ? Math.round((1 - summary.price / struck) * 100)
+    : null;
+  const eventInfo = { sessions, price, regularPrice: struck };
   const faqs = workshopFaqs({
     price: fmt(summary.price),
     priceFrom: summary.from,
@@ -612,12 +658,22 @@ export default async function AtelierVideoIaPage() {
         <Block title="Réserve ta place">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
             <div className="bg-card border-brand-accent/40 rounded-2xl border-2 p-6 text-center">
-              <p className="text-muted-foreground text-sm">
-                Valeur de l&apos;atelier :{" "}
-                <span className="font-semibold line-through">
-                  {fmt(regularPrice)} F CFA
-                </span>
-              </p>
+              {struck && (
+                <p className="text-muted-foreground text-sm">
+                  Valeur de l&apos;atelier
+                  <span className="mt-1 flex items-center justify-center gap-2">
+                    <StruckPrice
+                      amount={struck}
+                      className="text-2xl sm:text-3xl"
+                    />
+                    {discount !== null && discount > 0 && (
+                      <span className="rounded-full bg-red-500 px-2 py-0.5 text-sm font-bold text-white">
+                        -{discount} %
+                      </span>
+                    )}
+                  </span>
+                </p>
+              )}
               <p className="text-primary mt-2 text-4xl font-extrabold tracking-tight sm:text-5xl">
                 {price} F CFA
               </p>
