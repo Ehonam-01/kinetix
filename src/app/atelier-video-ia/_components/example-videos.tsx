@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CleanYouTube, youtubeIdOf } from "./clean-youtube";
 
 export type ExampleVideo = { embedUrl: string; thumbnailUrl: string };
 
@@ -78,14 +79,15 @@ export function ExampleVideos({ videos }: { videos: ExampleVideo[] }) {
           onClose={() => setPlaying(null)}
           className="m-auto bg-transparent p-0 backdrop:bg-black/85"
         >
-          <div className="relative aspect-[9/16] w-[min(90vw,48vh)]">
-            <iframe
-              src={`${playing.embedUrl}&autoplay=1`}
-              title="Vidéo d'exemple"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-              className="size-full rounded-2xl"
-            />
+          <div className="relative aspect-[9/16] w-[min(90vw,48vh)] overflow-hidden rounded-2xl bg-black">
+            {youtubeIdOf(playing.embedUrl) && (
+              <CleanYouTube
+                videoId={youtubeIdOf(playing.embedUrl)!}
+                title="Vidéo d'exemple"
+                muted={false}
+                pausable
+              />
+            )}
           </div>
           <button
             type="button"

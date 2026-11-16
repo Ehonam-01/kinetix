@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Play } from "lucide-react";
+import { CleanYouTube, youtubeIdOf } from "./clean-youtube";
 import type { ExampleVideo } from "./example-videos";
 
 // The horizontal video under the top of the page. As with the example
@@ -27,15 +28,17 @@ export function HeroVideo({ video }: { video: ExampleVideo | null }) {
     );
   }
 
-  if (playing) {
+  const videoId = youtubeIdOf(video.embedUrl);
+  if (playing && videoId) {
+    // YouTube's title and channel bars cropped out; a tap pauses or
+    // resumes it.
     return (
-      <div className={frame}>
-        <iframe
-          src={`${video.embedUrl}&autoplay=1`}
+      <div className={`${frame} bg-black`}>
+        <CleanYouTube
+          videoId={videoId}
           title="Vidéo de présentation de l'atelier"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 size-full"
+          muted={false}
+          pausable
         />
       </div>
     );

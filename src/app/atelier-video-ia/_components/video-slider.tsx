@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CleanYouTube } from "./clean-youtube";
 
 export type SliderVideo = { id: string; thumbnailUrl: string };
 
@@ -13,11 +14,6 @@ function savesData() {
   ).connection;
   return connection?.saveData === true;
 }
-
-const mutedSrc = (id: string) =>
-  `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&rel=0&disablekb=1&iv_load_policy=3`;
-const soundSrc = (id: string) =>
-  `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&rel=0`;
 
 // A row of upright videos to swipe through. Each one plays muted and on a
 // loop while it's on screen, and only then: a YouTube player is heavy and
@@ -202,17 +198,15 @@ export function VideoSlider({ videos }: { videos: SliderVideo[] }) {
                 className="absolute inset-0 size-full object-cover"
               />
               {playing && (
-                <iframe
+                // YouTube's title and channel bars cropped out; with the
+                // sound, a tap pauses or resumes it.
+                <CleanYouTube
                   key={sound ? "sound" : "muted"}
-                  src={sound ? soundSrc(video.id) : mutedSrc(video.id)}
+                  videoId={video.id}
                   title={`Vidéo d'exemple ${(i % videos.length) + 1}`}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen={sound}
-                  className={cn(
-                    "absolute inset-0 size-full",
-                    // Muted, the player only shows: the tap is ours.
-                    !sound && "pointer-events-none",
-                  )}
+                  muted={!sound}
+                  loop
+                  pausable={sound}
                 />
               )}
               {!sound && (
