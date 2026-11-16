@@ -8,6 +8,13 @@ import {
   updateWorkshopPage,
   updateWorkshopSession,
 } from "@/services/workshops/admin";
+import {
+  addImageTestimonial,
+  addTextTestimonial,
+  deleteTestimonial,
+  moveTestimonial,
+  setTestimonialPublished,
+} from "@/services/workshops/testimonials";
 
 type PageInput = Parameters<typeof updateWorkshopPage>[1];
 type SessionInput = Parameters<typeof updateWorkshopSession>[2];
@@ -67,5 +74,82 @@ export async function markWorkshopBalancePaidAction(registrationId: string) {
     return { error: errorMessage(err) };
   }
   revalidatePath("/admin/atelier");
+  return { error: null };
+}
+
+// ---- Participants' testimonials (services/workshops/testimonials.ts).
+
+function revalidateTestimonials() {
+  revalidatePath("/admin/atelier");
+  revalidatePath("/atelier-video-ia");
+}
+
+export async function addTextTestimonialAction(
+  input: Parameters<typeof addTextTestimonial>[1],
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await addTextTestimonial(profile.id, input);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateTestimonials();
+  return { error: null };
+}
+
+export async function addImageTestimonialAction(formData: FormData) {
+  const { profile } = await requireAdmin();
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choisis une capture d'écran." };
+  }
+  try {
+    await addImageTestimonial(profile.id, file, {
+      authorName: String(formData.get("authorName") ?? ""),
+      authorDetail: String(formData.get("authorDetail") ?? ""),
+    });
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateTestimonials();
+  return { error: null };
+}
+
+export async function setTestimonialPublishedAction(
+  id: string,
+  isPublished: boolean,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await setTestimonialPublished(profile.id, id, isPublished);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateTestimonials();
+  return { error: null };
+}
+
+export async function moveTestimonialAction(
+  id: string,
+  direction: "up" | "down",
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await moveTestimonial(profile.id, id, direction);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateTestimonials();
+  return { error: null };
+}
+
+export async function deleteTestimonialAction(id: string) {
+  const { profile } = await requireAdmin();
+  try {
+    await deleteTestimonial(profile.id, id);
+  } catch (err) {
+    return { error: errorMessage(err) };
+  }
+  revalidateTestimonials();
   return { error: null };
 }

@@ -16,6 +16,8 @@ import {
   WorkshopPageForm,
   WorkshopSessionForm,
 } from "./workshop-forms";
+import { TestimonialsAdmin } from "./testimonials-admin";
+import { listTestimonials } from "@/services/workshops/testimonials";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "En attente",
@@ -121,7 +123,10 @@ export default async function AdminWorkshopPage(
   // every navigation, so it can't be the only gate.
   await requireAdmin();
   const page = await getWorkshop(db);
-  const sessions = await listSessionsWithAvailability(db, page.id);
+  const [sessions, testimonials] = await Promise.all([
+    listSessionsWithAvailability(db, page.id),
+    listTestimonials(db, page.id, { publishedOnly: false }),
+  ]);
   // The sessions sold now, then the first one (the page's own row, Lomé,
   // 14 November) with its registrations.
   const choices = [...sessions.map(({ session }) => session), page];
@@ -193,6 +198,15 @@ export default async function AdminWorkshopPage(
           Les vidéos de la page, communes à toutes les villes.
         </p>
         <WorkshopPageForm current={page} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">Témoignages des participants</h2>
+        <p className="text-muted-foreground text-sm">
+          Affichés sur la page de vente, dans l&apos;ordre ci-dessous : des avis
+          écrits et des captures de messages reçus.
+        </p>
+        <TestimonialsAdmin testimonials={testimonials} />
       </section>
 
       <section className="space-y-3">

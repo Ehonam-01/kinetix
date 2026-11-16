@@ -44,6 +44,8 @@ import { ExampleVideos, type ExampleVideo } from "./_components/example-videos";
 import { HeroVideo } from "./_components/hero-video";
 import { PaymentLogos } from "./_components/payment-logos";
 import { RichText } from "./_components/rich-text";
+import { Testimonials } from "./_components/testimonials";
+import { listTestimonials } from "@/services/workshops/testimonials";
 import {
   citiesLabel,
   priceSummary,
@@ -304,9 +306,11 @@ export default async function AtelierVideoIaPage() {
     getWorkshop(db),
     getSupportWhatsapp(db),
   ]);
-  const sessions = (await listSessionsWithAvailability(db, workshop.id)).map(
-    toLiveSession,
-  );
+  const [sessionRows, testimonials] = await Promise.all([
+    listSessionsWithAvailability(db, workshop.id),
+    listTestimonials(db, workshop.id, { publishedOnly: true }),
+  ]);
+  const sessions = sessionRows.map(toLiveSession);
   const whatsappUrl = (text: string) =>
     supportWhatsapp ? whatsappHref(supportWhatsapp, text) : null;
   const sliderVideos = workshop.sliderVideoUrls
@@ -484,6 +488,10 @@ export default async function AtelierVideoIaPage() {
           )}
           <CtaRow className="mt-10 px-4" />
         </section>
+
+        {/* 3 bis. What participants of the first session said (shown once
+            the admin has published one). */}
+        <Testimonials testimonials={testimonials} />
 
         {/* 4. Who it's for. */}
         <Block title="À qui s'adresse la masterclass ?">

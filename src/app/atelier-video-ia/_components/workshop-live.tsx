@@ -176,19 +176,14 @@ export function WorkshopCta({
   );
 }
 
-// The line under a button: how to pay, and the seats left (or that the
-// online sale is over).
+// The line under a button: how to pay, or that the online sale is over.
+// The seats left are only shown per city, on the form (explicit user
+// decision): a total across the cities would mislead.
 export function CtaNote({ className }: { className?: string }) {
   const { open } = useLive();
   return (
     <p className={cn("text-muted-foreground text-xs", className)}>
-      {open ? (
-        <>
-          Paiement Mobile Money · <SeatsLeft className="text-xs" />
-        </>
-      ) : (
-        <SeatsLeft className="text-xs" />
-      )}
+      {open ? "Paiement Mobile Money" : <SaleStatus className="text-xs" />}
     </p>
   );
 }
@@ -224,12 +219,17 @@ export function WorkshopCtaBlock({ className }: { className?: string }) {
   );
 }
 
-export function SeatsLeft({ className }: { className?: string }) {
-  const { remaining, open } = useLive();
+// The cities still on sale, or that the online sale is over. No seat count:
+// those are per city, on the form.
+export function SaleStatus({ className }: { className?: string }) {
+  const { sessions, open } = useLive();
   return (
     <span className={cn("text-sm font-semibold", className)} aria-live="polite">
       {open
-        ? `${remaining} place${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}`
+        ? sessions
+            .filter((session) => session.open)
+            .map((session) => session.city)
+            .join(" · ")
         : "Inscriptions en ligne terminées"}
     </span>
   );
@@ -299,7 +299,7 @@ export function StickyCta() {
       )}
     >
       <div className="flex items-center gap-3">
-        <SeatsLeft className="w-24 shrink-0 text-xs leading-tight" />
+        <SaleStatus className="w-24 shrink-0 text-xs leading-tight" />
         <WorkshopCta label="JE RÉSERVE MA PLACE" className="flex-1 text-sm" />
       </div>
     </div>

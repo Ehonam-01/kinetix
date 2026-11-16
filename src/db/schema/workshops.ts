@@ -132,3 +132,42 @@ export const workshopRegistrations = pgTable(
     ),
   ],
 );
+
+export const workshopTestimonialKindEnum = pgEnum("workshop_testimonial_kind", [
+  "TEXT",
+  "IMAGE",
+]);
+
+// What participants said after a session, shown on the sales page (explicit
+// user decision: managed from /admin/atelier). Only ever real ones, entered
+// by an admin: a written review (authorName, body), or a screenshot of a
+// message received (imageUrl, in the course-thumbnails storage bucket,
+// under workshop-testimonials/). Hidden ones (isPublished false) stay for
+// the admin.
+export const workshopTestimonials = pgTable(
+  "workshop_testimonials",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // The sales page's row (repositories/workshops.ts getWorkshop).
+    workshopId: uuid("workshop_id")
+      .notNull()
+      .references(() => workshops.id),
+    kind: workshopTestimonialKindEnum("kind").notNull(),
+    authorName: text("author_name"),
+    // A city, a trade, the session attended: free text.
+    authorDetail: text("author_detail"),
+    body: text("body"),
+    imageUrl: text("image_url"),
+    position: integer("position").notNull().default(0),
+    isPublished: boolean("is_published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("workshop_testimonials_workshop_idx").on(
+      table.workshopId,
+      table.position,
+    ),
+  ],
+);
