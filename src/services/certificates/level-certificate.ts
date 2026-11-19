@@ -18,7 +18,7 @@ import {
 //
 // Each level has its own colours (bronze, silver, gold, platinum) on the
 // same layout: a dark gradient, a wave edged with the level's metal, a
-// medal, the name in a script font.
+// medal, the name in an elegant italic.
 
 const WIDTH = 841.89;
 const HEIGHT = 595.28;
@@ -116,6 +116,10 @@ const FONT_FILES = {
   title: "Montserrat-ExtraBold.ttf",
   semibold: "Montserrat-SemiBold.ttf",
   regular: "Montserrat-Regular.ttf",
+  // The member's name: an elegant italic that stays readable, capitals
+  // included (explicit user decision, the script font's weren't).
+  name: "PlayfairDisplay-SemiBoldItalic.ttf",
+  // The "La Direction" signature.
   script: "GreatVibes-Regular.ttf",
 } as const;
 type FontKey = keyof typeof FONT_FILES;
@@ -432,18 +436,15 @@ export async function renderLevelCertificate(
   });
 
   // The name: shrinks to fit a long one.
-  const name = printable(fonts.script, input.fullName.trim()) || "—";
-  let nameSize = 58;
-  while (
-    nameSize > 26 &&
-    fonts.script.widthOfTextAtSize(name, nameSize) > 640
-  ) {
+  const name = printable(fonts.name, input.fullName.trim()) || "—";
+  let nameSize = 46;
+  while (nameSize > 24 && fonts.name.widthOfTextAtSize(name, nameSize) > 640) {
     nameSize -= 2;
   }
   text(page, name, {
     x: LEFT,
     top: 352,
-    font: fonts.script,
+    font: fonts.name,
     size: nameSize,
     color: hex(theme.metalLight),
   });
