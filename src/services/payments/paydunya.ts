@@ -77,7 +77,9 @@ type OperatorConfig = {
 // "<operator>_fullName", some "<operator>_customer_fullname"...). Getting
 // one of these wrong means a silent 400 from PayDunya, not a wrong charge —
 // verify each combination with a small real payment before trusting it.
-const OPERATOR_CONFIG: Partial<Record<`${string}:${Operator}`, OperatorConfig>> = {
+const OPERATOR_CONFIG: Partial<
+  Record<`${string}:${Operator}`, OperatorConfig>
+> = {
   "SN:ORANGE_MONEY": {
     endpoint: "new-orange-money-senegal",
     responseKind: "push",
@@ -313,7 +315,8 @@ const OPERATOR_CONFIG: Partial<Record<`${string}:${Operator}`, OperatorConfig>> 
 };
 
 function getOperatorConfig(country: string, operator: string): OperatorConfig {
-  const config = OPERATOR_CONFIG[`${country}:${operator}` as `${string}:${Operator}`];
+  const config =
+    OPERATOR_CONFIG[`${country}:${operator}` as `${string}:${Operator}`];
   if (!config) {
     throw new Error(
       `PayDunya ne supporte pas la combinaison pays/opérateur ${country}/${operator}.`,
@@ -359,7 +362,11 @@ async function paydunyaRequest<T>(path: string, init: RequestInit): Promise<T> {
   return body;
 }
 
-type InvoiceCreateResponse = { response_code: string; response_text: string; token?: string };
+type InvoiceCreateResponse = {
+  response_code: string;
+  response_text: string;
+  token?: string;
+};
 
 async function createInvoice(
   input: CreatePaymentInput,
@@ -390,7 +397,9 @@ async function createInvoice(
   );
 
   if (result.response_code !== "00" || !result.token) {
-    throw new Error(`PayDunya n'a pas pu créer la facture : ${result.response_text}`);
+    throw new Error(
+      `PayDunya n'a pas pu créer la facture : ${result.response_text}`,
+    );
   }
   return result.token;
 }
@@ -401,6 +410,33 @@ type SoftpayChargeResponse = {
   url?: string;
   data?: { TransactionID?: string; transactionid?: string };
 };
+
+// "data[invoice][token]=x" form fields into { data: { invoice: { token: "x" } } }.
+// Only plain object keys, never "__proto__"-style ones.
+export function fromBracketForm(
+  params: URLSearchParams,
+): Record<string, unknown> {
+  const root: Record<string, unknown> = {};
+  for (const [key, value] of params.entries()) {
+    const parts = key.match(/[^[\]]+/g);
+    if (!parts?.length) continue;
+    if (
+      parts.some(
+        (p) => p === "__proto__" || p === "constructor" || p === "prototype",
+      )
+    ) {
+      continue;
+    }
+    let node = root;
+    for (const part of parts.slice(0, -1)) {
+      const next = node[part];
+      if (!next || typeof next !== "object") node[part] = {};
+      node = node[part] as Record<string, unknown>;
+    }
+    node[parts[parts.length - 1]] = value;
+  }
+  return root;
+}
 
 function toPaymentStatus(status: string): PaymentStatus {
   switch (status) {
@@ -423,7 +459,9 @@ export const paydunyaProvider: PaymentProvider = {
     }
     const config = getOperatorConfig(input.country, input.operator);
     if (config.requiresOtp && !input.otp) {
-      throw new Error("Un code de confirmation (USSD) est requis pour cet opérateur.");
+      throw new Error(
+        "Un code de confirmation (USSD) est requis pour cet opérateur.",
+      );
     }
     if (config.requiresAddress && !input.address) {
       throw new Error("Une adresse est requise pour cet opérateur.");
@@ -467,9 +505,12 @@ export const paydunyaProvider: PaymentProvider = {
     }
 
     if (config.responseKind === "wizall") {
-      const transactionId = result.data?.TransactionID ?? result.data?.transactionid;
+      const transactionId =
+        result.data?.TransactionID ?? result.data?.transactionid;
       if (!transactionId) {
-        throw new Error("PayDunya n'a renvoyé aucun identifiant de transaction Wizall.");
+        throw new Error(
+          "PayDunya n'a renvoyé aucun identifiant de transaction Wizall.",
+        );
       }
       return {
         providerReference: token,
@@ -491,10 +532,9 @@ export const paydunyaProvider: PaymentProvider = {
     const result = await paydunyaRequest<{
       status: string;
       invoice?: { total_amount?: number | string };
-    }>(
-      `/checkout-invoice/confirm/${encodeURIComponent(providerReference)}`,
-      { method: "GET" },
-    );
+    }>(`/checkout-invoice/confirm/${encodeURIComponent(providerReference)}`, {
+      method: "GET",
+    });
 
     // Number(): PayDunya's docs show total_amount both as a number and as a
     // numeric string — callers compare it strictly against payments.amount.
@@ -524,7 +564,17 @@ export const paydunyaProvider: PaymentProvider = {
       if (dataField) {
         payload = JSON.parse(dataField);
       } else {
-        payload = Object.fromEntries(params.entries());
+        // PayDunya's IPN as its PHP examples read it ($_POST['data']['hash']):
+        // a PHP-style form, data[hash]=...&data[status]=...&
+        // data[invoice][token]=..., read into the same nested shape as the
+        // JSON variants. Before this, no IPN had ever been recorded in
+        // production: only the confirmation pages' polling confirmed
+        // payments, and a payer who closed the page too early stayed
+        // "pending" though PayDunya had taken the money (Nov. 2026).
+        const nested = fromBracketForm(params);
+        payload = (
+          nested.data && typeof nested.data === "object" ? nested.data : nested
+        ) as Record<string, unknown>;
       }
     }
 
@@ -572,7 +622,9 @@ export const paydunyaProvider: PaymentProvider = {
   },
 
   async refundPayment(): Promise<RefundResult> {
-    throw new Error("PayDunya ne documente aucun endpoint de remboursement à ce jour.");
+    throw new Error(
+      "PayDunya ne documente aucun endpoint de remboursement à ce jour.",
+    );
   },
 };
 

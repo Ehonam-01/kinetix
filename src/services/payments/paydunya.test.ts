@@ -45,6 +45,29 @@ describe("paydunyaProvider.parseWebhook", () => {
     expect(event.status).toBe("CONFIRMED");
   });
 
+  it("accepts PayDunya's real IPN: a PHP-style form with data[...] fields", () => {
+    const body = new URLSearchParams({
+      "data[response_code]": "00",
+      "data[response_text]": "Transaction Found",
+      "data[hash]": validHash,
+      "data[invoice][token]": "test_php_form",
+      "data[invoice][total_amount]": "1000",
+      "data[status]": "completed",
+      "data[mode]": "live",
+    }).toString();
+    const event = paydunyaProvider.parseWebhook(body, null);
+    expect(event.providerReference).toBe("test_php_form");
+    expect(event.status).toBe("CONFIRMED");
+    expect(event.raw).not.toHaveProperty("hash");
+  });
+
+  it("ignores __proto__-style keys in a form body", () => {
+    const body = `data[__proto__][polluted]=1&data[hash]=${validHash}&data[status]=failed&data[invoice][token]=test_proto`;
+    const event = paydunyaProvider.parseWebhook(body, null);
+    expect(event.status).toBe("FAILED");
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
   it("maps cancelled and failed to FAILED", () => {
     for (const status of ["cancelled", "failed"]) {
       const body = JSON.stringify({
