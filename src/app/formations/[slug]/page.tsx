@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { db } from "@/db/client";
 import { getPublicCourse } from "@/repositories/courses";
+import { getLaunchOffer } from "@/services/pricing/launch-offer";
+import { splitTranches } from "@/lib/split-payment";
 import { SITE_NAME } from "@/config/site";
 import { getSiteEnv } from "@/config/env.site";
 import { PublicCourseView } from "./public-course-view";
@@ -31,6 +33,8 @@ export async function generateMetadata(
     course.description ??
     `Une formation ${SITE_NAME}, incluse dans l'abonnement annuel.`;
   const path = `/formations/${course.slug ?? course.id}`;
+  // The preview image is drawn by ./opengraph-image.tsx (title and
+  // thumbnail).
   return {
     title,
     description,
@@ -42,13 +46,11 @@ export async function generateMetadata(
       siteName: SITE_NAME,
       locale: "fr_FR",
       type: "website",
-      ...(course.thumbnailUrl ? { images: [course.thumbnailUrl] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(course.thumbnailUrl ? { images: [course.thumbnailUrl] } : {}),
     },
   };
 }
@@ -67,9 +69,10 @@ export default async function PublicCoursePage(
     permanentRedirect(`/formations/${course.slug}`);
   }
 
-  const [ratings, reviews] = await Promise.all([
+  const [ratings, reviews, offer] = await Promise.all([
     getRatingSummaries(db, [course.id]),
     listCourseReviews(db, course.id, 10),
+    getLaunchOffer(db),
   ]);
 
   return (
@@ -78,6 +81,10 @@ export default async function PublicCoursePage(
       shareUrl={`${getSiteEnv().SITE_URL}/formations/${course.slug ?? course.id}`}
       rating={ratings.get(course.id) ?? null}
       reviews={reviews}
+      subscription={{
+        price: offer.price,
+        tranches: splitTranches(offer.price),
+      }}
     />
   );
 }

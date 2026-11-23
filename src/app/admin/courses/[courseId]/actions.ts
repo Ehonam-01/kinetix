@@ -8,6 +8,8 @@ import { updateModule } from "@/services/lms/update-module";
 import { deleteLesson, deleteModule } from "@/services/lms/delete-course-item";
 import { updateCourseStatus } from "@/services/lms/update-course-status";
 import { updateCoursePricing } from "@/services/lms/update-course-pricing";
+import { updateCourseSalesPage } from "@/services/lms/update-course-sales-page";
+import type { CourseSalesPage } from "@/lib/course-sales-page";
 import { updateCourseDetails } from "@/services/lms/update-course-details";
 import { updateCourseAvailability } from "@/services/lms/update-course-availability";
 import {
@@ -105,6 +107,23 @@ export async function updateCoursePricingAction(
   const { profile } = await requireAdmin();
   try {
     await updateCoursePricing(profile.id, courseId, input);
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Une erreur est survenue.",
+    };
+  }
+  revalidatePath(`/admin/courses/${courseId}`);
+  revalidatePublicCourses();
+  return { error: null };
+}
+
+export async function updateCourseSalesPageAction(
+  courseId: string,
+  input: CourseSalesPage,
+) {
+  const { profile } = await requireAdmin();
+  try {
+    await updateCourseSalesPage(profile.id, courseId, input);
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Une erreur est survenue.",

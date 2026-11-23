@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   smallint,
@@ -9,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { levels } from "./levels";
 
 export const courseStatusEnum = pgEnum("course_status", [
@@ -60,6 +62,23 @@ export const courses = pgTable(
     // "Disponible bientôt" and can't open its lessons; admins still can, to
     // prepare it. Set by the admin on the course page.
     comingSoon: boolean("coming_soon").notNull().default(false),
+    // The public sales page (/formations/[slug]), filled by the admin;
+    // every part is optional and an empty one isn't shown. A YouTube link
+    // for the preview video; one item per line for what the learner will
+    // be able to do and who the course is for; questions and answers.
+    previewVideoUrl: text("preview_video_url"),
+    learningOutcomes: text("learning_outcomes")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    targetAudience: text("target_audience")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    faq: jsonb("faq")
+      .$type<{ question: string; answer: string }[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

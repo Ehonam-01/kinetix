@@ -21,6 +21,7 @@ import { EditModuleForm } from "./edit-module-form";
 import { EditDetailsForm } from "./edit-details-form";
 import { AvailabilityToggle } from "./availability-toggle";
 import { EditPricingForm } from "./edit-pricing-form";
+import { EditSalesPageForm } from "./edit-sales-page-form";
 import { EditThumbnailForm } from "./edit-thumbnail-form";
 import { MoveButtons } from "./move-buttons";
 import { requireAdmin } from "@/services/auth/current-user";
@@ -136,6 +137,27 @@ export default async function AdminCourseDetailPage(
             currentPrice={content.course.price}
             currentSalePrice={content.course.salePrice}
             currentCategory={content.course.category}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Page de vente</CardTitle>
+          <CardDescription>
+            Ce que voit un visiteur sur la page publique de la formation. Tout
+            est facultatif : une partie vide ne s&apos;affiche pas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EditSalesPageForm
+            courseId={courseId}
+            current={{
+              previewVideoUrl: content.course.previewVideoUrl,
+              learningOutcomes: content.course.learningOutcomes,
+              targetAudience: content.course.targetAudience,
+              faq: content.course.faq,
+            }}
           />
         </CardContent>
       </Card>
