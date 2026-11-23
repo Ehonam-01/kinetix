@@ -8,10 +8,11 @@ import {
   LAUNCH_SCREEN_SCRIPT,
 } from "@/components/pwa/launch-screen";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SITE_NAME } from "@/config/site";
+import { SITE_NAME, SITE_TAGLINE } from "@/config/site";
 import "./globals.css";
 import { CampaignTracker } from "@/components/marketing/campaign-tracker";
 import { MarketingConsent } from "@/components/marketing/marketing-consent";
+import { WhatsappFloat } from "@/components/marketing/whatsapp-float";
 
 // Dark by default (explicit user decision: most visitors are on a phone,
 // where there's no theme switch in sight): <html> is rendered with .dark,
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     ? new URL(process.env.SITE_URL)
     : undefined,
   title: SITE_NAME,
-  description: "Formations, mentorat et communauté pour la jeunesse de demain.",
+  description: SITE_TAGLINE,
   // Installed on an iPhone's home screen (app/manifest.ts covers Android):
   // opens full screen, under this name.
   appleWebApp: {
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <LaunchScreen />
         <CampaignTracker />
         <MarketingConsent />
+        <WhatsappFloat />
       </body>
     </html>
   );

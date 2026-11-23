@@ -32,18 +32,18 @@ export default async function LoginPage({
       <CardContent className="space-y-4">
         {error === "auth_callback_failed" && (
           <p className="text-destructive text-sm">
-            Le lien utilisé est invalide ou a expiré. Réessayez.
+            Le lien utilisé est invalide ou a expiré. Réessaie.
           </p>
         )}
         {error === "session_expired" && (
           <p className="text-muted-foreground text-sm">
             Session administrateur fermée après une heure d&apos;inactivité ou
-            la fermeture du navigateur. Reconnectez-vous.
+            la fermeture du navigateur. Reconnecte-toi.
           </p>
         )}
         {reset === "success" && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400">
-            Mot de passe mis à jour. Connectez-vous.
+            Mot de passe mis à jour. Connecte-toi.
           </p>
         )}
         <LoginForm next={next} />

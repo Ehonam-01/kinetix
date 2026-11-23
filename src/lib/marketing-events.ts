@@ -4,6 +4,13 @@
 type Fbq = (...args: unknown[]) => void;
 
 export const MARKETING_CONSENT_KEY = "kx-consent-marketing";
+// Fired on window when the consent banner opens or closes; while it's open,
+// <html data-consent-banner="open">.
+export const CONSENT_BANNER_EVENT = "kx:consent-banner";
+
+export function consentBannerOpen() {
+  return document.documentElement.dataset.consentBanner === "open";
+}
 
 export function trackMarketingEvent(
   name:

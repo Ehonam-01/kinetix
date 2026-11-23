@@ -3,4 +3,4 @@
 export const SITE_NAME = "Kinetix Africa";
 
 export const SITE_TAGLINE =
-  "Le repère de la jeunesse qui se prépare à l'avenir : formations, mentorat et communauté à l'ère de l'IA.";
+  "Le repère de celles et ceux qui se préparent à l'avenir : formations, mentorat et communauté à l'ère de l'IA.";

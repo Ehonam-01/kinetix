@@ -5,9 +5,12 @@ import { cn } from "@/lib/utils";
 // brand-colored placeholder, so a catalog never shows a broken or empty box.
 export function CourseCover({
   thumbnailUrl,
+  title,
   className,
 }: {
   thumbnailUrl: string | null;
+  // Describes the picture for screen readers: the course's title.
+  title?: string;
   className?: string;
 }) {
   return (
@@ -21,7 +24,7 @@ export function CourseCover({
         // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL, same unoptimized <img> as app/_components/course-card.tsx (no remotePatterns configured for next/image)
         <img
           src={thumbnailUrl}
-          alt=""
+          alt={title ? `Vignette de la formation « ${title} »` : ""}
           className="absolute inset-0 size-full object-cover"
         />
       ) : (

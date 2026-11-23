@@ -33,7 +33,7 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
       title: "Kinetix",
       links: [
         { label: "Accueil", href: "/" },
-        { label: "Notre vision" },
+        { label: "Notre vision", href: "/#vision" },
         { label: "Contact", href: "/contact" },
       ],
     },
@@ -51,7 +51,6 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
         { label: "Communauté", href: "/#communaute" },
         { label: "Mentorat", href: "/#communaute" },
         { label: "Projets", href: "/#projets" },
-        { label: "Événements" },
       ],
     },
     {
@@ -59,7 +58,6 @@ const COLUMNS: { title: string; links: { label: string; href?: string }[] }[] =
       links: [
         { label: "Opportunités", href: "/#projets" },
         { label: "Programme ambassadeur", href: "/programme-ambassadeur" },
-        { label: "Collaborations" },
       ],
     },
     {

@@ -14,6 +14,7 @@ import { PaBenefits } from "./_components/pa-benefits";
 import { PaObjections } from "./_components/pa-objections";
 import { PaFinalCta } from "./_components/pa-final-cta";
 import { PaTrustNote } from "./_components/pa-trust-note";
+import { SITE_OG_IMAGE } from "@/config/og";
 
 const TITLE = `Programme ambassadeur — ${SITE_NAME}`;
 const DESCRIPTION =
@@ -30,11 +31,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: "fr_FR",
     type: "website",
+    images: [SITE_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: [SITE_OG_IMAGE.url],
   },
 };
 

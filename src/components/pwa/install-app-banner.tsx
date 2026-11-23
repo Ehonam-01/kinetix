@@ -112,13 +112,13 @@ export function InstallAppBanner() {
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">
-          Installez l&apos;application Kinetix Africa
+          Installe l&apos;application Kinetix Africa
         </p>
         {mode === "prompt" ? (
           <>
             <p className="text-muted-foreground mt-0.5 text-sm">
-              Retrouvez vos formations en un geste, depuis l&apos;écran
-              d&apos;accueil de votre téléphone.
+              Retrouve tes formations en un geste, depuis l&apos;écran
+              d&apos;accueil de ton téléphone.
             </p>
             <Button size="sm" className="mt-3" onClick={install}>
               <Download className="size-4" />
@@ -127,7 +127,7 @@ export function InstallAppBanner() {
           </>
         ) : (
           <p className="text-muted-foreground mt-0.5 text-sm">
-            Dans Safari, touchez{" "}
+            Dans Safari, touche{" "}
             <Share
               className="inline size-4 align-text-bottom"
               aria-label="Partager"

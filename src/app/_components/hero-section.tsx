@@ -9,7 +9,6 @@ import {
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Reveal } from "./reveal";
 
 // Split hero: copy on the left, a round portrait with floating cards on the
 // right, pillars strip underneath. Always on the same dark blue background
@@ -108,7 +107,7 @@ export function HeroSection() {
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pt-10 pb-10 sm:gap-12 sm:px-6 sm:pt-16 sm:pb-12 lg:grid-cols-[1.15fr_1fr] lg:gap-8 lg:px-8 lg:pt-24 lg:pb-16">
         {/* Centered while copy and portrait are stacked (phones, tablets),
             left-aligned once they sit side by side (lg). */}
-        <Reveal className="text-center lg:text-left">
+        <div className="text-center lg:text-left">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
             <span className="bg-brand-accent size-1.5 rounded-full" />
             Formations · Mentorat · Communauté
@@ -145,12 +144,9 @@ export function HeroSection() {
               Découvrir la communauté
             </a>
           </div>
-        </Reveal>
+        </div>
 
-        <Reveal
-          delayMs={150}
-          className="relative mx-auto w-full max-w-76 sm:max-w-md"
-        >
+        <div className="relative mx-auto w-full max-w-76 sm:max-w-md">
           <div className="relative aspect-square">
             {/* Accent ring behind the portrait. */}
             <div
@@ -186,7 +182,7 @@ export function HeroSection() {
               <MentorCard />
             </div>
           </div>
-        </Reveal>
+        </div>
       </div>
 
       {/* Pillars strip — the reference design's partner-logo row, filled

@@ -1,4 +1,5 @@
 import {
+  Quote,
   ArrowLeftRight,
   BarChart3,
   BookOpen,
@@ -63,6 +64,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: "/admin/trainers", label: "Formateurs", icon: Presentation },
   { href: "/admin/orientation", label: "Orientation", icon: Compass },
   { href: "/admin/atelier", label: "Atelier", icon: Clapperboard },
+  { href: "/admin/temoignages", label: "Témoignages", icon: Quote },
   { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/courses", label: "Cours", icon: BookOpen },
   { href: "/admin/discussions", label: "Discussions", icon: MessagesSquare },

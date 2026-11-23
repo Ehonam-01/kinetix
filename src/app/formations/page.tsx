@@ -7,6 +7,7 @@ import { SITE_NAME } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { CatalogGrid } from "./catalog-grid";
+import { SITE_OG_IMAGE } from "@/config/og";
 
 const TITLE = `Toutes les formations — ${SITE_NAME}`;
 const DESCRIPTION =
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: "fr_FR",
     type: "website",
+    images: [SITE_OG_IMAGE],
   },
 };
 

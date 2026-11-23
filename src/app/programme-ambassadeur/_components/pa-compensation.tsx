@@ -1,5 +1,6 @@
 import { Reveal } from "@/app/_components/reveal";
 import type { CompensationData } from "../data";
+import { formatPrice } from "@/lib/format-price";
 
 // How many referred subscribers the worked example shows — always computed
 // from the example price and the live direct rate (data.ts).
@@ -42,11 +43,11 @@ export function PaCompensation({ data }: { data: CompensationData }) {
                   <p className="text-muted-foreground">
                     Exemple : abonnement annuel à{" "}
                     <span className="text-foreground font-medium">
-                      {data.example.price.toLocaleString("fr-FR")} F CFA
+                      {formatPrice(data.example.price)} CFA
                     </span>
                     , soit{" "}
                     <span className="text-foreground font-medium">
-                      {data.example.commission.toLocaleString("fr-FR")} F CFA
+                      {formatPrice(data.example.commission)} CFA
                     </span>{" "}
                     de commission par nouvel abonné parrainé.
                   </p>
@@ -61,10 +62,7 @@ export function PaCompensation({ data }: { data: CompensationData }) {
                           {count > 1 ? "s" : ""}
                         </p>
                         <p className="text-primary font-semibold whitespace-nowrap tabular-nums">
-                          {(data.example!.commission * count).toLocaleString(
-                            "fr-FR",
-                          )}{" "}
-                          F
+                          {formatPrice(data.example!.commission * count)}
                         </p>
                       </div>
                     ))}

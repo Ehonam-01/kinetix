@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, Clock, GraduationCap } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 import type { MarketingCourseSummary } from "@/repositories/courses";
+import { formatPrice } from "@/lib/format-price";
 
 export function CourseCard({ course }: { course: MarketingCourseSummary }) {
   return (
@@ -14,7 +15,7 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
           // eslint-disable-next-line @next/next/no-img-element -- external, unoptimized course thumbnails; no next.config.ts remotePatterns configured yet since no real thumbnail exists in the catalog
           <img
             src={course.thumbnailUrl}
-            alt=""
+            alt={`Vignette de la formation « ${course.title} »`}
             className="size-full object-cover"
           />
         ) : (
@@ -65,12 +66,12 @@ export function CourseCard({ course }: { course: MarketingCourseSummary }) {
                         : "text-muted-foreground text-lg font-semibold line-through"
                     }
                   >
-                    {course.price.toLocaleString("fr-FR")} F
+                    {formatPrice(course.price)}
                   </span>
                   {course.salePrice !== null &&
                     course.salePrice < course.price && (
                       <span className="text-foreground text-lg font-bold">
-                        {course.salePrice.toLocaleString("fr-FR")} F
+                        {formatPrice(course.salePrice)}
                       </span>
                     )}
                 </span>

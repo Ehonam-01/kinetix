@@ -74,16 +74,20 @@ export function Reveal({
     <div
       ref={ref}
       className={cn(
-        "transition-[opacity,translate,scale,filter] duration-700 ease-[cubic-bezier(0.2,0.7,0.2,1)]",
+        // 300 ms at most, delay included (explicit user decision: nothing
+        // stays blurred long enough to be read as a slow page).
+        "transition-[opacity,translate,scale,filter] duration-200 ease-[cubic-bezier(0.2,0.7,0.2,1)]",
         // Comes up out of a slight blur and shrink. Once in, filter-none
         // (not blur-0): any filter would make the block the containing box
         // of fixed-position descendants.
         visible
           ? "translate-y-0 scale-100 opacity-100 filter-none"
-          : "translate-y-7 scale-[0.96] opacity-0 blur-[6px]",
+          : "translate-y-4 scale-[0.98] opacity-0 blur-[2px]",
         className,
       )}
-      style={{ transitionDelay: visible ? `${delayMs}ms` : "0ms" }}
+      style={{
+        transitionDelay: visible ? `${Math.min(delayMs, 100)}ms` : "0ms",
+      }}
     >
       {children}
     </div>

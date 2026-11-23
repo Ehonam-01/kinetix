@@ -7,6 +7,9 @@ import {
 } from "@/services/attribution/resolve-referral";
 import { db } from "@/db/client";
 import { getPublicCourse } from "@/repositories/courses";
+import { formatPrice } from "@/lib/format-price";
+import { splitTranches } from "@/lib/split-payment";
+import { getLaunchOffer } from "@/services/pricing/launch-offer";
 import { RegisterForm } from "./register-form";
 
 export default async function RegisterPage({
@@ -26,6 +29,10 @@ export default async function RegisterPage({
   // present; otherwise, prefill from the visitor's own referral-link cookie
   // if any — so a click-through visitor isn't left with no sponsorships row
   // at all just because they never knew to type a pseudo themselves.
+  // The subscription and paying it in 3 times (lib/split-payment.ts), said
+  // before the account is made: the payment itself comes after.
+  const { price } = await getLaunchOffer(db);
+  const tranches = splitTranches(price);
   const defaultSponsorUsername =
     sponsor ??
     (await resolveReferralUsername(
@@ -46,6 +53,26 @@ export default async function RegisterPage({
             <CardDescription>
               Pour acheter « {learnerCourse.title} » et la retrouver quand tu
               veux. Tu paies juste après avoir confirmé ton adresse email.
+            </CardDescription>
+          )}
+          {!learnerCourse && (
+            <CardDescription>
+              Abonnement annuel : {formatPrice(price)} en une fois
+              {tranches && (
+                <>
+                  , ou en 3 fois (selon ton pays) :{" "}
+                  <strong className="text-foreground">
+                    {formatPrice(tranches[0])} aujourd&apos;hui
+                  </strong>
+                  , puis{" "}
+                  {tranches[1] === tranches[2]
+                    ? `2 × ${formatPrice(tranches[1])}`
+                    : `${formatPrice(tranches[1])} et ${formatPrice(tranches[2])}`}{" "}
+                  dans les 3 mois
+                </>
+              )}
+              . Tu choisis au moment du paiement, juste après
+              l&apos;inscription.
             </CardDescription>
           )}
           <CardDescription>

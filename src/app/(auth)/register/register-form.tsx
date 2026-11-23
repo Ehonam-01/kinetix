@@ -231,7 +231,7 @@ export function RegisterForm({
           {!formation && (
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">
-                Souhaitez-vous aussi devenir ambassadeur ?
+                Souhaites-tu aussi devenir ambassadeur ?
               </legend>
               <div className="flex gap-4 text-sm">
                 <label className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export function RegisterForm({
                 : "Nous rejoindre"}
           </Button>
           <p className="text-muted-foreground text-center text-xs">
-            En créant un compte, vous acceptez nos{" "}
+            En créant un compte, tu acceptes nos{" "}
             <Link
               href="/conditions-utilisation"
               className="underline"

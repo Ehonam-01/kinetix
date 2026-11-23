@@ -88,8 +88,8 @@ export function ResetPasswordForm() {
             autoFocus
           />
           <p className="text-muted-foreground text-xs">
-            Le code affiché par votre application d&apos;authentification
-            (Google Authenticator, Authy…).
+            Le code affiché par ton application d&apos;authentification (Google
+            Authenticator, Authy…).
           </p>
         </div>
       )}

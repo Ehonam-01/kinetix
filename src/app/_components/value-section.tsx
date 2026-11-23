@@ -34,7 +34,7 @@ const PILLARS = [
 // "dashboard feature grid" look this pass moves away from.
 export function ValueSection() {
   return (
-    <section className="py-20 sm:py-28">
+    <section id="vision" className="scroll-mt-16 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <h2 className="mx-auto max-w-3xl text-center text-4xl font-semibold tracking-tight text-balance sm:text-5xl">

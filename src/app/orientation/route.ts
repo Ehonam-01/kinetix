@@ -6,9 +6,11 @@ import { GOAL_COOKIE_NAME, isGoalValue } from "@/config/goals";
 import { getCurrentUser } from "@/services/auth/current-user";
 
 // Where the homepage's "Que veux-tu accomplir ?" cards lead
-// (app/_components/goal-section.tsx). Becoming a member comes first:
-//  - a visitor without an account is sent to sign-up, the goal kept in a
-//    cookie (saved on the profile at sign-up, or picked up at sign-in);
+// (app/_components/goal-section.tsx):
+//  - a visitor without an account lands on the public page for that goal
+//    (app/orientation/[objectif]: the courses for it, then sign-up — an
+//    explicit user decision), the goal kept in a cookie (saved on the
+//    profile at sign-up, or picked up at sign-in);
 //  - a signed-in member gets the goal saved on their profile and lands on
 //    the mentors page — or straight on the orientation questionnaire for
 //    "Je ne sais pas encore". The dashboard itself still requires a paid
@@ -21,7 +23,9 @@ export async function GET(request: NextRequest) {
   const current = await getCurrentUser();
 
   if (!current || current.profile.status === "DELETED") {
-    const response = NextResponse.redirect(new URL("/register", request.url));
+    const response = NextResponse.redirect(
+      new URL(`/orientation/${goal ?? "incertain"}`, request.url),
+    );
     if (goal) {
       response.cookies.set(GOAL_COOKIE_NAME, goal, {
         maxAge: 60 * 60 * 24 * 30,

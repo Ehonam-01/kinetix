@@ -11,11 +11,11 @@ export function LearnerAmbassadorSection() {
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              Vous voulez apprendre ? Commencez simplement.
+              Tu veux apprendre ? Commence simplement.
             </h2>
             <p className="text-muted-foreground mt-4 text-lg text-pretty">
-              Vous pouvez utiliser la plateforme uniquement pour grandir :
-              apprendre, découvrir vos talents et vous faire accompagner. Aucun
+              Tu peux utiliser la plateforme uniquement pour grandir :
+              apprendre, découvrir tes talents et te faire accompagner. Aucun
               besoin de devenir ambassadeur pour accéder aux formations.
             </p>
           </div>
@@ -31,8 +31,8 @@ export function LearnerAmbassadorSection() {
                 Je veux apprendre
               </h3>
               <p className="text-muted-foreground mt-2 flex-1 text-sm leading-relaxed">
-                Accédez aux formations, apprenez à votre rythme et développez
-                vos compétences.
+                Accède aux formations, apprends à ton rythme et développe tes
+                compétences.
               </p>
               <a
                 href="#formations"
@@ -55,9 +55,8 @@ export function LearnerAmbassadorSection() {
                 Je veux aussi recommander
               </h3>
               <p className="text-muted-foreground mt-2 flex-1 text-sm leading-relaxed">
-                Si vous souhaitez aller plus loin, vous pouvez devenir
-                ambassadeur et recommander les formations à votre entourage et à
-                votre audience.
+                Si tu souhaites aller plus loin, tu peux devenir ambassadeur et
+                recommander les formations à ton entourage et à ton audience.
               </p>
               <Link
                 href="/programme-ambassadeur"

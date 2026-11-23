@@ -20,6 +20,8 @@ import { ProjectsOpportunitiesSection } from "./_components/projects-opportuniti
 import { HowItWorks } from "./_components/how-it-works";
 import { LaunchOfferPopup } from "./_components/launch-offer-popup";
 import { PricingSection } from "./_components/pricing-section";
+import { TestimonialsSection } from "./_components/testimonials-section";
+import { listSiteTestimonials } from "@/services/site/testimonials";
 import { LearnerAmbassadorSection } from "./_components/learner-ambassador-section";
 import { AmbassadorSection } from "./_components/ambassador-section";
 import { FaqSection } from "./_components/faq-section";
@@ -58,10 +60,15 @@ export const metadata: Metadata = {
 export const revalidate = 600;
 
 export default async function HomePage() {
-  const [courses, launchOffer, reviews] = await Promise.all([
+  const [courses, launchOffer, reviews, testimonials] = await Promise.all([
     listPublishedCoursesForMarketing(db, 6),
     getLaunchOffer(db),
     listHomeReviews(db),
+    // Out of reach: the page goes without them, never fails for them.
+    listSiteTestimonials(db, { publishedOnly: true }).catch((error) => {
+      console.error("Témoignages de l'accueil illisibles :", error);
+      return [];
+    }),
   ]);
 
   return (
@@ -78,6 +85,7 @@ export default async function HomePage() {
         <CommunityMentorshipSection />
         <ProjectsOpportunitiesSection />
         <HowItWorks />
+        <TestimonialsSection testimonials={testimonials} />
         <PricingSection offer={launchOffer} />
         <LearnerAmbassadorSection />
         <AmbassadorSection />

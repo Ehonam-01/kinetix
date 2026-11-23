@@ -4,6 +4,7 @@ import { LEGAL_ENTITY } from "@/config/legal";
 import { SITE_NAME } from "@/config/site";
 import { getSupportWhatsapp } from "@/repositories/payment-settings";
 import { ContactForm } from "@/components/support/contact-form";
+import { SITE_OG_IMAGE } from "@/config/og";
 
 const TITLE = `Contact — ${SITE_NAME}`;
 const DESCRIPTION = `Une question sur ${SITE_NAME} ? Écris-nous : nous te répondons sur WhatsApp.`;
@@ -12,7 +13,12 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "/contact" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/contact" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/contact",
+    images: [SITE_OG_IMAGE],
+  },
 };
 
 // Static, refreshed when the admin changes the support number (its action

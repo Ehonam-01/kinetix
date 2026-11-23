@@ -13,7 +13,7 @@ export default function ResetPasswordPage() {
       <CardHeader>
         <CardTitle>Nouveau mot de passe</CardTitle>
         <CardDescription>
-          Choisissez un nouveau mot de passe pour votre compte.
+          Choisis un nouveau mot de passe pour ton compte.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -6,42 +6,42 @@ const FAQS = [
     question:
       "Pourquoi se former maintenant, alors que l'IA change déjà tout ?",
     answer:
-      "Parce que les métiers et les compétences recherchées évoluent plus vite que les formations classiques. Plus vous attendez, plus l'écart se creuse avec ceux qui se préparent déjà — Kinetix Africa existe pour que vous ne soyez jamais dans le deuxième groupe.",
+      "Parce que les métiers et les compétences recherchées évoluent plus vite que les formations classiques. Plus tu attends, plus l'écart se creuse avec celles et ceux qui se préparent déjà — Kinetix Africa existe pour que tu ne sois jamais dans le deuxième groupe.",
   },
   {
     question: "Dois-je devenir ambassadeur pour suivre une formation ?",
     answer:
-      "Non. Vous pouvez accéder et suivre nos formations simplement en tant qu'apprenant. Le programme ambassadeur est entièrement optionnel.",
+      "Non. Tu peux accéder à nos formations et les suivre simplement en tant qu'apprenant. Le programme ambassadeur est entièrement optionnel.",
   },
   {
     question: "Comment accéder aux formations ?",
     answer:
-      "Créez un compte et souscrivez à l'abonnement annuel : vous accédez immédiatement à l'ensemble du catalogue depuis votre tableau de bord, sans avoir à payer chaque formation séparément.",
+      "Crée un compte et souscris à l'abonnement annuel : tu accèdes immédiatement à tout le catalogue depuis ton tableau de bord, sans payer chaque formation séparément. Tu peux aussi le payer en 3 fois.",
   },
   {
     question: "Suis-je engagé sur la durée ?",
     answer:
-      "Non, l'abonnement est sans engagement. Il dure un an et n'est jamais renouvelé automatiquement : avant l'échéance, vous recevez un rappel, puis vous choisissez librement de renouveler ou non.",
+      "Non, l'abonnement est sans engagement. Il dure un an et n'est jamais renouvelé automatiquement : avant l'échéance, tu reçois un rappel, puis tu choisis librement de renouveler ou non.",
   },
   {
     question: "Puis-je suivre plusieurs formations ?",
     answer:
-      "Oui — l'abonnement donne accès à tout le catalogue. Suivez autant de formations que vous le souhaitez, chacune à votre propre rythme.",
+      "Oui — l'abonnement donne accès à tout le catalogue. Suis autant de formations que tu le souhaites, chacune à ton rythme.",
   },
   {
     question: "Puis-je devenir ambassadeur plus tard ?",
     answer:
-      "Oui. Vous pouvez commencer comme simple apprenant et rejoindre le programme ambassadeur ultérieurement si vous le souhaitez.",
+      "Oui. Tu peux commencer comme simple apprenant et rejoindre le programme ambassadeur plus tard, si tu le souhaites.",
   },
   {
     question: "Comment fonctionne le programme ambassadeur ?",
     answer:
-      "Une fois inscrit au programme, vous recevez un lien personnel à partager. Lorsqu'une personne souscrit à l'abonnement grâce à ce lien, vous pouvez recevoir une commission selon les règles du programme.",
+      "Une fois inscrit au programme, tu reçois un lien personnel à partager. Lorsqu'une personne souscrit à l'abonnement grâce à ce lien, tu peux recevoir une commission selon les règles du programme.",
   },
   {
     question: "Comment sont calculées les commissions ?",
     answer:
-      "Les commissions sont calculées selon les règles du programme ambassadeur, notamment les souscriptions éligibles et le volume généré. Consultez les conditions du programme pour connaître les règles détaillées.",
+      "Les commissions sont calculées selon les règles du programme ambassadeur, notamment les souscriptions éligibles et le volume généré. Consulte les conditions du programme pour connaître les règles détaillées.",
   },
   {
     question: "Puis-je m'abonner sans lien de parrainage ?",

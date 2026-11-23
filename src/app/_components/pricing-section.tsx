@@ -1,13 +1,22 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import {
   lastLaunchDayLabel,
   type LaunchOffer,
 } from "@/services/pricing/launch-offer";
 import { LaunchCountdown } from "@/components/launch-countdown";
+import { splitTranches } from "@/lib/split-payment";
+import { INSTALLMENT_MONTHS } from "@/services/subscriptions/installments";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "./reveal";
+import { formatPrice } from "@/lib/format-price";
 
 const INCLUDED = [
   "Tout le catalogue de formations, sans payer chaque formation",
@@ -31,6 +40,9 @@ export function PricingSection({ offer }: { offer: LaunchOffer }) {
   const { price, nextPrice: regularPrice, endsAt, savings } = offer;
   const perMonth = Math.round(price / 12);
   const launchOffer = regularPrice !== null;
+  // Paying in 3 times (lib/split-payment.ts), put forward (explicit user
+  // decision): the same tranches the subscription page offers.
+  const tranches = splitTranches(price);
   return (
     <section id="tarif" className="bg-muted/40 scroll-mt-16 py-16 sm:py-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -59,19 +71,42 @@ export function PricingSection({ offer }: { offer: LaunchOffer }) {
               </div>
               {launchOffer && (
                 <p className="text-muted-foreground -mb-3 text-xl font-semibold tabular-nums line-through">
-                  {regularPrice.toLocaleString("fr-FR")} F
+                  {formatPrice(regularPrice)}
                 </p>
               )}
               <p className="flex items-baseline justify-center gap-2 md:justify-start">
                 <span className="text-5xl font-bold tracking-tight tabular-nums sm:text-6xl">
-                  {price.toLocaleString("fr-FR")} F
+                  {formatPrice(price)}
                 </span>
                 <span className="text-muted-foreground text-lg">/ an</span>
               </p>
               <p className="text-muted-foreground text-sm">
-                Soit environ {perMonth.toLocaleString("fr-FR")} F par mois, payé
-                en une fois par mobile money.
+                Soit environ {formatPrice(perMonth)} par mois, par mobile money.
               </p>
+              {tranches && (
+                <div className="border-brand-accent bg-background/80 rounded-2xl border-2 p-4 text-left">
+                  <p className="text-brand-accent flex items-center gap-1.5 text-sm font-bold tracking-wide uppercase">
+                    <CalendarClock className="size-4" />
+                    Ou paie en 3 fois
+                  </p>
+                  <p className="mt-2 text-sm">
+                    <strong className="text-base">
+                      {formatPrice(tranches[0])} aujourd&apos;hui
+                    </strong>
+                    , puis{" "}
+                    <strong>
+                      {tranches[1] === tranches[2]
+                        ? `2 × ${formatPrice(tranches[1])}`
+                        : `${formatPrice(tranches[1])} et ${formatPrice(tranches[2])}`}
+                    </strong>{" "}
+                    quand tu veux, dans les {INSTALLMENT_MONTHS} mois.
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Ton accès s&apos;ouvre dès la première tranche. Paiement en
+                    3 fois par mobile money, selon ton pays.
+                  </p>
+                </div>
+              )}
               {launchOffer && endsAt && (
                 <div className="border-brand-accent/40 bg-background/70 space-y-3 rounded-2xl border p-4 text-center">
                   <p className="flex items-center justify-center gap-1.5 text-sm font-semibold">
@@ -84,13 +119,10 @@ export function PricingSection({ offer }: { offer: LaunchOffer }) {
                     labelClassName="text-muted-foreground"
                   />
                   <p className="text-sm">
-                    Ensuite :{" "}
-                    <strong>
-                      {regularPrice.toLocaleString("fr-FR")} F / an
-                    </strong>
-                    . En t&apos;inscrivant maintenant, tu économises{" "}
+                    Ensuite : <strong>{formatPrice(regularPrice)} / an</strong>.
+                    En t&apos;inscrivant maintenant, tu économises{" "}
                     <strong className="text-brand-accent">
-                      {savings?.toLocaleString("fr-FR")} F
+                      {formatPrice(savings ?? 0)}
                     </strong>
                     .
                   </p>
@@ -99,9 +131,8 @@ export function PricingSection({ offer }: { offer: LaunchOffer }) {
               {launchOffer && !endsAt && (
                 <p className="text-sm font-medium">
                   Le tarif passera bientôt à{" "}
-                  <strong>{regularPrice.toLocaleString("fr-FR")} F / an</strong>
-                  . Profite du prix de lancement en t&apos;inscrivant
-                  maintenant.
+                  <strong>{formatPrice(regularPrice)} / an</strong>. Profite du
+                  prix de lancement en t&apos;inscrivant maintenant.
                 </p>
               )}
               <div className="flex items-start justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-left text-sm md:justify-start">

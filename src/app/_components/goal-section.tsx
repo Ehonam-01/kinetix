@@ -13,7 +13,7 @@ import {
 import { GOAL_OPTIONS, type GoalValue } from "@/config/goals";
 import { Reveal } from "./reveal";
 
-const GOAL_DETAILS: Record<
+export const GOAL_DETAILS: Record<
   GoalValue,
   { icon: LucideIcon; description: string }
 > = {
@@ -57,9 +57,9 @@ const GOAL_DETAILS: Record<
   },
 };
 
-// app/orientation/route.ts: sign-up first for a visitor (the goal is
-// remembered), the mentors page — or the orientation questionnaire for
-// "Je ne sais pas encore" — for a member.
+// app/orientation/route.ts: the public page for that goal for a visitor
+// (the goal is remembered for sign-up), the mentors page — or the
+// orientation questionnaire for "Je ne sais pas encore" — for a member.
 const orientationHref = (goal: GoalValue) => `/orientation?objectif=${goal}`;
 
 const GOALS = GOAL_OPTIONS.map((goal) => ({
@@ -68,8 +68,8 @@ const GOALS = GOAL_OPTIONS.map((goal) => ({
   ...GOAL_DETAILS[goal.value],
 }));
 
-// Every card goes through /orientation: becoming a member comes first,
-// then the member is guided towards a mentor or the team's orientation
+// Every card goes through /orientation: a visitor sees the courses for that
+// goal, a member is guided towards a mentor or the team's orientation
 // questionnaire. Plain <a>, not next/link: that route saves the goal, so it
 // must never be prefetched.
 //

@@ -33,6 +33,7 @@ import { Reveal } from "@/app/_components/reveal";
 import { BinaryTree } from "./_components/binary-tree";
 import { CountUp } from "./_components/count-up";
 import { CtaLink, StickyMobileCta } from "./_components/cta-link";
+import { SITE_OG_IMAGE } from "@/config/og";
 
 const TITLE = "Programme Ambassadeur Kinetix-Africa | Développe ton réseau";
 const DESCRIPTION =
@@ -49,11 +50,13 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: "fr_FR",
     type: "website",
+    images: [SITE_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: [SITE_OG_IMAGE.url],
   },
 };
 

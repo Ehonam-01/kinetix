@@ -16,6 +16,55 @@ export const GOAL_OPTIONS = [
 
 export type GoalValue = (typeof GOAL_OPTIONS)[number]["value"];
 
+// The courses the public orientation page (app/orientation/[objectif])
+// puts forward for each goal, by slug, best first. Editorial: change them
+// freely; a slug that no longer matches a published course is skipped, and
+// a goal left with none shows the whole catalogue.
+export const GOAL_COURSE_SLUGS: Record<GoalValue, string[]> = {
+  emploi: [
+    "video-ia-masterclass-creez-des-videos-spectaculaires-avec-l-ia",
+    "montage-video-pro-avec-capcut",
+    "creation-d-images-et-d-affiches-avec-l-ia",
+    "creer-une-page-de-vente",
+  ],
+  entreprendre: [
+    "comment-lancer-une-entreprise-a-succes",
+    "se-lancer-dans-l-e-commerce-en-afrique",
+    "creation-de-boutique-et-vente-de-produits-digitaux",
+    "creer-une-page-de-vente",
+  ],
+  ia: [
+    "video-ia-masterclass-creez-des-videos-spectaculaires-avec-l-ia",
+    "creation-d-images-et-d-affiches-avec-l-ia",
+    "creez-une-application-web-avec-l-ia",
+  ],
+  competence: [
+    "montage-video-pro-avec-capcut",
+    "creation-d-images-et-d-affiches-avec-l-ia",
+    "creer-une-page-de-vente",
+    "creez-une-application-web-avec-l-ia",
+  ],
+  freelance: [
+    "montage-video-pro-avec-capcut",
+    "video-ia-masterclass-creez-des-videos-spectaculaires-avec-l-ia",
+    "creation-d-images-et-d-affiches-avec-l-ia",
+    "creer-une-page-de-vente",
+  ],
+  projet: [
+    "comment-lancer-une-entreprise-a-succes",
+    "creer-une-page-de-vente",
+    "creez-une-application-web-avec-l-ia",
+    "se-lancer-dans-l-e-commerce-en-afrique",
+  ],
+  mentor: ["comment-lancer-une-entreprise-a-succes", "transe-formation"],
+  reseau: ["transe-formation", "comment-lancer-une-entreprise-a-succes"],
+  incertain: [
+    "transe-formation",
+    "comment-lancer-une-entreprise-a-succes",
+    "creation-d-images-et-d-affiches-avec-l-ia",
+  ],
+};
+
 export function goalLabel(value: string | null): string | null {
   if (!value) return null;
   return GOAL_OPTIONS.find((g) => g.value === value)?.label ?? null;

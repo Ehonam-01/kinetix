@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { MARKETING_CONSENT_KEY } from "@/lib/marketing-events";
+import {
+  CONSENT_BANNER_EVENT,
+  MARKETING_CONSENT_KEY,
+} from "@/lib/marketing-events";
 
 type Fbq = ((...args: unknown[]) => void) & {
   callMethod?: (...args: unknown[]) => void;
@@ -108,7 +111,19 @@ export function MarketingConsent() {
     w.fbq?.("consent", "revoke");
   }, [consent]);
 
-  if (!ready || !pixelId || consent !== null) return null;
+  const bannerOpen = ready && !!pixelId && consent === null;
+
+  // While the banner waits for an answer, the page knows it: the launch
+  // offer waits for it to be dealt with, the WhatsApp button stays out of
+  // its way (app/_components/launch-offer-popup.tsx, whatsapp-button.tsx).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (bannerOpen) root.dataset.consentBanner = "open";
+    else delete root.dataset.consentBanner;
+    window.dispatchEvent(new Event(CONSENT_BANNER_EVENT));
+  }, [bannerOpen]);
+
+  if (!bannerOpen) return null;
 
   function choose(value: "granted" | "denied") {
     saveConsent(value);

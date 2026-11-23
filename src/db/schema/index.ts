@@ -37,3 +37,4 @@ export * from "./marketing";
 export * from "./trainer-profiles";
 export * from "./course-reviews";
 export * from "./workshops";
+export * from "./site-testimonials";

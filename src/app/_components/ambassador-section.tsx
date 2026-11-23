@@ -7,10 +7,10 @@ import { Reveal } from "./reveal";
 
 const STEPS = [
   { icon: UserPlus, label: "Devenez ambassadeur" },
-  { icon: Link2, label: "Partagez vos liens" },
-  { icon: Megaphone, label: "Recommandez les formations" },
+  { icon: Link2, label: "Partage tes liens" },
+  { icon: Megaphone, label: "Recommande les formations" },
   { icon: ShoppingBag, label: "Générez des souscriptions" },
-  { icon: Wallet, label: "Recevez vos commissions" },
+  { icon: Wallet, label: "Reçois tes commissions" },
 ];
 
 // Secondary section, on purpose: the platform sells formations first, this

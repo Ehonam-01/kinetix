@@ -16,7 +16,7 @@ export function FinalCta() {
         <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl px-6 py-20 text-center sm:px-12 sm:py-28">
           <Image
             src="/hero2.png"
-            alt=""
+            alt="Un groupe de jeunes membres de Kinetix Africa échangent autour d'une table, carnets et ordinateur ouverts"
             fill
             className="object-cover"
           />
