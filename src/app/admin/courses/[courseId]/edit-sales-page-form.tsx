@@ -68,8 +68,9 @@ export function EditSalesPageForm({
           placeholder="https://youtu.be/..."
         />
         <p className="text-muted-foreground text-xs">
-          Affichée à la place de la miniature. Une vidéo non répertoriée
-          convient. Vide : la miniature s&apos;affiche.
+          La miniature s&apos;affiche avec un bouton lecture ; la vidéo démarre
+          au clic, sans les bandeaux YouTube. Une vidéo non répertoriée
+          convient.
         </p>
       </div>
 

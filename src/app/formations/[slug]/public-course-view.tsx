@@ -23,6 +23,7 @@ import { ShareCourse } from "@/components/course/share-course";
 import { formatPrice } from "@/lib/format-price";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 import { HERO_CTA_ID, StickyBuyBar } from "./sticky-buy-bar";
+import { CoursePreviewVideo } from "./course-preview-video";
 
 export type PublicCourseContent = NonNullable<
   Awaited<ReturnType<typeof getPublicCourse>>
@@ -154,16 +155,11 @@ export function PublicCourseView({
                 the way back; on a wide screen it sits on the right. */}
             <div className="lg:order-2">
               {videoSrc ? (
-                <div className="relative aspect-video overflow-hidden rounded-3xl bg-black shadow-xl">
-                  <iframe
-                    src={videoSrc}
-                    title={`Aperçu de la formation « ${course.title} »`}
-                    allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                    allowFullScreen
-                    loading="lazy"
-                    className="absolute inset-0 size-full"
-                  />
-                </div>
+                <CoursePreviewVideo
+                  embedUrl={videoSrc}
+                  thumbnailUrl={course.thumbnailUrl}
+                  courseTitle={course.title}
+                />
               ) : (
                 <CourseCover
                   title={course.title}
