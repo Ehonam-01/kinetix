@@ -16,15 +16,16 @@ export function CoursePreviewVideo({
   embedUrl,
   thumbnailUrl,
   courseTitle,
+  className = "rounded-3xl shadow-xl",
 }: {
   embedUrl: string;
   thumbnailUrl: string | null;
   courseTitle: string;
+  className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const videoId = youtubeIdOf(embedUrl);
-  const frame =
-    "relative block aspect-video w-full overflow-hidden rounded-3xl bg-black shadow-xl";
+  const frame = `relative block aspect-video w-full overflow-hidden bg-black ${className}`;
   if (!videoId) return null;
 
   if (playing) {

@@ -11,22 +11,53 @@ type Review = {
   updatedAt: Date;
 };
 
+function ReviewItem({ review }: { review: Review }) {
+  return (
+    <li className="space-y-1.5 py-3 first:pt-0">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <StarRatingDisplay rating={review.rating} />
+        <span className="font-medium">{review.author}</span>
+        <span className="text-muted-foreground text-xs">
+          {review.updatedAt.toLocaleDateString("fr-FR", {
+            dateStyle: "medium",
+          })}
+        </span>
+      </div>
+      {review.comment && (
+        <p className="text-muted-foreground text-sm leading-relaxed break-words whitespace-pre-line">
+          {review.comment}
+        </p>
+      )}
+    </li>
+  );
+}
+
 // The learners' reviews of a course (services/lms/course-reviews.ts): the
 // average, then the reviews — only real ones, nothing shown when there are
 // none yet. `form` is the member's own review form (dashboard only).
+// `visible` shows only the first reviews, the others behind "Voir plus
+// d'avis" (the public sales page).
 export function CourseReviews({
   summary,
   reviews,
   form,
+  visible,
+  id,
   className,
 }: {
   summary: { average: number; count: number } | null;
   reviews: Review[];
   form?: ReactNode;
+  visible?: number;
+  id?: string;
   className?: string;
 }) {
+  const shown = visible ? reviews.slice(0, visible) : reviews;
+  const hidden = visible ? reviews.slice(visible) : [];
+
   return (
     <section
+      id={id}
       className={cn(
         "border-border bg-card space-y-5 rounded-2xl border p-5 sm:p-6",
         className,
@@ -56,26 +87,25 @@ export function CourseReviews({
           Aucun avis pour le moment.
         </p>
       ) : (
-        <ul className="divide-y">
-          {reviews.map((review) => (
-            <li key={review.id} className="space-y-1.5 py-3 first:pt-0">
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <StarRatingDisplay rating={review.rating} />
-                <span className="font-medium">{review.author}</span>
-                <span className="text-muted-foreground text-xs">
-                  {review.updatedAt.toLocaleDateString("fr-FR", {
-                    dateStyle: "medium",
-                  })}
-                </span>
-              </div>
-              {review.comment && (
-                <p className="text-muted-foreground text-sm leading-relaxed break-words whitespace-pre-line">
-                  {review.comment}
-                </p>
-              )}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="divide-y">
+            {shown.map((review) => (
+              <ReviewItem key={review.id} review={review} />
+            ))}
+          </ul>
+          {hidden.length > 0 && (
+            <details className="group">
+              <summary className="hover:bg-muted flex h-10 cursor-pointer list-none items-center justify-center rounded-lg border text-sm font-medium group-open:hidden marker:hidden">
+                Voir plus d&apos;avis ({hidden.length})
+              </summary>
+              <ul className="divide-y border-t pt-3">
+                {hidden.map((review) => (
+                  <ReviewItem key={review.id} review={review} />
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
       )}
     </section>
   );
